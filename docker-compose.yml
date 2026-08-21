@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: upts-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: upts_user
+      POSTGRES_PASSWORD: upts_password
+      POSTGRES_DB: upts_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - upts_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U upts_user -d upts_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  upts_pgdata:
