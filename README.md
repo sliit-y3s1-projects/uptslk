@@ -24,7 +24,24 @@ Getting Started
    docker compose up -d
    ```
 
-2. Backend Setup
+2. Identity Provider Setup
+
+   UPTS uses ThunderID as its Identity Provider by default. Each developer runs their own local ThunderID instance using the official quickstart.
+
+   Start ThunderID:
+
+   ```bash
+   docker compose -f oci://ghcr.io/thunder-id/thunderid-quick-start:latest up
+   ```
+
+   This automatically initializes the database, runs the setup process, and starts the ThunderID server.
+
+   Once it's running, access the admin console at:
+
+   `https://localhost:8090/console`
+
+3. Backend Setup
+
    Navigate to the API directory to apply the database migrations and start the backend server:
 
    ```bash
@@ -33,8 +50,10 @@ Getting Started
    dotnet run
    ```
 
-3. Frontend Setup
+4. Frontend Setup
+
    Open a separate terminal window, navigate to the web directory, install the required packages, and launch the development environment:
+
    ```bash
    cd apps/web
    pnpm install
