@@ -9,8 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+var urls = builder.Configuration["ASPNETCORE_URLS"] ?? "http://0.0.0.0:5250";
+builder.WebHost.UseUrls(urls);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
