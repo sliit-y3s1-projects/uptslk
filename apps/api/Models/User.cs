@@ -1,19 +1,13 @@
+using Microsoft.AspNetCore.Identity;
 using api.Enums;
 
 namespace api.Models;
 
-public class User
+public class User : IdentityUser<Guid>
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-
-    // Links this record to the identity managed by ThunderID
-    public string ThunderSub { get; set; } = default!;
 
     public string Name { get; set; } = default!;
-    public string Email { get; set; } = default!;
-    public string? Phone { get; set; }
     public UserRole Role { get; set; }
-
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

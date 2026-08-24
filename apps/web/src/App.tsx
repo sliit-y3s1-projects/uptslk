@@ -1,19 +1,19 @@
-import { SignedIn, SignedOut } from "@thunderid/react";
-
+import { useAuth } from "@/hooks/useAuth";
 import { SignInPanel } from "@/components/auth/SignInPanel";
 import { DashboardPage } from "@/pages/DashboardPage";
+import { RequireRole } from "./components/auth/RequireAuth";
 
 function App() {
-  return (
-    <>
-      <SignedIn>
-        <DashboardPage />
-      </SignedIn>
+  const { user, loading } = useAuth();
 
-      <SignedOut>
-        <SignInPanel />
-      </SignedOut>
-    </>
+  if (loading) return null;
+
+  if (!user) return <SignInPanel />;
+
+  return (
+    <RequireRole role="Admin">
+      <DashboardPage />
+    </RequireRole>
   );
 }
 

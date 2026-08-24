@@ -1,6 +1,6 @@
 import * as React from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, LogOut } from "lucide-react";
 import {
   Analytics01Icon,
   BusFrontIcon,
@@ -17,6 +17,7 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarHeader,
+  SidebarFooter,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -25,6 +26,8 @@ import {
   SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const data = {
   navMain: [
@@ -102,6 +105,7 @@ const defaultOpenItems = data.navMain
   .map((item) => item.title);
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { logout } = useAuth();
   const [openItems, setOpenItems] = React.useState<string[]>(defaultOpenItems);
 
   function toggleItem(title: string) {
@@ -201,6 +205,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
+          onClick={logout}
+        >
+          <LogOut className="size-4" />
+          <span>Log out</span>
+        </Button>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

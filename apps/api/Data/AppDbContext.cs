@@ -1,14 +1,15 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using api.Models;
 using RouteModel = api.Models.Route;
 
 namespace api.Data;
 
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-    public DbSet<User> Users => Set<User>();
     public DbSet<Driver> Drivers => Set<Driver>();
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<RouteModel> Routes => Set<RouteModel>();
@@ -24,8 +25,8 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<User>().HasIndex(u => u.ThunderSub).IsUnique();
-        modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
+        base.OnModelCreating(modelBuilder); // IMPORTANT: sets up Identity's own tables first
+
         modelBuilder.Entity<Vehicle>().HasIndex(v => v.PlateNumber).IsUnique();
         modelBuilder.Entity<Driver>().HasIndex(d => d.LicenseNumber).IsUnique();
 

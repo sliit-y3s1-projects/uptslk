@@ -4,10 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function SignInPanel() {
-  const { login, register } = useAuth();
-  const [mode, setMode] = useState<"login" | "register">("login");
-
+export function RegisterPage() {
+  const { register } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,17 +17,11 @@ export function SignInPanel() {
     setError(null);
     setSubmitting(true);
     try {
-      if (mode === "login") {
-        await login(email, password);
-      } else {
-        await register(name, email, password);
-      }
+      // register() always creates a Commuter account, role is not
+      // exposed to the client, see AuthContext
+      await register(name, email, password);
     } catch {
-      setError(
-        mode === "login"
-          ? "Invalid email or password"
-          : "Could not create account",
-      );
+      setError("Could not create account, please try again");
     } finally {
       setSubmitting(false);
     }
@@ -39,26 +31,24 @@ export function SignInPanel() {
     <main className="flex min-h-screen items-center justify-center bg-background px-6">
       <section className="flex w-full max-w-sm flex-col items-center gap-6 rounded-xl border bg-card p-8 text-center">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight">UPTS</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Create Account
+          </h1>
           <p className="text-sm leading-6 text-muted-foreground">
-            {mode === "login"
-              ? "Sign in to continue to your dashboard."
-              : "Create a commuter account to book and track trips."}
+            Sign up as a commuter to book and track trips.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="w-full space-y-4 text-left">
-          {mode === "register" && (
-            <div className="space-y-1.5">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-          )}
+          <div className="space-y-1.5">
+            <Label htmlFor="name">Full Name</Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -77,35 +67,16 @@ export function SignInPanel() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={mode === "register" ? 8 : undefined}
+              minLength={8}
             />
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <Button type="submit" className="w-full" disabled={submitting}>
-            {submitting
-              ? mode === "login"
-                ? "Signing in..."
-                : "Creating account..."
-              : mode === "login"
-                ? "Sign In"
-                : "Sign Up"}
+            {submitting ? "Creating account..." : "Sign Up"}
           </Button>
         </form>
-
-        <button
-          type="button"
-          onClick={() => {
-            setMode(mode === "login" ? "register" : "login");
-            setError(null);
-          }}
-          className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-        >
-          {mode === "login"
-            ? "Don't have an account? Sign up"
-            : "Already have an account? Sign in"}
-        </button>
       </section>
     </main>
   );
