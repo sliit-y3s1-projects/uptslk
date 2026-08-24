@@ -24,25 +24,9 @@ Getting Started
    docker compose up -d
    ```
 
-2. Identity Provider Setup
+2. Backend Setup
 
-   UPTS uses ThunderID as its Identity Provider by default. Each developer runs their own local ThunderID instance using the official quickstart.
-
-   Start ThunderID:
-
-   ```bash
-   docker compose -f oci://ghcr.io/thunder-id/thunderid-quick-start:latest up
-   ```
-
-   This automatically initializes the database, runs the setup process, and starts the ThunderID server.
-
-   Once it's running, access the admin console at:
-
-   `https://localhost:8090/console`
-
-3. Backend Setup
-
-   Navigate to the API directory to apply the database migrations and start the backend server:
+   Navigate to the API directory and apply the database migrations to set up the schema, then start the backend server:
 
    ```bash
    cd apps/api
@@ -50,7 +34,18 @@ Getting Started
    dotnet run
    ```
 
-4. Frontend Setup
+   The `dotnet ef database update` command applies any pending migrations to your local database. Run this the first time you set up the project, and again any time you pull changes that include new migrations.
+
+   If you make changes to the EF Core models and need to create a new migration, run the following two commands from `apps/api`:
+
+   ```bash
+   dotnet ef migrations add <MeaningfulMigrationName>
+   dotnet ef database update
+   ```
+
+   Use a short, descriptive name that reflects what changed, e.g. `AddRouteScheduleTable`, `AddUserPhoneNumber`, `RenameStopToStation`. Avoid generic names like `Update1` or `Migration2` - the name is committed to the repo and should make sense to other developers reading the migration history later.
+
+3. Frontend Setup
 
    Open a separate terminal window, navigate to the web directory, install the required packages, and launch the development environment:
 
