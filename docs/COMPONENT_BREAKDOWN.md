@@ -5,8 +5,8 @@ UPTS is a platform that brings Sri Lanka's public bus network into one digital s
 ## Team Assignment
 
 - **Component A:** [kishan-ahamed45](https://github.com/kishan-ahamed45)
-- **Component B:**
-- **Component C:**
+- **Component B:** [RashmiK0119](https://github.com/RashmiK0119)
+- **Component C:** [Nadeesha-D-Shalom](https://github.com/Nadeesha-D-Shalom)
 - **Component D:** [chamals3n4](https://github.com/chamals3n4)
 
 ## Component A: Trip Booking & Ticketing
