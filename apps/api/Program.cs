@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using api.Data;
 using api.Enums;
 using api.Models;
@@ -15,7 +16,8 @@ builder.WebHost.UseUrls(urls);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));

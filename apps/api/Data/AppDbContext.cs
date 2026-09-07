@@ -11,9 +11,12 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<Driver> Drivers => Set<Driver>();
+    public DbSet<Centre> Centres => Set<Centre>();
+    public DbSet<Bay> Bays => Set<Bay>();
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<RouteModel> Routes => Set<RouteModel>();
     public DbSet<RouteStop> RouteStops => Set<RouteStop>();
+    public DbSet<RouteSchedule> RouteSchedules => Set<RouteSchedule>();
     public DbSet<Trip> Trips => Set<Trip>();
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<Wallet> Wallets => Set<Wallet>();
@@ -29,6 +32,27 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
 
         modelBuilder.Entity<Vehicle>().HasIndex(v => v.PlateNumber).IsUnique();
         modelBuilder.Entity<Driver>().HasIndex(d => d.LicenseNumber).IsUnique();
+        modelBuilder.Entity<Centre>().HasIndex(c => c.Code).IsUnique();
+        modelBuilder.Entity<Bay>().HasIndex(b => new { b.CentreId, b.Code }).IsUnique();
+        modelBuilder.Entity<RouteModel>().HasIndex(r => new { r.CentreId, r.RouteNumber }).IsUnique();
+        modelBuilder.Entity<RouteStop>().HasIndex(rs => new { rs.RouteId, rs.SequenceOrder }).IsUnique();
+
+        modelBuilder.Entity<Centre>().Property(c => c.Code).HasMaxLength(32);
+        modelBuilder.Entity<Centre>().Property(c => c.Name).HasMaxLength(160);
+        modelBuilder.Entity<Bay>().Property(b => b.Code).HasMaxLength(24);
+        modelBuilder.Entity<RouteModel>().Property(r => r.RouteNumber).HasMaxLength(32);
+
+        modelBuilder.Entity<Bay>()
+            .HasOne(b => b.Centre)
+            .WithMany(c => c.Bays)
+            .HasForeignKey(b => b.CentreId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<RouteModel>()
+            .HasOne(r => r.Centre)
+            .WithMany(c => c.Routes)
+            .HasForeignKey(r => r.CentreId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // User <-> Driver (1:1)
         modelBuilder.Entity<Driver>()
@@ -50,6 +74,18 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .WithMany(r => r.Stops)
             .HasForeignKey(rs => rs.RouteId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RouteSchedule>()
+            .HasOne(s => s.Route)
+            .WithMany(r => r.Schedules)
+            .HasForeignKey(s => s.RouteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RouteSchedule>()
+            .HasOne(s => s.Bay)
+            .WithMany(b => b.RouteSchedules)
+            .HasForeignKey(s => s.BayId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Route <-> Trip (1:N)
         modelBuilder.Entity<Trip>()
