@@ -15,4 +15,6 @@ public class Centre
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<Bay> Bays { get; set; } = new List<Bay>();
     public ICollection<Route> Routes { get; set; } = new List<Route>();
+    public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
+    public ICollection<Driver> Drivers { get; set; } = new List<Driver>();
 }

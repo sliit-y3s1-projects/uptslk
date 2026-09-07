@@ -17,6 +17,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<RouteModel> Routes => Set<RouteModel>();
     public DbSet<RouteStop> RouteStops => Set<RouteStop>();
     public DbSet<RouteSchedule> RouteSchedules => Set<RouteSchedule>();
+    public DbSet<MaintenanceRecord> MaintenanceRecords => Set<MaintenanceRecord>();
     public DbSet<Trip> Trips => Set<Trip>();
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<Wallet> Wallets => Set<Wallet>();
@@ -32,6 +33,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
 
         modelBuilder.Entity<Vehicle>().HasIndex(v => v.PlateNumber).IsUnique();
         modelBuilder.Entity<Driver>().HasIndex(d => d.LicenseNumber).IsUnique();
+        modelBuilder.Entity<Driver>().HasIndex(d => d.UserId).IsUnique();
         modelBuilder.Entity<Centre>().HasIndex(c => c.Code).IsUnique();
         modelBuilder.Entity<Bay>().HasIndex(b => new { b.CentreId, b.Code }).IsUnique();
         modelBuilder.Entity<RouteModel>().HasIndex(r => new { r.CentreId, r.RouteNumber }).IsUnique();
@@ -41,6 +43,9 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<Centre>().Property(c => c.Name).HasMaxLength(160);
         modelBuilder.Entity<Bay>().Property(b => b.Code).HasMaxLength(24);
         modelBuilder.Entity<RouteModel>().Property(r => r.RouteNumber).HasMaxLength(32);
+        modelBuilder.Entity<Vehicle>().Property(v => v.Model).HasMaxLength(120);
+        modelBuilder.Entity<Driver>().Property(d => d.FullName).HasMaxLength(160);
+        modelBuilder.Entity<MaintenanceRecord>().Property(m => m.Type).HasMaxLength(80);
 
         modelBuilder.Entity<Bay>()
             .HasOne(b => b.Centre)
@@ -54,12 +59,30 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .HasForeignKey(r => r.CentreId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<Vehicle>()
+            .HasOne(v => v.Centre)
+            .WithMany(c => c.Vehicles)
+            .HasForeignKey(v => v.CentreId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Driver>()
+            .HasOne(d => d.Centre)
+            .WithMany(c => c.Drivers)
+            .HasForeignKey(d => d.CentreId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // User <-> Driver (1:1)
         modelBuilder.Entity<Driver>()
             .HasOne(d => d.User)
             .WithOne(u => u.Driver)
             .HasForeignKey<Driver>(d => d.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<MaintenanceRecord>()
+            .HasOne(record => record.Vehicle)
+            .WithMany(vehicle => vehicle.MaintenanceRecords)
+            .HasForeignKey(record => record.VehicleId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // User <-> Wallet (1:1)
         modelBuilder.Entity<Wallet>()

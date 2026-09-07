@@ -6,9 +6,13 @@ public class Driver
 {
     public Guid Id { get; set; } = Guid.NewGuid();
 
-    public Guid UserId { get; set; }
-    public User User { get; set; } = default!;
+    public Guid CentreId { get; set; }
+    public Centre Centre { get; set; } = default!;
+    public Guid? UserId { get; set; }
+    public User? User { get; set; }
 
+    public string FullName { get; set; } = default!;
+    public string? PhoneNumber { get; set; }
     public string LicenseNumber { get; set; } = default!;
     public DriverStatus Status { get; set; } = DriverStatus.Active;
 
