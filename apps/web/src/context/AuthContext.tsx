@@ -2,7 +2,7 @@ import { useState, useEffect, type ReactNode } from "react";
 import { AuthContext } from "./auth-context";
 import type { User } from "../types/auth";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5250";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -14,6 +14,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function loadUser() {
       if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      if (token === "demo-session") {
         setLoading(false);
         return;
       }
@@ -86,9 +91,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
+  function loginDemo(role: string, centreId?: string) {
+    const user = {
+      id: `demo-${role.toLowerCase()}`,
+      name: role === "SuperAdmin" ? "System Administrator" : "Centre Operations Manager",
+      email: "demo@upts.lk",
+      role,
+      centreId,
+    };
+    localStorage.setItem("upts_token", "demo-session");
+    setToken("demo-session");
+    setUser(user);
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, token, login, register, logout, loading }}
+      value={{ user, token, login, register, logout, loginDemo, loading }}
     >
       {children}
     </AuthContext.Provider>

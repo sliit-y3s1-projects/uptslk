@@ -3,9 +3,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DemoAccessPanel } from "@/components/auth/DemoAccessPanel";
 
 export function SignInPanel() {
-  const { login, register } = useAuth();
+  const { login, register, loginDemo } = useAuth();
   const [mode, setMode] = useState<"login" | "register">("login");
 
   const [name, setName] = useState("");
@@ -93,6 +94,8 @@ export function SignInPanel() {
                 : "Sign Up"}
           </Button>
         </form>
+
+        <DemoAccessPanel onLogin={loginDemo} />
 
         <button
           type="button"

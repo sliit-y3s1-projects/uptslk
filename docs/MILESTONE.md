@@ -1,122 +1,79 @@
-# UPTS - Development Milestones (Backend First)
+# UPTS - Development Milestones
 
-## Important Notes Before Starting
+## Working Rules
 
-- The current database structure is a **starting point, not final**. As you build each part, you may find a field, relationship, or table needs to change. That's expected, discuss any schema change with the team before applying it, since it affects everyone's migrations.
-- **Agentic AI is intentionally left out of this milestone list for now.** Focus is only on getting the core backend APIs working and stable first. Agent work will be a separate milestone list once this is done.
-- For now, the whole team should focus on **backend only** (ASP.NET Core + PostgreSQL). React and Flutter work comes after each backend piece is stable and testable via Swagger/Postman.
-- Mark each row's status as you go: `Not Started`, `In Progress`, or `Done`.
-- With only 4 people, work through this **in order, top to bottom**. Later milestones depend on earlier ones, so it's fine, and expected, for someone to wait until the milestone before theirs is done rather than starting early on empty data.
+- The schema is a starting point. Discuss cross-component database changes before creating migrations.
+- Each component must provide full CRUD, validation, authorization, filtering/pagination where relevant, and a functional API before its React/Flutter screens are integrated.
+- Agentic AI follows the core CRUD work because it relies on real centre, fleet, trip, booking, and fare data.
+- Mark each task `Not Started`, `In Progress`, or `Done`.
 
----
+## Milestone 1: Centres and Network (Component A)
 
-## Milestone 1: Vehicles & Drivers (Component B)
+| # | Task | Status |
+| --- | --- | :---: |
+| 1.1 | Create, list, update, and deactivate multimodal centres with district/status filtering | Not Started |
+| 1.2 | Create routes with ordered stops, centre ownership, and timetable information | Not Started |
+| 1.3 | Manage centre bays and bay availability | Not Started |
+| 1.4 | Add centre profiles, route search, and centre-scoped authorization | Not Started |
 
-| #   | Task                                                                  |   Status    |
-| --- | --------------------------------------------------------------------- | :---------: |
-| 1.1 | Add, list, update, and deactivate vehicles, with search and filtering | Not Started |
-| 1.2 | Create driver accounts (admin only) and link them to the driver table | Not Started |
-| 1.3 | List and update drivers, with filtering by status                     | Not Started |
-| 1.4 | Test everything using the seeded admin account                        | Not Started |
+## Milestone 2: Fleet and Maintenance (Component B)
 
----
+| # | Task | Status |
+| --- | --- | :---: |
+| 2.1 | Add, list, update, and deactivate vehicles with centre/type/readiness filtering | Not Started |
+| 2.2 | Create and view inspection and maintenance records | Not Started |
+| 2.3 | Update vehicle readiness, capacity, and accessibility information | Not Started |
+| 2.4 | Test fleet and maintenance actions with seeded accounts | Not Started |
 
-## Milestone 2: Routes (Component B)
+## Milestone 3: Scheduling and Dispatch (Component C)
 
-| #   | Task                                                                             |   Status    |
-| --- | -------------------------------------------------------------------------------- | :---------: |
-| 2.1 | Create a route along with its ordered list of stops                              | Not Started |
-| 2.2 | List and search routes by origin/destination                                     | Not Started |
-| 2.3 | View, update, and delete routes (only delete if unused)                          | Not Started |
-| 2.4 | Seed a few realistic routes, including same-destination, different-path examples | Not Started |
+| # | Task | Status |
+| --- | --- | :---: |
+| 3.1 | Create trips with route, vehicle, driver, bay, and departure time | Not Started |
+| 3.2 | Build centre/date/status-filtered dispatch boards and trip detail | Not Started |
+| 3.3 | Let drivers view/update only their assigned trips in Flutter | Not Started |
+| 3.4 | Reassign resources, progress trip status, delay/cancel trips, and retain history | Not Started |
+| 3.5 | Add recurring timetable services, conflict detection, and basic route performance | Not Started |
 
----
+## Milestone 4: Passengers and Fares (Component D)
 
-## Milestone 3: Trip Scheduling (Component B)
+Requires scheduled trips.
 
-| #   | Task                                                                         |   Status    |
-| --- | ---------------------------------------------------------------------------- | :---------: |
-| 3.1 | Schedule a trip by assigning a route, vehicle, driver, and time              | Not Started |
-| 3.2 | List all trips for admins, with filters by status/date/route                 | Not Started |
-| 3.3 | Let a driver see only the trips assigned to them                             | Not Started |
-| 3.4 | Update trip status as it progresses, and reassign driver/vehicle when needed | Not Started |
-| 3.5 | Add route performance summary (on-time rate, average occupancy)              | Not Started |
+| # | Task | Status |
+| --- | --- | :---: |
+| 4.1 | Search trips and create bookings with seat selection and QR boarding pass | Not Started |
+| 4.2 | View, filter, cancel, and reschedule a commuter's bookings | Not Started |
+| 4.3 | Estimate fares and manage wallet top-ups, balance, and transaction history | Not Started |
+| 4.4 | Deduct fare on confirmation; process approved refunds or credits | Not Started |
+| 4.5 | Test the complete commuter search-to-payment flow | Not Started |
 
-_Component B is fully done after this milestone._
+## Milestone 5: Agentic Service Recovery (Cross-Component)
 
----
+Requires the previous milestones and the driver incident-report flow.
 
-## Milestone 4: Trip Booking & Ticketing (Component A)
+| # | Task | Status |
+| --- | --- | :---: |
+| 5.1 | Persist workflow, step, tool-call, validation, and approval audit data | Not Started |
+| 5.2 | Implement the four member-owned agents with DTO contracts and allow-listed tools | Not Started |
+| 5.3 | Add deterministic rules for readiness, duty eligibility, bay conflict, capacity, fare policy, and centre scope | Not Started |
+| 5.4 | Pause reassignment, cancellation, and financial action for authorized manager approval | Not Started |
+| 5.5 | Implement approved execution plus rejection, revision, timeout, and safe-failure paths | Not Started |
+| 5.6 | Demonstrate driver report -> agent workflow -> manager approval -> service update across Flutter, React, and API | Not Started |
 
-Can only start once Milestone 3 is done, since bookings need real trips to book against.
+See [Agentic AI Service-Recovery Workflow](AGENTIC_AI_WORKFLOW.md) for the assessed scenario.
 
-| #   | Task                                                                       |   Status    |
-| --- | -------------------------------------------------------------------------- | :---------: |
-| 4.1 | Search available trips by origin, destination, and time                    | Not Started |
-| 4.2 | Create a booking with seat selection and a generated boarding pass         | Not Started |
-| 4.3 | List and view a commuter's own bookings, with pagination and status filter | Not Started |
-| 4.4 | Cancel or reschedule a booking within policy rules                         | Not Started |
-| 4.5 | Add fare estimation based on distance, demand, and service type            | Not Started |
-| 4.6 | Test the full search-to-booking flow with a seeded commuter account        | Not Started |
+## Milestone 6: Reports and Dashboards (Cross-Component)
 
-_Component A is fully done after this milestone._
+| # | Task | Status |
+| --- | --- | :---: |
+| 6.1 | Centre dashboard summary: active trips, fleet readiness, bookings, and incidents | Not Started |
+| 6.2 | Reports for route performance, ridership, revenue, maintenance, and recovery outcomes | Not Started |
 
----
+## Milestone 7: Hardening and Demonstration (Cross-Component)
 
-## Milestone 5: Wallet & Payment (Component C)
-
-Can only start once Milestone 4 is done, since fare deduction needs real bookings to attach to.
-
-| #   | Task                                                                     |   Status    |
-| --- | ------------------------------------------------------------------------ | :---------: |
-| 5.1 | Auto-create a wallet when a commuter registers                           | Not Started |
-| 5.2 | Top up wallet and view balance                                           | Not Started |
-| 5.3 | List and filter transaction history, with pagination                     | Not Started |
-| 5.4 | Deduct fare automatically when a booking is confirmed                    | Not Started |
-| 5.5 | Support refunds against a booking                                        | Not Started |
-| 5.6 | Build a payout reconciliation summary for drivers/vehicles over a period | Not Started |
-| 5.7 | Test the full top-up to fare-deduction flow end to end                   | Not Started |
-
-_Component C is fully done after this milestone._
-
----
-
-## Milestone 6: Incident & Safety Reporting (Component D)
-
-Can start as soon as Milestone 3 is done (only needs trips to exist), doesn't need to wait for Milestones 4 or 5.
-
-| #   | Task                                                                     |   Status    |
-| --- | ------------------------------------------------------------------------ | :---------: |
-| 6.1 | Let commuters and drivers report an incident linked to a trip            | Not Started |
-| 6.2 | List and filter incidents by type, status, and trip, with pagination     | Not Started |
-| 6.3 | View a single incident's full detail                                     | Not Started |
-| 6.4 | Update incident status as it gets resolved, with SLA due date tracking   | Not Started |
-| 6.5 | Add an incident trend summary (recurring issues by driver/vehicle/route) | Not Started |
-| 6.6 | Test incident reporting from both a commuter and a driver seeded account | Not Started |
-
-_Component D is fully done after this milestone._
-
----
-
-## Milestone 7: Reports & Dashboard (Cross-Component)
-
-Needs all four components done, since it pulls data from all of them.
-
-| #   | Task                                                                     |   Status    |
-| --- | ------------------------------------------------------------------------ | :---------: |
-| 7.1 | General dashboard summary (active trips, bookings today, open incidents) | Not Started |
-| 7.2 | Revenue and booking trends over time                                     | Not Started |
-
----
-
-## Milestone 8: Backend Hardening (Cross-Component)
-
-Final pass across the whole API, everyone reviews their own component's endpoints.
-
-| #   | Task                                                                         |   Status    |
-| --- | ---------------------------------------------------------------------------- | :---------: |
-| 8.1 | Review role-based access on every endpoint                                   | Not Started |
-| 8.2 | Add proper input validation everywhere data is created or updated            | Not Started |
-| 8.3 | Make sure API responses follow one consistent format                         | Not Started |
-| 8.4 | Double check pagination, filtering, and sorting work the same way everywhere | Not Started |
-| 8.5 | Add basic, consistent error handling across the whole API                    | Not Started |
+| # | Task | Status |
+| --- | --- | :---: |
+| 7.1 | Review role-based access and centre data isolation on all endpoints | Not Started |
+| 7.2 | Apply consistent DTO validation, pagination, error responses, and audit logging | Not Started |
+| 7.3 | Run backend, React, Flutter, CRUD, and agent-workflow demonstration tests | Not Started |
+| 7.4 | Prepare ADR, test evidence, screenshots, and each member's explanation/demo | Not Started |

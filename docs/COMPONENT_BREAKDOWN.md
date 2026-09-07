@@ -1,149 +1,87 @@
-## UPTS - Component Breakdown & Team Assignment Guide
+# UPTS - Component Breakdown and Team Assignment
 
-UPTS is a platform that brings Sri Lanka's public bus network into one digital system. Commuters search, book, and track bus trips from their phone. Drivers see only the trips assigned to them and update status as they go. Admins manage the fleet, routes, and payments from a web dashboard. Behind the scenes, four AI agents work together to plan each booking, check real route and vehicle data, carry out the booking, and validate everything before it's finalized, pausing for human approval if something looks unusual. The whole system runs on one shared login, one database, and one consistent set of rules across web and mobile.
+UPTSLK is a centre-based public-transport platform. Commuters search, book, pay for, and track bus trips in Flutter. Drivers use Flutter to see their assignments, update a trip, and report incidents. Centre Managers operate their own multimodal centre in React; Super Admins govern centres, employees, roles, and platform health.
+
+The four components below are the team's distinct major CRUD features. The four-agent service-recovery workflow is a shared assessed feature that uses data from each component; it does not replace their CRUD work.
 
 ## Team Assignment
 
-- **Component A:** [kishan-ahamed45](https://github.com/kishan-ahamed45)
-- **Component B:** [RashmiK0119](https://github.com/RashmiK0119)
-- **Component C:** [Nadeesha-D-Shalom](https://github.com/Nadeesha-D-Shalom)
-- **Component D:** [chamals3n4](https://github.com/chamals3n4)
+| Component | Member | Major functionality | Primary entity |
+| --- | --- | --- | --- |
+| A | [kishan-ahamed45](https://github.com/kishan-ahamed45) | Centres and network | Centre / Route |
+| B | [RashmiK0119](https://github.com/RashmiK0119) | Fleet and maintenance | Vehicle |
+| C | [chamals3n4](https://github.com/chamals3n4) | Scheduling and dispatch | Trip |
+| D | [Nadeesha-D-Shalom](https://github.com/Nadeesha-D-Shalom) | Passengers and fares | Booking |
 
-## Component A: Trip Booking & Ticketing
+## A: Centres and Network
 
-Lets commuters search for available bus trips and book a seat, generating a digital boarding pass. Handles the full lifecycle of a booking from creation to completion or cancellation.
+Owns multimodal centres, routes, ordered stops, bays, timetables, and centre-scoped network information.
 
-### CRUD Operations
+| Operation | Scope |
+| --- | --- |
+| Create | Centre, route, stop sequence, bay, and timetable |
+| Read | Search/list centres and routes; view centre profiles, route details, bays, and timetables |
+| Update | Centre details, route stops, bay availability, timetable, and operating status |
+| Delete | Deactivate a centre/bay or archive an unused route |
 
-| Operation | Description                                                                                          |
-| --------- | ---------------------------------------------------------------------------------------------------- |
-| Create    | Create a new booking (select trip, seat, generate QR boarding pass)                                  |
-| Read      | Search trips by origin, destination, time; view booking history; view single booking and its QR pass |
-| Update    | Confirm, cancel, or reschedule a booking                                                             |
-| Delete    | Cancel a booking (soft delete, kept for record, never fully removed)                                 |
+Includes district/status filters, route search, pagination, and network-health summaries.
 
-**Also includes:** search/filter by status and date, sorting, pagination on booking history, and dynamic fare estimation based on distance, demand, and service type.
+**Agent: Network Continuity Agent.** Reads centre, route, bay, and timetable data to propose an alternative bay or time slot when a trip is disrupted. It cannot change operational data.
 
-### Agent Part: Trip Planning Agent
+## B: Fleet and Maintenance
 
-This agent receives the commuter's raw request, for example "Kurunegala to Colombo, 8 AM." It doesn't touch the database or call any tool, its only job is to turn that request into a clear step-by-step plan: find matching routes, estimate fare, check seat availability, propose a booking. This plan is then passed to the next agent in the pipeline.
+Owns vehicles and their maintenance/inspection readiness within a centre.
 
-## Component B: Fleet & Route Management
+| Operation | Scope |
+| --- | --- |
+| Create | Vehicle and maintenance/inspection record |
+| Read | Search/list vehicles; view profile, documents, maintenance history, and assignments |
+| Update | Vehicle status, capacity, accessibility features, maintenance, and readiness |
+| Delete | Deactivate a vehicle while retaining operational history |
 
-Lets admins manage the buses, drivers, and routes that make up the network, and schedule trips by assigning a vehicle and driver to a route and time.
+Includes centre/type/readiness filters, vehicle images, pagination, and maintenance-due alerts.
 
-### CRUD Operations
+**Agent: Fleet Readiness Agent.** Ranks replacement vehicles using availability, capacity, accessibility requirements, inspection status, and maintenance blocks. It returns a structured result and cannot assign a vehicle.
 
-| Operation | Description                                                                                                                |
-| --------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Create    | Register a vehicle, register a driver, create a route with its ordered stops, schedule a trip                              |
-| Read      | List vehicles, drivers, and routes; view a route's stop sequence; view trips (drivers see only their own assigned trips)   |
-| Update    | Update vehicle/driver status, edit route details, reassign a trip's driver or vehicle, update trip status as it progresses |
-| Delete    | Deactivate a vehicle or driver; delete a route only if no trips are linked to it                                           |
+## C: Scheduling and Dispatch
 
-**Also includes:** filter by status/type, paginated fleet and trip lists, and route performance analytics (on-time percentage and average occupancy per route).
+Owns planned and live trips: route, vehicle, driver, bay, timetable, dispatch state, and incident handling.
 
-### Agent Part: Route & Demand Analysis Agent
+| Operation | Scope |
+| --- | --- |
+| Create | Trip with route, departure, vehicle, driver, and bay |
+| Read | Filtered dispatch boards; trip detail, assignments, history, and incidents |
+| Update | Reassign trip resources, progress lifecycle, delay/cancel a trip, resolve an incident |
+| Delete | Cancel/archive a trip while retaining its record |
 
-This agent takes the plan from the previous agent and checks it against real data, which routes actually exist between the two points, how full those buses currently are, and which driver/vehicle are actually available at that time. It picks the best match and passes that decision forward.
+Includes recurring services, bay boards, conflict detection, approval queues, and dispatch history. Drivers see only their own assignments in Flutter.
 
-## Component C: Wallet & Payment Management
+**Agent: Dispatch Recovery Agent.** Combines eligible vehicle options, driver availability, and an available bay/time slot into a ranked recovery proposal. It reads only trip, driver, and schedule data; it cannot change a trip.
 
-Gives every commuter a digital wallet they can top up and pay fares from, and tracks every transaction so admins can reconcile driver payouts.
+## D: Passengers and Fares
 
-### CRUD Operations
+Owns commuter bookings, seats, boarding passes, wallet/payment records, refunds, and passenger service updates.
 
-| Operation | Description                                                                               |
-| --------- | ----------------------------------------------------------------------------------------- |
-| Create    | Top up a wallet, create a transaction (fare, refund, or payout)                           |
-| Read      | View wallet balance, view transaction history, admin view of all transactions and payouts |
-| Update    | Update transaction status, process a refund                                               |
-| Delete    | No hard delete, financial records are never removed, only reversed with a new transaction |
+| Operation | Scope |
+| --- | --- |
+| Create | Booking, seat allocation, fare payment, wallet top-up, refund, or transfer proposal |
+| Read | Trip search, booking/QR pass, wallet balance, transaction history, and service updates |
+| Update | Confirm, cancel, or reschedule booking; apply an approved refund or transfer |
+| Delete | Soft-cancel a booking; reverse rather than delete financial records |
 
-**Also includes:** filter by transaction type and date range, paginated transaction history, and driver/operator payout reconciliation across completed trips.
+Includes fare estimation, seat maps, booking/payment history, pagination, and commuter incident reporting.
 
-### Agent Part: Booking & Dispatch Agent
+**Agent: Passenger and Fare Impact Agent.** Determines affected passengers, capacity/accessibility impact, notifications, and a transfer/refund/credit proposal. It cannot modify bookings or issue money.
 
-This is the only agent that actually performs real actions. It takes the route/vehicle decision from the previous agent and calls a fixed set of tools: a maps API to confirm distance and time, a fare calculator, a booking-creation tool that writes the booking into the database, and a notification tool that confirms the trip to the commuter.
+## Shared Foundation
 
-## Component D: Incident & Safety Reporting + Agent Oversight
+| Layer | Technology |
+| --- | --- |
+| Backend | ASP.NET Core Web API and C# |
+| Database | PostgreSQL through Entity Framework Core |
+| Authentication | ASP.NET Core Identity and JWT |
+| Admin application | React |
+| Mobile application | Flutter |
+| Agent workflow | Shared workflow state, validation, approval, and audit trail |
 
-Lets commuters and drivers report incidents like delays or safety issues, tracks how quickly they're resolved, and owns the shared system that ties all four AI agents' work together, including the point where a human has to approve anything unusual.
-
-### CRUD Operations
-
-| Operation | Description                                                                                             |
-| --------- | ------------------------------------------------------------------------------------------------------- |
-| Create    | Report an incident linked to a trip; create an approval request when the system flags something unusual |
-| Read      | List incidents, view incident detail, view AI workflow history for a booking, view pending approvals    |
-| Update    | Update incident status as it's resolved; approve, reject, or send back a flagged AI action              |
-| Delete    | No hard delete, incidents and approval records are kept as a permanent audit trail                      |
-
-**Also includes:** filter by incident type/status/trip, paginated incident list, and incident trend analytics (recurring issues by driver, vehicle, or route).
-
-### Agent Part: Compliance & Validation Agent
-
-This agent runs last. It checks the outcome of the booking against fixed rules, is the fare in a normal range, is the vehicle within capacity, and looks for anything unusual, like a sudden fare spike or a last-minute driver change. If everything checks out, the booking is finalized. If not, it pauses the workflow and sends it to an admin for approval before anything is confirmed.
-
-## Technology Stack by Component
-
-Each dot shows which application layer that component is built on.
-
-🔴 = Backend API (ASP.NET Core) &nbsp;&nbsp; 🔵 = React Web App &nbsp;&nbsp; 🟢 = Flutter Mobile App
-
-| Component                               | Backend (ASP.NET Core) | React Web |    Flutter Mobile     |
-| --------------------------------------- | :--------------------: | :-------: | :-------------------: |
-| A - Trip Booking & Ticketing            |           🔴           |    🔵     |          🟢           |
-| B - Fleet & Route Management            |           🔴           |    🔵     | 🟢 (driver view only) |
-| C - Wallet & Payment                    |           🔴           |    🔵     |          🟢           |
-| D - Incident & Safety + Agent Oversight |           🔴           |    🔵     |   🟢 (report only)    |
-
-**How the two frontends differ:**
-
-- **React (web)** is used only by Admins, managing fleet, routes, payments, incidents, and reviewing AI agent decisions.
-- **Flutter (mobile)** is used by Commuters (search, book, pay, track, report) and Drivers (view assigned trips, update status, report incidents). Drivers never see fleet/route management screens, they only see what's assigned to them.
-
-## Shared Foundation (used by all 4 components)
-
-| Layer               | Technology                                                                                     |
-| ------------------- | ---------------------------------------------------------------------------------------------- |
-| Backend Framework   | ASP.NET Core Web API (C#)                                                                      |
-| Database            | PostgreSQL, via Entity Framework Core                                                          |
-| Authentication      | ASP.NET Core Identity with JWT-based login, shared across React and Flutter                    |
-| Web Frontend        | React                                                                                          |
-| Mobile Frontend     | Flutter                                                                                        |
-| Agent Orchestration | Shared workflow state (AgentWorkflow, AgentStep, ApprovalRequest tables), owned by Component D |
-
-## Rough Idea: How to Implement the Agent Workflow / Orchestration
-
-This is just a simple starting idea, not a fixed design, refine it once you actually start building it.
-
-**Basic concept:** the 4 agents are not 4 separate always-on services. Think of them as 4 functions that run one after another, in order, every time a booking request comes in. One function's output becomes the next function's input.
-
-**Where it lives:** all 4 agent functions live inside the ASP.NET Core backend, as a single service, something like `AgentOrchestrationService`. No separate app or server needed for this. Keeps things simple for a student project, one codebase, one deployment.
-
-**How a run actually happens, step by step:**
-
-1. Commuter submits a booking request.
-2. Backend creates one row in `AgentWorkflow` (status = Running).
-3. Backend calls `Agent1_Plan()` → saves its output as a row in `AgentStep`.
-4. Backend calls `Agent2_Analyze()`, passing Agent 1's output → saves another `AgentStep` row.
-5. Backend calls `Agent3_BookAndDispatch()`, passing Agent 2's output → this one actually creates the real Booking record, calls the maps API, calls the fare calculator → saves its result as a `AgentStep` row.
-6. Backend calls `Agent4_Validate()` → checks fixed rules (fare range, capacity). If OK, mark `AgentWorkflow` as Completed. If something looks off, mark it as PausedForApproval and create an `ApprovalRequest` row.
-7. Admin sees pending approvals in React, approves or rejects, workflow updates to Completed or Failed.
-
-**Do the agents need to actually be "AI" (LLM calls)?**
-Not necessarily for all 4. A simple, honest way to think about it:
-
-- Agent 1 (Planning) and Agent 2 (Analysis) are good candidates for an actual LLM call (e.g. OpenAI/Claude API), since they involve reasoning over a flexible request.
-- Agent 3 (Booking/Dispatch) can be plain C# code that calls your existing APIs/tools in sequence, no LLM needed, it's just executing a plan.
-- Agent 4 (Validation) can also be plain C# rule-checking (if fare > X, if capacity exceeded), not necessarily an LLM either.
-
-Using an LLM only where real reasoning is needed, and plain code where it's just fixed rules or tool calls, is a completely valid and honestly a stronger design than forcing all 4 to be LLM calls.
-
-**Suggested simple tech pieces:**
-
-- One LLM API (OpenAI, Claude, or even a free-tier model) called from the backend for Agent 1 and Agent 2 only.
-- Plain C# service methods for Agent 3 and Agent 4.
-- `AgentWorkflow`, `AgentStep`, `ApprovalRequest` tables (already in the schema) to store everything, so React can display the full run afterwards.
-- No message queue, no separate microservice, no LangChain/LangGraph required for a project this size, a single service class calling 4 methods in order is enough to satisfy the assignment's requirements.
+React is for Super Admin and Centre Manager work. Flutter is for commuters and drivers. See [Agentic AI Service-Recovery Workflow](AGENTIC_AI_WORKFLOW.md) for the shared assessed workflow.

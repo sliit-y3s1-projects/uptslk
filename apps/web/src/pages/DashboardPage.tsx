@@ -1,9 +1,9 @@
-import { AppSidebar } from "@/components/app-sidebar";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { NetworkStatusPanel } from "@/components/dashboard/NetworkStatusPanel";
 import { PriorityAlertsPanel } from "@/components/dashboard/PriorityAlertsPanel";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { useOperationalScope } from "@/context/OperationalScopeContext";
+import { CentreConsolePage } from "@/features/centres/CentreConsolePage";
+import { centres } from "@/mock/centres";
 
 const metrics = [
   { label: "Active routes", value: "42" },
@@ -55,20 +55,13 @@ const priorityAlerts = [
 ];
 
 export function DashboardPage() {
+  const { district } = useOperationalScope();
+  const selectedCentre = centres.find((centre) => centre.district === district);
+
+  if (selectedCentre) return <CentreConsolePage centreId={selectedCentre.id} />;
+
   return (
-    <SidebarProvider
-      style={
-        {
-          "--sidebar-width": "14.5rem",
-        } as React.CSSProperties
-      }
-    >
-      <AppSidebar />
-
-      <SidebarInset>
-        <DashboardHeader />
-
-        <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
+    <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
           <div className="flex flex-col gap-1">
             <h1 className="text-xl font-semibold tracking-tight">
               Operations command
@@ -92,8 +85,6 @@ export function DashboardPage() {
             <NetworkStatusPanel items={networkStatus} />
             <PriorityAlertsPanel items={priorityAlerts} />
           </section>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    </main>
   );
 }

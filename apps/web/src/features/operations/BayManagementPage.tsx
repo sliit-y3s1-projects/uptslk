@@ -1,0 +1,25 @@
+import { useMemo, useState } from "react";
+import { Ban, BusFront, CheckCircle2, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { PageHeading } from "@/components/shared/PageHeading";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { BayOperationsGrid } from "@/features/operations/components/BayOperationsGrid";
+import { useAuth } from "@/hooks/useAuth";
+import { bayOperations, type BayOperation } from "@/mock/centre-operations";
+import { centres } from "@/mock/centres";
+
+export function BayManagementPage() {
+  const { user } = useAuth();
+  const centre = centres.find((item) => item.id === user?.centreId) ?? centres[0];
+  const initial = useMemo(() => Array.from({ length: centre.bays }, (_, index) => { const bay = `B${String(index + 1).padStart(2, "0")}`; return bayOperations[centre.id]?.find((item) => item.bay === bay) ?? { bay, state: "Available" as const }; }), [centre]);
+  const [bays, setBays] = useState(initial);
+  const [selected, setSelected] = useState<BayOperation>(initial.find((item) => item.state === "Boarding") ?? initial[0]);
+  const [showAssign, setShowAssign] = useState(false);
+  function setState(state: BayOperation["state"]) { const next: BayOperation = state === "Available" || state === "Closed" ? { bay: selected.bay, state } : { ...selected, state }; setBays((current) => current.map((item) => item.bay === selected.bay ? next : item)); setSelected(next); }
+  const active = bays.filter((bay) => bay.state === "Boarding" || bay.state === "Occupied").length;
+  return <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4"><PageHeading title="Bay management" description={`Control live platform usage and boarding at ${centre.name}.`} action={<Button onClick={() => setShowAssign((value) => !value)}><BusFront /> Assign bus</Button>} />{showAssign && <form className="rounded-lg border bg-card p-4" onSubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); const assigned: BayOperation = { bay: String(form.get("bay")), state: "Occupied", route: String(form.get("route")), destination: String(form.get("destination")), vehicle: String(form.get("vehicle")), departure: String(form.get("departure")), queue: 0 }; setBays((current) => current.map((item) => item.bay === assigned.bay ? assigned : item)); setSelected(assigned); setShowAssign(false); }}><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5"><Input name="bay" defaultValue={selected.bay} placeholder="Bay" required /><Input name="route" placeholder="Route" required /><Input name="destination" placeholder="Destination" required /><Input name="vehicle" placeholder="Vehicle" required /><Input name="departure" type="time" required /></div><div className="mt-3 flex justify-end gap-2"><Button type="button" variant="outline" onClick={() => setShowAssign(false)}>Cancel</Button><Button type="submit">Confirm assignment</Button></div></form>}<section className="grid gap-3 sm:grid-cols-3"><Metric label="Active bays" value={`${active}/${centre.bays}`} /><Metric label="Boarding" value={String(bays.filter((item) => item.state === "Boarding").length)} /><Metric label="Available" value={String(bays.filter((item) => item.state === "Available").length)} /></section><section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_330px]"><BayOperationsGrid bays={bays} selected={selected} onSelect={setSelected} /><aside className="rounded-lg border bg-card p-5"><div className="flex items-center justify-between"><div><p className="text-xs text-muted-foreground">Selected bay</p><h2 className="text-xl font-semibold">{selected.bay}</h2></div><StatusBadge label={selected.state} tone={selected.state === "Closed" ? "danger" : selected.state === "Boarding" ? "warning" : selected.state === "Available" ? "neutral" : "good"} /></div>{selected.vehicle ? <div className="mt-5 space-y-3 rounded-md bg-muted/50 p-4 text-sm"><Fact label="Vehicle" value={selected.vehicle} /><Fact label="Service" value={`Route ${selected.route} to ${selected.destination}`} /><Fact label="Departure" value={selected.departure ?? "—"} /><Fact label="Passenger queue" value={`${selected.queue ?? 0} waiting`} /></div> : <p className="mt-5 rounded-md border border-dashed p-4 text-sm text-muted-foreground">No vehicle is currently assigned to this bay.</p>}<div className="mt-5 grid gap-2"><Button onClick={() => setState("Boarding")}><CheckCircle2 /> Open boarding</Button><Button variant="outline" onClick={() => setState("Available")}><RotateCcw /> Release bay</Button><Button variant="outline" onClick={() => setState("Closed")}><Ban /> Close bay</Button></div></aside></section></main>;
+}
+
+function Metric({ label, value }: { label: string; value: string }) { return <article className="rounded-lg border bg-card p-4"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold">{value}</p></article>; }
+function Fact({ label, value }: { label: string; value: string }) { return <div><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 font-medium">{value}</p></div>; }

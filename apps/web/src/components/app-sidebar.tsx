@@ -1,11 +1,11 @@
 import * as React from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ChevronRight, LogOut } from "lucide-react";
+import { NavLink, useLocation } from "react-router";
 import {
   Analytics01Icon,
   BusFrontIcon,
   ClipboardListIcon,
-  DashboardSquare03Icon,
   Route01Icon,
   Settings01Icon,
   Ticket01Icon,
@@ -33,68 +33,74 @@ const data = {
   navMain: [
     {
       title: "Operations",
-      url: "#",
+      url: "/operations",
       icon: ClipboardListIcon,
       items: [
-        { title: "Overview", url: "#", isActive: true },
-        { title: "Dispatch", url: "#" },
-        { title: "Incidents", url: "#" },
+        { title: "Overview", url: "/operations", isActive: true },
+        { title: "Dispatch", url: "/operations/dispatch" },
+        { title: "Trip history", url: "/operations/history" },
+        { title: "Bay management", url: "/operations/bays" },
+        { title: "Incidents", url: "/operations/incidents" },
+        { title: "Approvals", url: "/operations/approvals" },
       ],
     },
     {
       title: "Network",
-      url: "#",
+      url: "/network/routes",
       icon: Route01Icon,
       items: [
-        { title: "Routes", url: "#" },
-        { title: "Stops", url: "#" },
-        { title: "Service Areas", url: "#" },
+        { title: "Routes", url: "/network/routes" },
+        { title: "Timetables", url: "/network/timetables" },
+        { title: "Stops", url: "/network/stops" },
       ],
     },
     {
       title: "Fleet",
-      url: "#",
+      url: "/fleet/vehicles",
       icon: BusFrontIcon,
       items: [
-        { title: "Vehicles", url: "#" },
-        { title: "Drivers", url: "#" },
-        { title: "Maintenance", url: "#" },
+        { title: "Vehicles", url: "/fleet/vehicles" },
+        { title: "Drivers", url: "/fleet/drivers" },
+        { title: "Maintenance", url: "/fleet/maintenance" },
       ],
     },
     {
-      title: "Riders",
-      url: "#",
+      title: "Passengers",
+      url: "/passengers/flow",
       icon: UserMultipleIcon,
       items: [
-        { title: "Accounts", url: "#" },
-        { title: "Support", url: "#" },
+        { title: "Passenger flow", url: "/passengers/flow" },
+        { title: "Assistance", url: "/passengers/assistance" },
+        { title: "Accounts", url: "/riders/accounts" },
+        { title: "Support", url: "/riders/support" },
       ],
     },
     {
-      title: "Fares",
-      url: "#",
+      title: "Fares & finance",
+      url: "/fares/tickets",
       icon: Ticket01Icon,
       items: [
-        { title: "Tickets", url: "#" },
-        { title: "Payments", url: "#" },
+        { title: "Tickets", url: "/fares/tickets" },
+        { title: "Payments", url: "/fares/payments" },
+        { title: "Reconciliation", url: "/fares/reconciliation" },
       ],
     },
     {
       title: "Reports",
-      url: "#",
+      url: "/reports/ridership",
       icon: Analytics01Icon,
       items: [
-        { title: "Ridership", url: "#" },
-        { title: "Revenue", url: "#" },
+        { title: "Ridership", url: "/reports/ridership" },
+        { title: "Revenue", url: "/reports/revenue" },
       ],
     },
     {
       title: "Settings",
-      url: "#",
+      url: "/settings/team",
       icon: Settings01Icon,
       items: [
-        { title: "Team", url: "#" },
-        { title: "Integrations", url: "#" },
+        { title: "Team", url: "/settings/team" },
+        { title: "Integrations", url: "/settings/integrations" },
       ],
     },
   ],
@@ -106,7 +112,9 @@ const defaultOpenItems = data.navMain
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { logout } = useAuth();
+  const { pathname } = useLocation();
   const [openItems, setOpenItems] = React.useState<string[]>(defaultOpenItems);
+  const matchesPath = (url: string) => url === "/operations" ? pathname === url : pathname.startsWith(url);
 
   function toggleItem(title: string) {
     setOpenItems((current) =>
@@ -123,23 +131,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              render={
-                <a href="#" aria-label="UPTS dashboard">
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                    <HugeiconsIcon
-                      icon={DashboardSquare03Icon}
-                      strokeWidth={2}
-                      className="size-4"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-medium">UPTS</span>
-                    <span className="text-xs text-sidebar-foreground/70">
-                      Transport Operations
-                    </span>
-                  </div>
-                </a>
-              }
+              render={<a href="/operations" aria-label="UPTSLK Console"><span className="text-2xl font-bold tracking-tight">UPTSLK Console</span></a>}
             />
           </SidebarMenuItem>
         </SidebarMenu>
@@ -149,7 +141,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenu>
             {data.navMain.map((item) => {
               const isOpen = openItems.includes(item.title);
-              const isActive = item.items.some((subItem) => subItem.isActive);
+              const isActive = item.items.some((subItem) => matchesPath(subItem.url));
 
               return (
                 <SidebarMenuItem key={item.title}>
@@ -186,12 +178,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         {item.items.map((subItem) => (
                           <SidebarMenuSubItem key={subItem.title}>
                             <SidebarMenuSubButton
-                              isActive={subItem.isActive}
+                              isActive={matchesPath(subItem.url)}
                               className="data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground data-active:font-medium"
                               render={
-                                <a href={subItem.url}>
+                                <NavLink to={subItem.url}>
                                   <span>{subItem.title}</span>
-                                </a>
+                                </NavLink>
                               }
                             />
                           </SidebarMenuSubItem>

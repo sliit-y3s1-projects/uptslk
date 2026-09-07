@@ -1,5 +1,6 @@
 using System.Text;
 using api.Data;
+using api.Enums;
 using api.Models;
 using api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -23,6 +24,7 @@ builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
     {
         options.Password.RequiredLength = 8;
         options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequireUppercase = false;
         options.User.RequireUniqueEmail = true;
     })
     .AddEntityFrameworkStores<AppDbContext>()
@@ -68,6 +70,30 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
+
+    if (app.Environment.IsDevelopment())
+    {
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        const string adminEmail = "admin@upts.lk";
+
+        if (await userManager.FindByEmailAsync(adminEmail) is null)
+        {
+            var admin = new User
+            {
+                UserName = adminEmail,
+                Email = adminEmail,
+                Name = "UPTS Administrator",
+                Role = UserRole.Admin
+            };
+
+            var result = await userManager.CreateAsync(admin, "admin123");
+            if (!result.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    $"Could not create the development admin: {string.Join(", ", result.Errors.Select(error => error.Description))}");
+            }
+        }
+    }
 }
 
 if (app.Environment.IsDevelopment())
