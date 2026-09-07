@@ -13,8 +13,6 @@ public class User : IdentityUser<Guid>
 
     // Navigation
     public Driver? Driver { get; set; }
-    public Wallet? Wallet { get; set; }
-    public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
     public ICollection<Incident> ReportedIncidents { get; set; } = new List<Incident>();
     public ICollection<ApprovalRequest> ReviewedApprovals { get; set; } = new List<ApprovalRequest>();
 }

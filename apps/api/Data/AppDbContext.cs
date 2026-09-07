@@ -19,6 +19,8 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<RouteSchedule> RouteSchedules => Set<RouteSchedule>();
     public DbSet<MaintenanceRecord> MaintenanceRecords => Set<MaintenanceRecord>();
     public DbSet<Trip> Trips => Set<Trip>();
+    public DbSet<Passenger> Passengers => Set<Passenger>();
+    public DbSet<FareRule> FareRules => Set<FareRule>();
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
@@ -38,6 +40,11 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<Bay>().HasIndex(b => new { b.CentreId, b.Code }).IsUnique();
         modelBuilder.Entity<RouteModel>().HasIndex(r => new { r.CentreId, r.RouteNumber }).IsUnique();
         modelBuilder.Entity<RouteStop>().HasIndex(rs => new { rs.RouteId, rs.SequenceOrder }).IsUnique();
+        modelBuilder.Entity<Passenger>().HasIndex(p => p.PhoneNumber).IsUnique();
+        modelBuilder.Entity<FareRule>().HasIndex(rule => new { rule.RouteId, rule.PassengerCategory }).IsUnique();
+        modelBuilder.Entity<Booking>().HasIndex(booking => new { booking.TripId, booking.SeatNumber })
+            .IsUnique()
+            .HasFilter("\"Status\" IN (0, 1)");
 
         modelBuilder.Entity<Centre>().Property(c => c.Code).HasMaxLength(32);
         modelBuilder.Entity<Centre>().Property(c => c.Name).HasMaxLength(160);
@@ -46,6 +53,13 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<Vehicle>().Property(v => v.Model).HasMaxLength(120);
         modelBuilder.Entity<Driver>().Property(d => d.FullName).HasMaxLength(160);
         modelBuilder.Entity<MaintenanceRecord>().Property(m => m.Type).HasMaxLength(80);
+        modelBuilder.Entity<Passenger>().Property(p => p.FullName).HasMaxLength(160);
+        modelBuilder.Entity<Passenger>().Property(p => p.PhoneNumber).HasMaxLength(32);
+        modelBuilder.Entity<FareRule>().Property(rule => rule.Amount).HasPrecision(12, 2);
+        modelBuilder.Entity<Booking>().Property(booking => booking.Fare).HasPrecision(12, 2);
+        modelBuilder.Entity<Booking>().Property(booking => booking.RefundAmount).HasPrecision(12, 2);
+        modelBuilder.Entity<Wallet>().Property(wallet => wallet.Balance).HasPrecision(12, 2);
+        modelBuilder.Entity<Transaction>().Property(transaction => transaction.Amount).HasPrecision(12, 2);
 
         modelBuilder.Entity<Bay>()
             .HasOne(b => b.Centre)
@@ -102,11 +116,10 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .HasForeignKey(record => record.VehicleId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // User <-> Wallet (1:1)
         modelBuilder.Entity<Wallet>()
-            .HasOne(w => w.Commuter)
-            .WithOne(u => u.Wallet)
-            .HasForeignKey<Wallet>(w => w.CommuterId)
+            .HasOne(w => w.Passenger)
+            .WithOne(p => p.Wallet)
+            .HasForeignKey<Wallet>(w => w.PassengerId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Route <-> RouteStop (1:N)
@@ -156,11 +169,16 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .HasForeignKey(b => b.TripId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // User <-> Booking (1:N, as commuter)
         modelBuilder.Entity<Booking>()
-            .HasOne(b => b.Commuter)
-            .WithMany(u => u.Bookings)
-            .HasForeignKey(b => b.CommuterId)
+            .HasOne(b => b.Passenger)
+            .WithMany(p => p.Bookings)
+            .HasForeignKey(b => b.PassengerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<FareRule>()
+            .HasOne(rule => rule.Route)
+            .WithMany(route => route.FareRules)
+            .HasForeignKey(rule => rule.RouteId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // Trip <-> Incident (1:N, nullable)

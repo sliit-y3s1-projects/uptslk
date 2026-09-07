@@ -4,8 +4,8 @@ public class Wallet
 {
     public Guid Id { get; set; } = Guid.NewGuid();
 
-    public Guid CommuterId { get; set; }
-    public User Commuter { get; set; } = default!;
+    public Guid PassengerId { get; set; }
+    public Passenger Passenger { get; set; } = default!;
 
     public decimal Balance { get; set; } = 0;
 

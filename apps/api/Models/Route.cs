@@ -25,4 +25,5 @@ public class Route
     public ICollection<RouteStop> Stops { get; set; } = new List<RouteStop>();
     public ICollection<RouteSchedule> Schedules { get; set; } = new List<RouteSchedule>();
     public ICollection<Trip> Trips { get; set; } = new List<Trip>();
+    public ICollection<FareRule> FareRules { get; set; } = new List<FareRule>();
 }
