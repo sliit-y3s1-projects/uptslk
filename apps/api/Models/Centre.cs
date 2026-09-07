@@ -17,4 +17,6 @@ public class Centre
     public ICollection<Route> Routes { get; set; } = new List<Route>();
     public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
     public ICollection<Driver> Drivers { get; set; } = new List<Driver>();
+    public ICollection<Trip> Trips { get; set; } = new List<Trip>();
+    public ICollection<Incident> Incidents { get; set; } = new List<Incident>();
 }

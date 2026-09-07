@@ -71,6 +71,24 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .HasForeignKey(d => d.CentreId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<Trip>()
+            .HasOne(t => t.Centre)
+            .WithMany(c => c.Trips)
+            .HasForeignKey(t => t.CentreId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Incident>()
+            .HasOne(i => i.Centre)
+            .WithMany(c => c.Incidents)
+            .HasForeignKey(i => i.CentreId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Trip>()
+            .HasOne(t => t.Bay)
+            .WithMany(b => b.Trips)
+            .HasForeignKey(t => t.BayId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // User <-> Driver (1:1)
         modelBuilder.Entity<Driver>()
             .HasOne(d => d.User)
@@ -157,7 +175,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .HasOne(i => i.ReportedBy)
             .WithMany(u => u.ReportedIncidents)
             .HasForeignKey(i => i.ReportedById)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Wallet <-> Transaction (1:N)
         modelBuilder.Entity<Transaction>()

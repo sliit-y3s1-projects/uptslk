@@ -3,7 +3,10 @@ namespace api.Enums;
 public enum TripStatus
 {
     Scheduled,
-    InTransit,
+    Dispatched,
     Completed,
-    Cancelled
+    Cancelled,
+    Ready,
+    Boarding,
+    Delayed
 }

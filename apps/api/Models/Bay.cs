@@ -13,4 +13,5 @@ public class Bay
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<RouteSchedule> RouteSchedules { get; set; } = new List<RouteSchedule>();
+    public ICollection<Trip> Trips { get; set; } = new List<Trip>();
 }

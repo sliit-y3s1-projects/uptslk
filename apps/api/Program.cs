@@ -33,6 +33,7 @@ builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
     .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<JwtTokenService>();
+builder.Services.AddScoped<TripConflictService>();
 
 builder.Services.AddAuthentication(options =>
     {
