@@ -10,9 +10,4 @@ public class User : IdentityUser<Guid>
     public UserRole Role { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
-    // Navigation
-    public Driver? Driver { get; set; }
-    public ICollection<Incident> ReportedIncidents { get; set; } = new List<Incident>();
-    public ICollection<ApprovalRequest> ReviewedApprovals { get; set; } = new List<ApprovalRequest>();
 }

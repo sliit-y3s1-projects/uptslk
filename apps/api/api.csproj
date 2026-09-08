@@ -18,4 +18,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="_archive_other_components\**" />
+    <EmbeddedResource Remove="_archive_other_components\**" />
+    <None Remove="_archive_other_components\**" />
+  </ItemGroup>
+
 </Project>

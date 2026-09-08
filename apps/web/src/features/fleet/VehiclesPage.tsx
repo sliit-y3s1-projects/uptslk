@@ -1,51 +1,509 @@
-import { useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import { Plus, RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeading } from "@/components/shared/PageHeading";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { collections } from "@/mock/mock-data";
-import { useMockData } from "@/context/MockDataContext";
-import { useAuth } from "@/hooks/useAuth";
-import { mockRowCentreId } from "@/mock/centre-scope";
-import { centres, departuresByCentre } from "@/mock/centres";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
+import type { StatusTone } from "@/mock/mock-data";
 
-export function VehiclesPage({ centreId, basePath = "/fleet/vehicles", readOnly = false }: { centreId?: string; basePath?: string; readOnly?: boolean } = {}) {
-  const { data } = useMockData();
-  const { user } = useAuth();
-  const [query, setQuery] = useState("");
-  const effectiveCentreId = centreId ?? user?.centreId;
-  const centre = centres.find((item) => item.id === effectiveCentreId);
-  const vehicles = data.vehicles ?? collections.vehicles;
-  const visibleVehicles = vehicles.filter((vehicle, index) => !effectiveCentreId || mockRowCentreId(vehicle, index) === effectiveCentreId);
-  const matchingVehicles = visibleVehicles.filter((vehicle) => `${vehicle.id} ${vehicle.title} ${vehicle.subtitle} ${vehicle.status}`.toLowerCase().includes(query.trim().toLowerCase()));
-  return <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4"><PageHeading title="Vehicles" description={`${readOnly ? "Read-only fleet assignments, compliance, and service history" : "A fleet workspace for availability, assignments, compliance, and service history"}.`} action={readOnly ? <Button variant="outline" render={<Link to={`/admin/centres/${effectiveCentreId}`} />}>Back to centre</Button> : <Button render={<Link to="/fleet/vehicles/new" />}><Plus /> Register vehicle</Button>} /><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm text-muted-foreground">{matchingVehicles.length} vehicles assigned to {centre?.name ?? "this centre"}</p><div className="relative w-full sm:max-w-xs"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(event) => setQuery(event.target.value)} className="h-9 bg-card pl-9" placeholder="Search registration or model" /></div></div><section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{matchingVehicles.map((vehicle) => <Link key={vehicle.id} to={`${basePath}/${vehicle.id}`} className="group flex rounded-lg border bg-card"><div className="flex w-24 shrink-0 items-center justify-center p-2"><img src="/vehicle-placeholder.svg" alt="UPTS bus placeholder" className="size-20 rounded-md bg-muted object-contain" /></div><div className="flex min-w-0 flex-1 flex-col py-2 pr-3"><div className="flex items-start justify-between gap-2"><p className="font-semibold">{vehicle.id}</p><StatusBadge label={vehicle.status} tone={vehicle.tone} /></div><h2 className="mt-1 text-sm font-medium">{vehicle.title}</h2><p className="mt-2 border-t pt-2 text-xs text-muted-foreground">{vehicle.updated}</p></div></Link>)}{matchingVehicles.length === 0 && <div className="col-span-full rounded-lg border border-dashed bg-card p-8 text-center text-sm text-muted-foreground">No vehicles match this search.</div>}</section></main>;
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5250";
+
+export interface VehicleItem {
+  vehicleId: string;
+  registrationNumber: string;
+  vehicleType: "Normal" | "SemiLuxury" | "AcExpress" | string;
+  capacity: number;
+  status:
+    | "Available"
+    | "Assigned"
+    | "InTrip"
+    | "Maintenance"
+    | "OutOfService"
+    | "Inactive"
+    | string;
+  centreId: string;
+  centreName?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export function VehicleProfilePage({ centreId, basePath = "/fleet/vehicles", readOnly = false }: { centreId?: string; basePath?: string; readOnly?: boolean } = {}) {
-  const { data, deactivateRecord } = useMockData();
-  const { user } = useAuth();
-  const { vehicleId } = useParams();
-  const vehicles = data.vehicles ?? collections.vehicles;
-  const effectiveCentreId = centreId ?? user?.centreId;
-  const scopedVehicles = vehicles.filter((item, index) => !effectiveCentreId || mockRowCentreId(item, index) === effectiveCentreId);
-  const vehicle = scopedVehicles.find((item) => item.id === vehicleId) ?? scopedVehicles[0];
-  if (!vehicle) return <main className="p-5">Vehicle not found for this centre.</main>;
-  const assignment = effectiveCentreId ? departuresByCentre[effectiveCentreId]?.find((item) => item.vehicle === vehicle.id) : undefined;
-  return <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4"><PageHeading title={vehicle.id} description="Vehicle profile, current operating state, and maintenance readiness." action={readOnly ? <Button variant="outline" render={<Link to={basePath} />}>Back to vehicles</Button> : <div className="flex gap-2"><Button variant="outline" render={<Link to={`/fleet/vehicles/${vehicle.id}/edit`} />}>Edit vehicle</Button><Button variant="destructive" onClick={() => deactivateRecord("vehicles", vehicle.id)}>Deactivate</Button></div>} /><section className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(330px,0.9fr)]"><article className="overflow-hidden rounded-lg border bg-card"><img src="/vehicle-placeholder.svg" alt={`Placeholder for ${vehicle.id}`} className="h-64 w-full object-cover" /><div className="grid gap-4 p-5 sm:grid-cols-3"><Info label="Registration" value={vehicle.id} /><Info label="Vehicle type" value={vehicle.title} /><Info label="Operating status" value={vehicle.status} /></div></article><article className="rounded-lg border bg-card p-5"><h2 className="font-semibold">Current assignment</h2><div className="mt-4 rounded-md bg-muted/60 p-4"><p className="text-sm font-medium">{vehicle.updated}</p><p className="mt-1 text-sm text-muted-foreground">{assignment ? `Route ${assignment.route} · ${assignment.destination}` : "No active departure assigned"}</p><p className="mt-3 text-xs text-muted-foreground">{assignment ? `Bay ${assignment.bay} · Departure ${assignment.time} · ${assignment.occupancy}% occupied` : "Vehicle remains available for centre dispatch"}</p></div><h2 className="mt-6 font-semibold">Operational readiness</h2><div className="mt-3 space-y-3"><Meter label="Fuel / charge" value="78%" width="78%" /><Meter label="Inspection compliance" value="Valid" width="100%" /><Meter label="Seat availability" value="9 seats" width="18%" /></div></article></section><section className="grid gap-4 lg:grid-cols-2"><article className="rounded-lg border bg-card p-5"><h2 className="font-semibold">Maintenance timeline</h2><div className="mt-4 space-y-4 border-l pl-4 text-sm"><p><b>Sep 21</b> · Next oil service scheduled</p><p><b>Aug 19</b> · Routine inspection passed</p><p><b>Jul 04</b> · Brake service completed</p></div></article><article className="rounded-lg border bg-card p-5"><h2 className="font-semibold">Service performance</h2><div className="mt-4 grid grid-cols-3 gap-3"><Info label="Trips / 30d" value="184" /><Info label="On-time" value="91.8%" /><Info label="Incidents" value="2" /></div></article></section></main>;
+export interface CentreItem {
+  id: string;
+  name: string;
+  code?: string;
+  city?: string;
 }
+
+function getStatusTone(status: string): StatusTone {
+  switch (status) {
+    case "Available":
+    case "Active":
+      return "good";
+    case "Assigned":
+    case "InTrip":
+      return "neutral";
+    case "Maintenance":
+      return "warning";
+    case "OutOfService":
+    case "Inactive":
+      return "danger";
+    default:
+      return "neutral";
+  }
+}
+
+export function VehiclesPage({
+  centreId,
+  basePath = "/fleet/vehicles",
+  readOnly = false,
+}: {
+  centreId?: string;
+  basePath?: string;
+  readOnly?: boolean;
+} = {}) {
+  const [vehicles, setVehicles] = useState<VehicleItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  useEffect(() => {
+    let ignore = false;
+    async function fetchVehicles() {
+      try {
+        const url = centreId
+          ? `${API_BASE}/api/vehicles?centreId=${encodeURIComponent(centreId)}`
+          : `${API_BASE}/api/vehicles`;
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(`Failed to load vehicles (HTTP ${res.status})`);
+        }
+        const data = await res.json();
+        if (!ignore) {
+          setVehicles(data);
+          setError(null);
+        }
+      } catch (err: unknown) {
+        if (!ignore) {
+          const message = err instanceof Error ? err.message : "Error connecting to backend API";
+          setError(message);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void fetchVehicles();
+
+    return () => {
+      ignore = true;
+    };
+  }, [centreId]);
+
+  async function handleRefresh() {
+    setLoading(true);
+    setError(null);
+    try {
+      const url = centreId
+        ? `${API_BASE}/api/vehicles?centreId=${encodeURIComponent(centreId)}`
+        : `${API_BASE}/api/vehicles`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`Failed to load vehicles (HTTP ${res.status})`);
+      }
+      const data = await res.json();
+      setVehicles(data);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error connecting to backend API";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSoftDelete(vehicleId: string) {
+    if (!confirm("Are you sure you want to deactivate this vehicle?")) return;
+    setActionLoadingId(vehicleId);
+    try {
+      const res = await fetch(`${API_BASE}/api/vehicles/${vehicleId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? `Delete failed (HTTP ${res.status})`);
+      }
+      // Refresh vehicles after deactivation
+      await handleRefresh();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to deactivate vehicle");
+    } finally {
+      setActionLoadingId(null);
+    }
+  }
+
+  return (
+    <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-6">
+      <PageHeading
+        title="Vehicles"
+        description="Fleet management: vehicle registration, type, capacity, and operational status."
+        action={
+          readOnly ? (
+            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading}>
+              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} /> Refresh
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading}>
+                <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} /> Refresh
+              </Button>
+              <Button size="sm" render={<Link to={`${basePath}/new`} />}>
+                <Plus className="size-4" /> Add Vehicle
+              </Button>
+            </div>
+          )
+        }
+      />
+
+      {error && (
+        <div className="flex items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+          <AlertCircle className="size-4 shrink-0" />
+          <span>{error}</span>
+          <Button variant="outline" size="sm" className="ml-auto" onClick={handleRefresh}>
+            Retry
+          </Button>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="rounded-lg border bg-card p-12 text-center text-sm text-muted-foreground">
+          Loading vehicles from API...
+        </div>
+      ) : vehicles.length === 0 ? (
+        <div className="rounded-lg border border-dashed bg-card p-12 text-center">
+          <p className="text-sm font-medium text-foreground">No vehicles registered yet.</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Click "Add Vehicle" to register the first vehicle into the fleet.
+          </p>
+          <div className="mt-4">
+            <Button size="sm" render={<Link to={`${basePath}/new`} />}>
+              <Plus className="size-4" /> Add Vehicle
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-lg border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-semibold">Registration Number</TableHead>
+                <TableHead className="font-semibold">Type</TableHead>
+                <TableHead className="font-semibold">Capacity</TableHead>
+                <TableHead className="font-semibold">Status</TableHead>
+                <TableHead className="font-semibold">Centre</TableHead>
+                <TableHead className="font-semibold">Active</TableHead>
+                <TableHead className="text-right font-semibold">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {vehicles.map((v) => (
+                <TableRow key={v.vehicleId}>
+                  <TableCell className="font-semibold">{v.registrationNumber}</TableCell>
+                  <TableCell>{v.vehicleType}</TableCell>
+                  <TableCell>{v.capacity} seats</TableCell>
+                  <TableCell>
+                    <StatusBadge label={v.status} tone={getStatusTone(v.status)} />
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {v.centreName ?? v.centreId}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                        v.isActive
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                          : "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400"
+                      }`}
+                    >
+                      {v.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {v.isActive ? (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={actionLoadingId === v.vehicleId}
+                        onClick={() => handleSoftDelete(v.vehicleId)}
+                      >
+                        {actionLoadingId === v.vehicleId ? "Deactivating..." : "Deactivate"}
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Deactivated</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </main>
+  );
+}
+
+const DEFAULT_CENTRES: CentreItem[] = [
+  { id: "11111111-1111-1111-1111-111111111111", name: "Makumbura Multimodal Centre (MMC)" },
+  { id: "22222222-2222-2222-2222-222222222222", name: "Kadawatha Multimodal Centre (KMC)" },
+  { id: "33333333-3333-3333-3333-333333333333", name: "Kandy Central Transit Hub" },
+  { id: "44444444-4444-4444-4444-444444444444", name: "Bastian Mawatha Transit Centre" },
+];
 
 export function VehicleFormPage() {
-  const { vehicleId } = useParams();
   const navigate = useNavigate();
-  const { data, saveRecord } = useMockData();
-  const { user } = useAuth();
-  const editing = Boolean(vehicleId);
-  const existing = data.vehicles?.find((item) => item.id === vehicleId);
-  return <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4"><PageHeading title={editing ? `Edit ${vehicleId}` : "Register vehicle"} description="Capture the operational details required before a vehicle can be dispatched." /><form className="max-w-3xl rounded-lg border bg-card p-5" onSubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); const id = String(form.get("registration") || vehicleId || "WP-NEW-0001").toUpperCase(); saveRecord("vehicles", { id, title: String(form.get("model") || "New vehicle"), subtitle: `${String(form.get("type") || "Standard bus")} · ${String(form.get("capacity") || "0")} seats · ${String(form.get("depot") || "Unassigned depot")}`, status: existing?.status ?? "Available", tone: existing?.tone ?? "neutral", updated: "Updated just now", meta: "Inspection pending", district: String(form.get("district") || "Colombo"), centreId: user?.centreId }); navigate(`/fleet/vehicles/${id}`); }}><div className="grid gap-4 sm:grid-cols-2"><Field name="registration" label="Registration number" value={vehicleId ?? ""} placeholder="WP CAB-4821" /><Field name="model" label="Vehicle model" value={existing?.title} placeholder="Ashok Leyland Viking" /><Field name="type" label="Vehicle type" placeholder="Standard bus" /><Field name="capacity" label="Seat capacity" placeholder="52" type="number" /><Field name="depot" label="Depot" placeholder="Colombo depot" /><Field name="district" label="District" value={existing?.district} placeholder="Colombo" /></div><div className="mt-5 flex justify-end gap-2"><Button type="button" variant="outline" onClick={() => navigate(-1)}>Cancel</Button><Button type="submit">{editing ? "Save changes" : "Register vehicle"}</Button></div></form></main>;
+
+  const [registrationNumber, setRegistrationNumber] = useState("");
+  const [vehicleType, setVehicleType] = useState<string>("Normal");
+  const [capacity, setCapacity] = useState<number | string>(52);
+  const [centreId, setCentreId] = useState<string>(DEFAULT_CENTRES[0].id);
+  const [status, setStatus] = useState<string>("Available");
+
+  const [centres] = useState<CentreItem[]>(DEFAULT_CENTRES);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    const trimmedReg = registrationNumber.trim().toUpperCase();
+    if (!trimmedReg) {
+      setError("Registration number is required.");
+      return;
+    }
+
+    const numCapacity = Number(capacity);
+    if (!numCapacity || numCapacity <= 0) {
+      setError("Capacity must be greater than 0.");
+      return;
+    }
+
+    if (!centreId) {
+      setError("Please select a centre.");
+      return;
+    }
+
+    const selectedCentre = centres.find((c) => c.id === centreId);
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/vehicles`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          registrationNumber: trimmedReg,
+          vehicleType,
+          capacity: numCapacity,
+          centreId,
+          centreName: selectedCentre?.name ?? "Makumbura Multimodal Centre (MMC)",
+          status,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? `Failed to register vehicle (HTTP ${res.status})`);
+      }
+
+      // Success -> navigate to vehicles list
+      navigate("/fleet/vehicles");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred while creating vehicle");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-6">
+      <PageHeading
+        title="Add Vehicle"
+        description="Register a new vehicle into the transport fleet."
+      />
+
+      {error && (
+        <div className="flex max-w-2xl items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+          <AlertCircle className="size-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-2xl space-y-5 rounded-lg border bg-card p-6 shadow-xs"
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-1.5 text-sm font-medium">
+            <label htmlFor="registrationNumber">Registration Number *</label>
+            <Input
+              id="registrationNumber"
+              value={registrationNumber}
+              onChange={(e) => setRegistrationNumber(e.target.value)}
+              placeholder="WP CAB-4821"
+              required
+            />
+          </div>
+
+          <div className="grid gap-1.5 text-sm font-medium">
+            <label htmlFor="vehicleType">Vehicle Type *</label>
+            <select
+              id="vehicleType"
+              value={vehicleType}
+              onChange={(e) => setVehicleType(e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="Normal">Normal</option>
+              <option value="SemiLuxury">SemiLuxury</option>
+              <option value="AcExpress">AcExpress</option>
+            </select>
+          </div>
+
+          <div className="grid gap-1.5 text-sm font-medium">
+            <label htmlFor="capacity">Capacity (Seats) *</label>
+            <Input
+              id="capacity"
+              type="number"
+              min="1"
+              value={capacity}
+              onChange={(e) => setCapacity(e.target.value)}
+              placeholder="52"
+              required
+            />
+          </div>
+
+          <div className="grid gap-1.5 text-sm font-medium">
+            <label htmlFor="status">Status *</label>
+            <select
+              id="status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="Available">Available</option>
+              <option value="Assigned">Assigned</option>
+              <option value="InTrip">InTrip</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="OutOfService">OutOfService</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+
+          <div className="grid gap-1.5 text-sm font-medium sm:col-span-2">
+            <label htmlFor="centreId">Operating Centre *</label>
+            <select
+              id="centreId"
+              value={centreId}
+              onChange={(e) => setCentreId(e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              required
+            >
+              {centres.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 border-t pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate("/fleet/vehicles")}
+            disabled={submitting}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={submitting}>
+            {submitting ? "Saving..." : "Add Vehicle"}
+          </Button>
+        </div>
+      </form>
+    </main>
+  );
 }
 
-function Field({ label, value, ...props }: { label: string; name: string; value?: string; placeholder?: string; type?: string }) { return <label className="grid gap-1.5 text-sm font-medium">{label}<Input defaultValue={value} {...props} /></label>; }
-function Info({ label, value }: { label: string; value: string }) { return <div><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-sm font-medium">{value}</p></div>; }
-function Meter({ label, value, width }: { label: string; value: string; width: string }) { return <div><div className="flex justify-between text-sm"><span>{label}</span><span className="font-medium">{value}</span></div><div className="mt-2 h-1.5 rounded bg-muted"><div className="h-full rounded bg-primary" style={{ width }} /></div></div>; }
+export function VehicleProfilePage(props: {
+  centreId?: string;
+  basePath?: string;
+  readOnly?: boolean;
+} = {}) {
+  const { vehicleId } = useParams();
+  const navigate = useNavigate();
+  const basePath = props.basePath ?? "/fleet/vehicles";
+  const [vehicle, setVehicle] = useState<VehicleItem | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      if (!vehicleId) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/vehicles/${vehicleId}`);
+        if (res.ok) {
+          setVehicle(await res.json());
+        }
+      } catch {
+        // ignore
+      } finally {
+        setLoading(false);
+      }
+    }
+    void load();
+  }, [vehicleId]);
+
+  if (loading) return <main className="p-6">Loading vehicle details...</main>;
+  if (!vehicle) {
+    return (
+      <main className="p-6">
+        <p>Vehicle not found.</p>
+        <Button variant="outline" className="mt-4" onClick={() => navigate(basePath)}>
+          Back to vehicles
+        </Button>
+      </main>
+    );
+  }
+
+  return (
+    <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-6">
+      <PageHeading
+        title={vehicle.registrationNumber}
+        description="Vehicle details and operating state"
+        action={
+          <Button variant="outline" onClick={() => navigate(basePath)}>
+            Back to vehicles
+          </Button>
+        }
+      />
+      <div className="max-w-xl rounded-lg border bg-card p-6 space-y-3">
+        <p><b>Registration:</b> {vehicle.registrationNumber}</p>
+        <p><b>Type:</b> {vehicle.vehicleType}</p>
+        <p><b>Capacity:</b> {vehicle.capacity} seats</p>
+        <p><b>Status:</b> {vehicle.status}</p>
+        <p><b>Centre:</b> {vehicle.centreName ?? vehicle.centreId}</p>
+        <p><b>Active:</b> {vehicle.isActive ? "Yes" : "No"}</p>
+      </div>
+    </main>
+  );
+}

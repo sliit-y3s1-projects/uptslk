@@ -2,15 +2,7 @@ import * as React from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ChevronRight, LogOut } from "lucide-react";
 import { NavLink, useLocation } from "react-router";
-import {
-  Analytics01Icon,
-  BusFrontIcon,
-  ClipboardListIcon,
-  Route01Icon,
-  Settings01Icon,
-  Ticket01Icon,
-  UserMultipleIcon,
-} from "@hugeicons/core-free-icons";
+import { BusFrontIcon } from "@hugeicons/core-free-icons";
 
 import {
   Sidebar,
@@ -32,75 +24,12 @@ import { useAuth } from "@/hooks/useAuth";
 const data = {
   navMain: [
     {
-      title: "Operations",
-      url: "/operations",
-      icon: ClipboardListIcon,
-      items: [
-        { title: "Overview", url: "/operations", isActive: true },
-        { title: "Dispatch", url: "/operations/dispatch" },
-        { title: "Trip history", url: "/operations/history" },
-        { title: "Bay management", url: "/operations/bays" },
-        { title: "Incidents", url: "/operations/incidents" },
-        { title: "Approvals", url: "/operations/approvals" },
-      ],
-    },
-    {
-      title: "Network",
-      url: "/network/routes",
-      icon: Route01Icon,
-      items: [
-        { title: "Routes", url: "/network/routes" },
-        { title: "Timetables", url: "/network/timetables" },
-        { title: "Stops", url: "/network/stops" },
-      ],
-    },
-    {
-      title: "Fleet",
+      title: "Fleet & Maintenance",
       url: "/fleet/vehicles",
       icon: BusFrontIcon,
       items: [
-        { title: "Vehicles", url: "/fleet/vehicles" },
-        { title: "Drivers", url: "/fleet/drivers" },
+        { title: "Vehicles", url: "/fleet/vehicles", isActive: true },
         { title: "Maintenance", url: "/fleet/maintenance" },
-      ],
-    },
-    {
-      title: "Passengers",
-      url: "/passengers/flow",
-      icon: UserMultipleIcon,
-      items: [
-        { title: "Passenger flow", url: "/passengers/flow" },
-        { title: "Assistance", url: "/passengers/assistance" },
-        { title: "Accounts", url: "/riders/accounts" },
-        { title: "Support", url: "/riders/support" },
-      ],
-    },
-    {
-      title: "Fares & finance",
-      url: "/fares/tickets",
-      icon: Ticket01Icon,
-      items: [
-        { title: "Tickets", url: "/fares/tickets" },
-        { title: "Payments", url: "/fares/payments" },
-        { title: "Reconciliation", url: "/fares/reconciliation" },
-      ],
-    },
-    {
-      title: "Reports",
-      url: "/reports/ridership",
-      icon: Analytics01Icon,
-      items: [
-        { title: "Ridership", url: "/reports/ridership" },
-        { title: "Revenue", url: "/reports/revenue" },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "/settings/team",
-      icon: Settings01Icon,
-      items: [
-        { title: "Team", url: "/settings/team" },
-        { title: "Integrations", url: "/settings/integrations" },
       ],
     },
   ],

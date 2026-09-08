@@ -8,120 +8,184 @@ using Microsoft.EntityFrameworkCore;
 namespace api.Controllers;
 
 [ApiController]
-[Route("api/v1/vehicles")]
+[Route("api/vehicles")]
 public class VehiclesController(AppDbContext db) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] Guid? centreId, [FromQuery] VehicleStatus? status, [FromQuery] string? search)
+    public async Task<ActionResult<IEnumerable<VehicleResponseDto>>> List(
+        [FromQuery] Guid? centreId,
+        [FromQuery] VehicleStatus? status,
+        [FromQuery] bool? isActive)
     {
-        var query = db.Vehicles.AsNoTracking().Include(vehicle => vehicle.Centre).AsQueryable();
-        if (centreId.HasValue) query = query.Where(vehicle => vehicle.CentreId == centreId.Value);
-        if (status.HasValue) query = query.Where(vehicle => vehicle.Status == status.Value);
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var term = search.Trim().ToLower();
-            query = query.Where(vehicle => vehicle.PlateNumber.ToLower().Contains(term) || vehicle.Model.ToLower().Contains(term));
-        }
+        var query = db.Vehicles.AsNoTracking().AsQueryable();
 
-        var vehicles = await query.OrderBy(vehicle => vehicle.PlateNumber).Select(vehicle => new
-        {
-            vehicle.Id,
-            vehicle.CentreId,
-            Centre = vehicle.Centre.Name,
-            vehicle.PlateNumber,
-            vehicle.Model,
-            vehicle.Type,
-            vehicle.Capacity,
-            vehicle.IsAccessible,
-            vehicle.Status,
-            MaintenanceCount = vehicle.MaintenanceRecords.Count(record => record.Status != MaintenanceStatus.Completed && record.Status != MaintenanceStatus.Cancelled)
-        }).ToListAsync();
+        if (centreId.HasValue) query = query.Where(v => v.CentreId == centreId.Value);
+        if (status.HasValue) query = query.Where(v => v.Status == status.Value);
+        if (isActive.HasValue) query = query.Where(v => v.IsActive == isActive.Value);
+
+        var vehicles = await query
+            .OrderByDescending(v => v.CreatedAt)
+            .Select(v => new VehicleResponseDto
+            {
+                VehicleId = v.VehicleId,
+                RegistrationNumber = v.RegistrationNumber,
+                VehicleType = v.VehicleType,
+                Capacity = v.Capacity,
+                Status = v.Status,
+                CentreId = v.CentreId,
+                CentreName = v.CentreName,
+                IsActive = v.IsActive,
+                CreatedAt = v.CreatedAt,
+                UpdatedAt = v.UpdatedAt,
+                Model = v.Model
+            })
+            .ToListAsync();
 
         return Ok(vehicles);
     }
 
-    [HttpGet("{vehicleId:guid}")]
-    public async Task<IActionResult> Get(Guid vehicleId)
+    [HttpGet("{id:guid}", Name = nameof(Get))]
+    public async Task<ActionResult<VehicleResponseDto>> Get(Guid id)
     {
         var vehicle = await db.Vehicles.AsNoTracking()
-            .Include(item => item.Centre)
-            .Include(item => item.MaintenanceRecords)
-            .SingleOrDefaultAsync(item => item.Id == vehicleId);
+            .SingleOrDefaultAsync(v => v.VehicleId == id);
 
-        if (vehicle is null) return NotFound();
-
-        return Ok(new
+        if (vehicle is null)
         {
-            vehicle.Id,
-            vehicle.CentreId,
-            Centre = new { vehicle.Centre.Id, vehicle.Centre.Code, vehicle.Centre.Name },
-            vehicle.PlateNumber,
-            vehicle.Model,
-            vehicle.Type,
-            vehicle.Capacity,
-            vehicle.IsAccessible,
-            vehicle.Status,
-            Maintenance = vehicle.MaintenanceRecords.OrderByDescending(record => record.ScheduledFor).Select(record => new { record.Id, record.Type, record.Description, record.Status, record.ScheduledFor, record.CompletedAt })
+            return NotFound(new { error = $"Vehicle with ID {id} not found." });
+        }
+
+        return Ok(new VehicleResponseDto
+        {
+            VehicleId = vehicle.VehicleId,
+            RegistrationNumber = vehicle.RegistrationNumber,
+            VehicleType = vehicle.VehicleType,
+            Capacity = vehicle.Capacity,
+            Status = vehicle.Status,
+            CentreId = vehicle.CentreId,
+            CentreName = vehicle.CentreName,
+            IsActive = vehicle.IsActive,
+            CreatedAt = vehicle.CreatedAt,
+            UpdatedAt = vehicle.UpdatedAt,
+            Model = vehicle.Model
         });
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateVehicleRequest request)
+    public async Task<ActionResult<VehicleResponseDto>> Create([FromBody] VehicleCreateDto request)
     {
-        if (!await db.Centres.AnyAsync(centre => centre.Id == request.CentreId)) return BadRequest(new { error = "The selected centre does not exist." });
+        if (request.Capacity <= 0)
+        {
+            return BadRequest(new { error = "Capacity must be greater than 0." });
+        }
 
-        var plateNumber = NormalizePlate(request.PlateNumber);
-        if (await db.Vehicles.AnyAsync(vehicle => vehicle.PlateNumber == plateNumber)) return Conflict(new { error = "A vehicle with this plate number already exists." });
+        var registrationNumber = NormalizeRegistration(request.RegistrationNumber);
+        if (await db.Vehicles.AnyAsync(v => v.RegistrationNumber.ToUpper() == registrationNumber))
+        {
+            return Conflict(new { error = "A vehicle with this registration number already exists." });
+        }
 
         var vehicle = new Vehicle
         {
+            VehicleId = Guid.NewGuid(),
             CentreId = request.CentreId,
-            PlateNumber = plateNumber,
-            Model = request.Model.Trim(),
-            Type = request.Type,
+            CentreName = request.CentreName?.Trim() ?? string.Empty,
+            RegistrationNumber = registrationNumber,
+            VehicleType = request.VehicleType,
             Capacity = request.Capacity,
-            IsAccessible = request.IsAccessible,
-            Status = request.Status
+            Status = request.Status,
+            IsActive = true,
+            Model = request.Model?.Trim() ?? string.Empty,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         db.Vehicles.Add(vehicle);
         await db.SaveChangesAsync();
-        return CreatedAtAction(nameof(Get), new { vehicleId = vehicle.Id }, new { vehicle.Id, vehicle.CentreId, vehicle.PlateNumber, vehicle.Model, vehicle.Status });
+
+        var response = new VehicleResponseDto
+        {
+            VehicleId = vehicle.VehicleId,
+            RegistrationNumber = vehicle.RegistrationNumber,
+            VehicleType = vehicle.VehicleType,
+            Capacity = vehicle.Capacity,
+            Status = vehicle.Status,
+            CentreId = vehicle.CentreId,
+            CentreName = vehicle.CentreName,
+            IsActive = vehicle.IsActive,
+            CreatedAt = vehicle.CreatedAt,
+            UpdatedAt = vehicle.UpdatedAt,
+            Model = vehicle.Model
+        };
+
+        return CreatedAtAction(nameof(Get), new { id = vehicle.VehicleId }, response);
     }
 
-    [HttpPut("{vehicleId:guid}")]
-    public async Task<IActionResult> Update(Guid vehicleId, UpdateVehicleRequest request)
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<VehicleResponseDto>> Update(Guid id, [FromBody] VehicleUpdateDto request)
     {
-        var vehicle = await db.Vehicles.FindAsync(vehicleId);
-        if (vehicle is null) return NotFound();
-        if (!await db.Centres.AnyAsync(centre => centre.Id == request.CentreId)) return BadRequest(new { error = "The selected centre does not exist." });
+        var vehicle = await db.Vehicles.FirstOrDefaultAsync(v => v.VehicleId == id);
+        if (vehicle is null)
+        {
+            return NotFound(new { error = $"Vehicle with ID {id} not found." });
+        }
 
-        var plateNumber = NormalizePlate(request.PlateNumber);
-        if (await db.Vehicles.AnyAsync(item => item.Id != vehicleId && item.PlateNumber == plateNumber)) return Conflict(new { error = "A vehicle with this plate number already exists." });
+        if (request.Capacity <= 0)
+        {
+            return BadRequest(new { error = "Capacity must be greater than 0." });
+        }
 
-        vehicle.CentreId = request.CentreId;
-        vehicle.PlateNumber = plateNumber;
-        vehicle.Model = request.Model.Trim();
-        vehicle.Type = request.Type;
+        var registrationNumber = NormalizeRegistration(request.RegistrationNumber);
+        if (await db.Vehicles.AnyAsync(v => v.VehicleId != id && v.RegistrationNumber.ToUpper() == registrationNumber))
+        {
+            return Conflict(new { error = "A vehicle with this registration number already exists." });
+        }
+
+        vehicle.RegistrationNumber = registrationNumber;
+        vehicle.VehicleType = request.VehicleType;
         vehicle.Capacity = request.Capacity;
-        vehicle.IsAccessible = request.IsAccessible;
         vehicle.Status = request.Status;
+        vehicle.CentreId = request.CentreId;
+        if (!string.IsNullOrWhiteSpace(request.CentreName)) vehicle.CentreName = request.CentreName.Trim();
+        if (request.Model is not null) vehicle.Model = request.Model.Trim();
+        if (request.IsActive.HasValue) vehicle.IsActive = request.IsActive.Value;
         vehicle.UpdatedAt = DateTime.UtcNow;
+
         await db.SaveChangesAsync();
-        return NoContent();
+
+        return Ok(new VehicleResponseDto
+        {
+            VehicleId = vehicle.VehicleId,
+            RegistrationNumber = vehicle.RegistrationNumber,
+            VehicleType = vehicle.VehicleType,
+            Capacity = vehicle.Capacity,
+            Status = vehicle.Status,
+            CentreId = vehicle.CentreId,
+            CentreName = vehicle.CentreName,
+            IsActive = vehicle.IsActive,
+            CreatedAt = vehicle.CreatedAt,
+            UpdatedAt = vehicle.UpdatedAt,
+            Model = vehicle.Model
+        });
     }
 
-    [HttpDelete("{vehicleId:guid}")]
-    public async Task<IActionResult> Deactivate(Guid vehicleId)
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
     {
-        var vehicle = await db.Vehicles.FindAsync(vehicleId);
-        if (vehicle is null) return NotFound();
+        var vehicle = await db.Vehicles.FirstOrDefaultAsync(v => v.VehicleId == id);
+        if (vehicle is null)
+        {
+            return NotFound(new { error = $"Vehicle with ID {id} not found." });
+        }
 
+        // Soft-delete -> sets IsActive = false
+        vehicle.IsActive = false;
         vehicle.Status = VehicleStatus.Inactive;
         vehicle.UpdatedAt = DateTime.UtcNow;
+
         await db.SaveChangesAsync();
         return NoContent();
     }
 
-    private static string NormalizePlate(string value) => value.Trim().ToUpperInvariant();
+    private static string NormalizeRegistration(string value) => value.Trim().ToUpperInvariant();
 }

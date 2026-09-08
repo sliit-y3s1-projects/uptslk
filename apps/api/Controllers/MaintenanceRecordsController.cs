@@ -14,7 +14,7 @@ public class MaintenanceRecordsController(AppDbContext db) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] Guid? vehicleId, [FromQuery] Guid? centreId, [FromQuery] MaintenanceStatus? status)
     {
-        var query = db.MaintenanceRecords.AsNoTracking().Include(record => record.Vehicle).ThenInclude(vehicle => vehicle.Centre).AsQueryable();
+        var query = db.MaintenanceRecords.AsNoTracking().Include(record => record.Vehicle).AsQueryable();
         if (vehicleId.HasValue) query = query.Where(record => record.VehicleId == vehicleId.Value);
         if (centreId.HasValue) query = query.Where(record => record.Vehicle.CentreId == centreId.Value);
         if (status.HasValue) query = query.Where(record => record.Status == status.Value);
@@ -25,7 +25,7 @@ public class MaintenanceRecordsController(AppDbContext db) : ControllerBase
             record.VehicleId,
             Vehicle = record.Vehicle.PlateNumber,
             record.Vehicle.CentreId,
-            Centre = record.Vehicle.Centre.Name,
+            Centre = record.Vehicle.CentreName,
             record.Type,
             record.Description,
             record.Status,
@@ -39,7 +39,7 @@ public class MaintenanceRecordsController(AppDbContext db) : ControllerBase
     [HttpGet("{recordId:guid}")]
     public async Task<IActionResult> Get(Guid recordId)
     {
-        var record = await db.MaintenanceRecords.AsNoTracking().Include(item => item.Vehicle).ThenInclude(vehicle => vehicle.Centre).SingleOrDefaultAsync(item => item.Id == recordId);
+        var record = await db.MaintenanceRecords.AsNoTracking().Include(item => item.Vehicle).SingleOrDefaultAsync(item => item.Id == recordId);
         if (record is null) return NotFound();
 
         return Ok(new
