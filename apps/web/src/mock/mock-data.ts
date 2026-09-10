@@ -43,11 +43,11 @@ export const collections: Record<string, TableRow[]> = {
     { id: "AREA-03", title: "Southern", subtitle: "13 active routes · 35 vehicles", status: "Stable", tone: "good", updated: "71% service health", meta: "Galle hub" },
   ],
   vehicles: [
-    { id: "WP CAB-4821", title: "Ashok Leyland Viking", subtitle: "Standard bus · 52 seats · Makumbura allocation", status: "In service", tone: "good", updated: "Route EX01 · Bay B03", meta: "Inspection: Sep 21", district: "Colombo", centreId: "makumbura" },
-    { id: "WP NB-6602", title: "Tata LP 909", subtitle: "Standard bus · 48 seats · Makumbura allocation", status: "In service", tone: "good", updated: "Route EX02 · Bay B07", meta: "Inspection: Sep 18", district: "Colombo", centreId: "makumbura" },
-    { id: "WP ND-7714", title: "Ashok Leyland Viking", subtitle: "Standard bus · 44 seats · Kadawatha allocation", status: "Boarding", tone: "warning", updated: "Route 177 · Bay B04", meta: "Inspection: Sep 26", district: "Gampaha", centreId: "kadawatha" },
-    { id: "WP NC-3381", title: "Lanka Ashok Leyland", subtitle: "Intercity bus · 49 seats · Kadawatha allocation", status: "In service", tone: "good", updated: "Route EX04 · Bay B02", meta: "Inspection: Sep 19", district: "Gampaha", centreId: "kadawatha" },
-    { id: "WP NB-2428", title: "Tata Starbus", subtitle: "Standard bus · 48 seats · Kadawatha allocation", status: "In service", tone: "good", updated: "Route 234 · Bay B09", meta: "Inspection: Oct 02", district: "Gampaha", centreId: "kadawatha" },
+    { id: "WP CAB-4821", title: "Ashok Leyland Viking", subtitle: "Normal · 52 seats · Makumbura allocation", status: "Active", tone: "good", updated: "Route EX01 · Bay B03", meta: "Inspection: Sep 21", district: "Colombo", centreId: "makumbura" },
+    { id: "WP NB-6602", title: "Tata LP 909", subtitle: "Normal · 48 seats · Makumbura allocation", status: "Active", tone: "good", updated: "Route EX02 · Bay B07", meta: "Inspection: Sep 18", district: "Colombo", centreId: "makumbura" },
+    { id: "WP ND-7714", title: "Ashok Leyland Viking", subtitle: "Normal · 44 seats · Kadawatha allocation", status: "Active", tone: "good", updated: "Route 177 · Bay B04", meta: "Inspection: Sep 26", district: "Gampaha", centreId: "kadawatha" },
+    { id: "WP NC-3381", title: "Lanka Ashok Leyland", subtitle: "SemiLuxury · 49 seats · Kadawatha allocation", status: "Active", tone: "good", updated: "Route EX04 · Bay B02", meta: "Inspection: Sep 19", district: "Gampaha", centreId: "kadawatha" },
+    { id: "WP NB-2428", title: "Tata Starbus", subtitle: "Normal · 48 seats · Kadawatha allocation", status: "Active", tone: "good", updated: "Route 234 · Bay B09", meta: "Inspection: Oct 02", district: "Gampaha", centreId: "kadawatha" },
   ],
   drivers: [
     { id: "DRV-020", title: "A. Perera", subtitle: "Licence B-457829 · Colombo depot", status: "On duty", tone: "good", updated: "TRP-8241 · Route 138", meta: "98% attendance" },

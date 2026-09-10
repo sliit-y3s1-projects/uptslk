@@ -13,7 +13,8 @@ import { TripFormPage } from "@/features/operations/TripFormPage";
 import { TripHistoryPage } from "@/features/operations/TripHistoryPage";
 import { StopsPage } from "@/features/network/NetworkPages";
 import { TimetablesPage } from "@/features/network/TimetablesPage";
-import { DriversPage, MaintenancePage } from "@/features/fleet/FleetPages";
+import { DriverDetailPage, DriverFormPage, DriversPage } from "@/features/fleet/DriversPage";
+import { MaintenanceDetailPage, MaintenanceFormPage, MaintenancePage } from "@/features/fleet/MaintenancePage";
 import { RouteDetailPage, RouteFormPage, RoutesPage } from "@/features/network/RoutesPage";
 import { VehicleFormPage, VehicleProfilePage, VehiclesPage } from "@/features/fleet/VehiclesPage";
 import { RidersPage, SupportPage } from "@/features/riders/RiderPages";
@@ -73,7 +74,7 @@ function App() {
     <Route path="/operations/incidents/new" element={<IncidentFormPage />} />
     <Route path="/operations/approvals" element={<ApprovalsPage />} />
     <Route path="/network/routes" element={<RoutesPage />} /><Route path="/network/routes/new" element={<RouteFormPage />} /><Route path="/network/routes/:routeId" element={<RouteDetailPage />} /><Route path="/network/routes/:routeId/edit" element={<RouteFormPage />} /><Route path="/network/timetables" element={<TimetablesPage />} /><Route path="/network/stops" element={<StopsPage />} />
-    <Route path="/fleet/vehicles" element={<VehiclesPage />} /><Route path="/fleet/vehicles/new" element={<VehicleFormPage />} /><Route path="/fleet/vehicles/:vehicleId" element={<VehicleProfilePage />} /><Route path="/fleet/vehicles/:vehicleId/edit" element={<VehicleFormPage />} /><Route path="/fleet/drivers" element={<DriversPage />} /><Route path="/fleet/maintenance" element={<MaintenancePage />} />
+    <Route path="/fleet/vehicles" element={<VehiclesPage />} /><Route path="/fleet/vehicles/new" element={<VehicleFormPage />} /><Route path="/fleet/vehicles/:vehicleId" element={<VehicleProfilePage />} /><Route path="/fleet/vehicles/:vehicleId/edit" element={<VehicleFormPage />} /><Route path="/fleet/drivers" element={<DriversPage />} /><Route path="/fleet/drivers/new" element={<DriverFormPage />} /><Route path="/fleet/drivers/:driverId" element={<DriverDetailPage />} /><Route path="/fleet/drivers/:driverId/edit" element={<DriverFormPage />} /><Route path="/fleet/maintenance" element={<MaintenancePage />} /><Route path="/fleet/maintenance/new" element={<MaintenanceFormPage />} /><Route path="/fleet/maintenance/:recordId" element={<MaintenanceDetailPage />} /><Route path="/fleet/maintenance/:recordId/edit" element={<MaintenanceFormPage />} />
     <Route path="/passengers/flow" element={<PassengerFlowPage />} /><Route path="/passengers/assistance" element={<AssistancePage />} /><Route path="/riders/accounts" element={<RidersPage />} /><Route path="/riders/support" element={<SupportPage />} />
     <Route path="/fares/tickets" element={<TicketsPage />} /><Route path="/fares/payments" element={<PaymentsPage />} /><Route path="/fares/reconciliation" element={<ReconciliationPage />} />
     <Route path="/reports/ridership" element={<RidershipPage />} /><Route path="/reports/revenue" element={<RevenuePage />} />

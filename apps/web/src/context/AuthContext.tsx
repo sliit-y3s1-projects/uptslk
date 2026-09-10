@@ -1,8 +1,7 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { AuthContext } from "./auth-context";
 import type { User } from "../types/auth";
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5250";
+import { API_BASE_URL } from "@/lib/api/api-client";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -24,7 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const res = await fetch(`${API_BASE}/api/v1/auth/me`, {
+        const res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -50,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token]);
 
   async function login(email: string, password: string) {
-    const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -68,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function register(name: string, email: string, password: string) {
-    const res = await fetch(`${API_BASE}/api/v1/auth/register`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password }),
