@@ -217,7 +217,11 @@ export function VehiclesPage({
             <TableBody>
               {vehicles.map((v) => (
                 <TableRow key={v.vehicleId}>
-                  <TableCell className="font-semibold">{v.registrationNumber}</TableCell>
+                  <TableCell className="font-semibold">
+                    <Link to={`${basePath}/${v.vehicleId}`} className="text-primary hover:underline">
+                      {v.registrationNumber}
+                    </Link>
+                  </TableCell>
                   <TableCell>{v.vehicleType}</TableCell>
                   <TableCell>{v.capacity} seats</TableCell>
                   <TableCell>
@@ -238,18 +242,27 @@ export function VehiclesPage({
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    {v.isActive ? (
+                    <div className="flex justify-end gap-2">
                       <Button
-                        variant="destructive"
+                        variant="outline"
                         size="sm"
-                        disabled={actionLoadingId === v.vehicleId}
-                        onClick={() => handleSoftDelete(v.vehicleId)}
+                        render={<Link to={`${basePath}/${v.vehicleId}/edit`} />}
                       >
-                        {actionLoadingId === v.vehicleId ? "Deactivating..." : "Deactivate"}
+                        Edit
                       </Button>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Deactivated</span>
-                    )}
+                      {v.isActive ? (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          disabled={actionLoadingId === v.vehicleId}
+                          onClick={() => handleSoftDelete(v.vehicleId)}
+                        >
+                          {actionLoadingId === v.vehicleId ? "Deactivating..." : "Deactivate"}
+                        </Button>
+                      ) : (
+                        <span className="flex items-center text-xs text-muted-foreground">Deactivated</span>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -270,6 +283,8 @@ const DEFAULT_CENTRES: CentreItem[] = [
 
 export function VehicleFormPage() {
   const navigate = useNavigate();
+  const { vehicleId } = useParams();
+  const isEditing = Boolean(vehicleId);
 
   const [registrationNumber, setRegistrationNumber] = useState("");
   const [vehicleType, setVehicleType] = useState<string>("Normal");
@@ -278,8 +293,42 @@ export function VehicleFormPage() {
   const [status, setStatus] = useState<string>("Available");
 
   const [centres] = useState<CentreItem[]>(DEFAULT_CENTRES);
+  const [loading, setLoading] = useState(isEditing);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!vehicleId) return;
+    let ignore = false;
+    async function loadVehicle() {
+      try {
+        const res = await fetch(`${API_BASE}/api/vehicles/${vehicleId}`);
+        if (!res.ok) {
+          throw new Error(`Failed to load vehicle (HTTP ${res.status})`);
+        }
+        const data = await res.json();
+        if (!ignore) {
+          setRegistrationNumber(data.registrationNumber ?? "");
+          setVehicleType(data.vehicleType ?? "Normal");
+          setCapacity(data.capacity ?? 52);
+          setCentreId(data.centreId ?? DEFAULT_CENTRES[0].id);
+          setStatus(data.status ?? "Available");
+        }
+      } catch (err: unknown) {
+        if (!ignore) {
+          setError(err instanceof Error ? err.message : "Error loading vehicle details");
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+    void loadVehicle();
+    return () => {
+      ignore = true;
+    };
+  }, [vehicleId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -306,40 +355,58 @@ export function VehicleFormPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE}/api/vehicles`, {
-        method: "POST",
+      const url = isEditing ? `${API_BASE}/api/vehicles/${vehicleId}` : `${API_BASE}/api/vehicles`;
+      const method = isEditing ? "PUT" : "POST";
+      const payload: Record<string, unknown> = {
+        registrationNumber: trimmedReg,
+        vehicleType,
+        capacity: numCapacity,
+        centreId,
+        centreName: selectedCentre?.name ?? "Makumbura Multimodal Centre (MMC)",
+        status,
+      };
+
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          registrationNumber: trimmedReg,
-          vehicleType,
-          capacity: numCapacity,
-          centreId,
-          centreName: selectedCentre?.name ?? "Makumbura Multimodal Centre (MMC)",
-          status,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(data?.error ?? `Failed to register vehicle (HTTP ${res.status})`);
+        throw new Error(data?.error ?? `Failed to ${isEditing ? "update" : "register"} vehicle (HTTP ${res.status})`);
       }
 
       // Success -> navigate to vehicles list
       navigate("/fleet/vehicles");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An error occurred while creating vehicle");
+      setError(err instanceof Error ? err.message : `An error occurred while ${isEditing ? "updating" : "creating"} vehicle`);
     } finally {
       setSubmitting(false);
     }
   }
 
+  if (loading) {
+    return (
+      <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-6">
+        <div className="rounded-lg border bg-card p-12 text-center text-sm text-muted-foreground">
+          Loading vehicle details...
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-6">
       <PageHeading
-        title="Add Vehicle"
-        description="Register a new vehicle into the transport fleet."
+        title={isEditing ? "Edit Vehicle" : "Add Vehicle"}
+        description={
+          isEditing
+            ? "Update vehicle registration, type, capacity, and operational status."
+            : "Register a new vehicle into the transport fleet."
+        }
       />
 
       {error && (
@@ -437,7 +504,7 @@ export function VehicleFormPage() {
             Cancel
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? "Saving..." : "Add Vehicle"}
+            {submitting ? "Saving..." : isEditing ? "Save Changes" : "Add Vehicle"}
           </Button>
         </div>
       </form>
@@ -491,9 +558,14 @@ export function VehicleProfilePage(props: {
         title={vehicle.registrationNumber}
         description="Vehicle details and operating state"
         action={
-          <Button variant="outline" onClick={() => navigate(basePath)}>
-            Back to vehicles
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate(basePath)}>
+              Back to vehicles
+            </Button>
+            <Button render={<Link to={`${basePath}/${vehicle.vehicleId}/edit`} />}>
+              Edit vehicle
+            </Button>
+          </div>
         }
       />
       <div className="max-w-xl rounded-lg border bg-card p-6 space-y-3">

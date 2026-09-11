@@ -2,7 +2,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { SignInPanel } from "@/components/auth/SignInPanel";
 import { Navigate, Route, Routes } from "react-router";
 import { AdminShell } from "@/components/layout/AdminShell";
-import { MaintenancePage } from "@/features/fleet/FleetPages";
+import {
+  MaintenancePage,
+  MaintenanceDetailPage,
+  MaintenanceFormPage,
+} from "@/features/fleet/MaintenancePage";
 import { VehicleFormPage, VehicleProfilePage, VehiclesPage } from "@/features/fleet/VehiclesPage";
 
 function App() {
@@ -21,6 +25,9 @@ function App() {
         <Route path="/fleet/vehicles/:vehicleId" element={<VehicleProfilePage />} />
         <Route path="/fleet/vehicles/:vehicleId/edit" element={<VehicleFormPage />} />
         <Route path="/fleet/maintenance" element={<MaintenancePage />} />
+        <Route path="/fleet/maintenance/new" element={<MaintenanceFormPage />} />
+        <Route path="/fleet/maintenance/:recordId" element={<MaintenanceDetailPage />} />
+        <Route path="/fleet/maintenance/:recordId/edit" element={<MaintenanceFormPage />} />
         <Route path="*" element={<Navigate to="/fleet/vehicles" replace />} />
       </Routes>
     </AdminShell>
