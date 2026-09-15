@@ -2,6 +2,13 @@
 
 UPTSLK is a centre-based public-transport platform with an ASP.NET Core API, PostgreSQL database, React admin console, and Flutter mobile application. Keep changes focused on the feature you own.
 
+## Contents
+
+- [Quick start (Makefile)](#quick-start-makefile)
+- [Manual setup](#manual-setup)
+- [Development rules](#development-rules)
+- [Validation and pull requests](#validation-and-pull-requests)
+
 ## Quick start (Makefile)
 
 ### Table of contents
