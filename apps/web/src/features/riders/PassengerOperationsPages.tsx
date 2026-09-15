@@ -1,23 +1,141 @@
+import { useCentreSelection } from "@/features/fares/hooks/useCentreSelection";
 import { useState } from "react";
-import { Accessibility, ArchiveRestore, Clock3, UsersRound } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Link, useSearchParams } from "react-router";
 import { PageHeading } from "@/components/shared/PageHeading";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { useAuth } from "@/hooks/useAuth";
-import { assistanceCases, passengerZones } from "@/mock/centre-operations";
-
+import { Button } from "@/components/ui/button";
+import { PassengerWorkspace } from "./RiderPages";
+import {
+  Panel,
+  SelectField,
+  QueryState,
+  DataTable,
+} from "./components/FeatureUi";
+import { dateTime } from "./components/format";
+import {
+  useTrips,
+  useManifest,
+  useSeats,
+} from "@/features/fares/hooks/useBookings";
+import { CentrePicker } from "@/features/fares/components/CentrePicker";
 export function PassengerFlowPage() {
-  const { user } = useAuth();
-  const zones = passengerZones.filter((item) => item.centreId === user?.centreId);
-  const total = zones.reduce((sum, zone) => sum + zone.passengers, 0);
-  return <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4"><PageHeading title="Passenger flow" description="Monitor terminal crowding, queues, and waiting times before they disrupt boarding." /><section className="grid gap-3 sm:grid-cols-3"><Metric icon={UsersRound} label="Passengers in terminal" value={String(total)} /><Metric icon={Clock3} label="Longest wait" value={zones.sort((a, b) => Number.parseInt(b.wait) - Number.parseInt(a.wait))[0]?.wait ?? "—"} /><Metric icon={Accessibility} label="Assistance requests" value={String(assistanceCases.filter((item) => item.centreId === user?.centreId && item.type === "Accessibility" && item.status !== "Resolved").length)} /></section><section className="grid gap-4 xl:grid-cols-3">{zones.map((zone) => <article key={zone.id} className="rounded-lg border bg-card p-5"><div className="flex items-start justify-between"><div><p className="text-xs text-muted-foreground">{zone.id}</p><h2 className="mt-1 font-semibold">{zone.name}</h2></div><StatusBadge label={zone.level} tone={zone.level === "Critical" ? "danger" : zone.level === "Busy" ? "warning" : "good"} /></div><p className="mt-5 text-3xl font-semibold">{zone.passengers}</p><p className="text-sm text-muted-foreground">estimated passengers</p><div className="mt-5 grid grid-cols-2 gap-3 border-t pt-4 text-sm"><div><p className="text-xs text-muted-foreground">Average wait</p><p className="mt-1 font-medium">{zone.wait}</p></div><div><p className="text-xs text-muted-foreground">Trend</p><p className="mt-1 font-medium">{zone.trend}</p></div></div></article>)}</section></main>;
+  const [params, setParams] = useSearchParams();
+  const tripId = params.get("tripId") ?? "";
+  const [selectedCentre, setCentre] = useState("");
+  const { centreId } = useCentreSelection(selectedCentre);
+  const trips = useTrips(centreId);
+  const manifest = useManifest(tripId);
+  const seats = useSeats(tripId);
+  return (
+    <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
+      <PageHeading
+        title="Passenger flow"
+        description="Review trip seat availability and the passenger manifest before boarding."
+      />
+      <Panel title="Select a trip">
+        <CentrePicker
+          selected={selectedCentre}
+          onChange={(id) => {
+            setCentre(id);
+            setParams({});
+          }}
+        />
+        <SelectField
+          label="Trip"
+          value={trips.data?.some((t) => t.id === tripId) ? tripId : ""}
+          onChange={(e) =>
+            setParams(e.target.value ? { tripId: e.target.value } : {})
+          }
+        >
+          <option value="">Select a trip</option>
+          {trips.data?.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.routeNumber} · {t.routeName} · {dateTime(t.scheduledTime)} ?{" "}
+              {t.status}
+            </option>
+          ))}
+        </SelectField>
+        {centreId && <QueryState query={trips} empty={!trips.data?.length} />}
+      </Panel>
+      {tripId && (
+        <Panel title="Passenger manifest">
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              disabled={manifest.isFetching || seats.isFetching}
+              onClick={() => {
+                void manifest.refetch();
+                void seats.refetch();
+              }}
+            >
+              Refresh manifest
+            </Button>
+          </div>
+          <QueryState query={manifest} />
+          <QueryState query={seats} />
+          {manifest.data && !manifest.error && (
+            <>
+              <h3 className="font-medium">
+                {manifest.data.trip.route} · {manifest.data.trip.name}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {dateTime(manifest.data.trip.scheduledTime)} · Vehicle{" "}
+                {manifest.data.trip.vehicle}
+              </p>
+              <p className="text-sm">
+                {manifest.data.passengerCount} passengers on manifest
+                {seats.data &&
+                  !seats.error &&
+                  ` · ${seats.data.filter((s) => s.isAvailable).length} available of ${seats.data.length} seats`}
+              </p>
+              <DataTable
+                headings={[
+                  "Seat",
+                  "Passenger",
+                  "Phone",
+                  "Category",
+                  "Status",
+                  "QR reference",
+                  "Ticket",
+                ]}
+              >
+                {[...manifest.data.bookings]
+                  .sort((a, b) => Number(a.seatNumber) - Number(b.seatNumber))
+                  .map((b) => (
+                    <tr key={b.id}>
+                      <td>{b.seatNumber}</td>
+                      <td className="font-medium">{b.passenger}</td>
+                      <td>{b.phoneNumber}</td>
+                      <td>{b.category}</td>
+                      <td>{b.status}</td>
+                      <td className="font-mono text-xs">{b.qrCode}</td>
+                      <td>
+                        <Link
+                          className="underline"
+                          to={`/fares/tickets?bookingId=${b.id}`}
+                        >
+                          View ticket
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+              </DataTable>
+              {!manifest.data.bookings.length && (
+                <p className="text-sm text-muted-foreground">
+                  No passengers on this manifest.
+                </p>
+              )}
+            </>
+          )}
+        </Panel>
+      )}
+    </main>
+  );
 }
-
 export function AssistancePage() {
-  const { user } = useAuth();
-  const scoped = assistanceCases.filter((item) => item.centreId === user?.centreId);
-  const [statuses, setStatuses] = useState<Record<string, "Open" | "Assigned" | "Resolved">>({});
-  return <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4"><PageHeading title="Passenger assistance" description="Coordinate accessibility requests and lost-property cases within this centre." action={<Button>Log new case</Button>} /><section className="overflow-hidden rounded-lg border bg-card"><div className="hidden grid-cols-[110px_150px_minmax(240px,1fr)_140px_160px] gap-4 border-b px-4 py-3 text-xs font-medium uppercase text-muted-foreground md:grid"><span>Case</span><span>Type</span><span>Details</span><span>Status</span><span>Action</span></div>{scoped.map((item) => { const status = statuses[item.id] ?? item.status; return <div key={item.id} className="grid gap-3 border-b px-4 py-4 md:grid-cols-[110px_150px_minmax(240px,1fr)_140px_160px] md:items-center"><p className="font-medium">{item.id}</p><p className="flex items-center gap-2 text-sm">{item.type === "Accessibility" ? <Accessibility className="size-4 text-blue-600" /> : <ArchiveRestore className="size-4 text-amber-600" />}{item.type}</p><div><p className="text-sm font-medium">{item.passenger}</p><p className="text-sm text-muted-foreground">{item.detail} · {item.owner}</p></div><StatusBadge label={status} tone={status === "Resolved" ? "good" : status === "Assigned" ? "warning" : "danger"} /><Button size="sm" variant="outline" disabled={status === "Resolved"} onClick={() => setStatuses((current) => ({ ...current, [item.id]: status === "Open" ? "Assigned" : "Resolved" }))}>{status === "Open" ? "Assign case" : status === "Assigned" ? "Resolve" : "Completed"}</Button></div>; })}</section></main>;
+  return (
+    <PassengerWorkspace
+      title="Passenger assistance"
+      description="Find passenger contact details and review bookings or wallet issues. Open a ticket to arrange a seat change or cancellation."
+    />
+  );
 }
-
-function Metric({ icon: Icon, label, value }: { icon: typeof UsersRound; label: string; value: string }) { return <article className="rounded-lg border bg-card p-4"><Icon className="size-4 text-primary" /><p className="mt-3 text-sm text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-semibold">{value}</p></article>; }
