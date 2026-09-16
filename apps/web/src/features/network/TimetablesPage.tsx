@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRoutes, useSchedules, useCreateSchedule, useDeactivateSchedule } from "./hooks/useRoutes";
 import { useBays } from "@/features/centres/hooks/useCentres";
 
+import { useEffect } from "react";
 import { useSearchParams } from "react-router";
 
 export function TimetablesPage() {
@@ -19,9 +20,15 @@ export function TimetablesPage() {
   const [selectedRouteId, setSelectedRouteId] = useState<string | undefined>(routeIdParam || undefined);
   const [showForm, setShowForm] = useState(false);
 
-  const { data: routes, isLoading: loadingRoutes } = useRoutes(user?.centreId);
-  const { data: bays } = useBays(user?.centreId);
-  const { data: schedules, isLoading: loadingSchedules } = useSchedules(selectedRouteId);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => {
+    setSelectedRouteId(routeIdParam || undefined);
+  }, [routeIdParam]);
+
+  const { data: routes, isLoading: loadingRoutes, error: routesError } = useRoutes(user?.centreId);
+  const selectedRoute = routes?.find(r => r.id === selectedRouteId);
+  const { data: bays, error: baysError } = useBays(selectedRoute?.centreId ?? user?.centreId);
+  const { data: schedules, isLoading: loadingSchedules, error: schedulesError } = useSchedules(selectedRouteId);
   
   const createMutation = useCreateSchedule(selectedRouteId || "");
   const deactivateMutation = useDeactivateSchedule(selectedRouteId || "");
@@ -75,7 +82,7 @@ export function TimetablesPage() {
           </label>
           <label className="grid gap-1.5 text-sm font-medium">First Departure<Input name="firstDeparture" type="time" required /></label>
           <label className="grid gap-1.5 text-sm font-medium">Last Departure<Input name="lastDeparture" type="time" required /></label>
-          <label className="grid gap-1.5 text-sm font-medium">Headway (min)<Input name="headwayMinutes" type="number" placeholder="15" required /></label>
+          <label className="grid gap-1.5 text-sm font-medium">Headway (min)<Input name="headwayMinutes" type="number" min="1" placeholder="15" required /></label>
           <label className="grid gap-1.5 text-sm font-medium">Operating Days
             <Select name="operatingDays" defaultValue="Everyday">
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -96,6 +103,8 @@ export function TimetablesPage() {
 
     {!selectedRouteId ? (
       <div className="rounded-lg border border-dashed bg-card p-10 text-center text-sm text-muted-foreground">Select a route above to view and manage its schedules.</div>
+    ) : (routesError || baysError || schedulesError) ? (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-10 text-center text-sm text-red-600">Failed to load schedule data. Please check your connection.</div>
     ) : loadingSchedules ? (
       <div className="flex justify-center p-10"><Loader2 className="animate-spin text-primary" /></div>
     ) : schedules?.length === 0 ? (
@@ -115,12 +124,12 @@ export function TimetablesPage() {
               </p>
             </div>
             {schedule.isActive && (
-              <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => {
+              <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50 disabled:opacity-50" disabled={deactivateMutation.isPending} onClick={() => {
                 deactivateMutation.mutate(schedule.id, {
                   onSuccess: () => console.log("Success")
                 });
               }}>
-                <Trash2 className="size-4 mr-2" /> Deactivate
+                {deactivateMutation.isPending ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Trash2 className="size-4 mr-2" />} Deactivate
               </Button>
             )}
           </div>

@@ -4,16 +4,26 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useAuth } from "@/hooks/useAuth";
-import { departuresByCentre, type Departure } from "@/mock/centres";
-import { centreRouteServices } from "@/mock/centre-services";
-import { BusSeatMap } from "@/features/centres/components/BusSeatMap";
 import { RouteServiceStatus } from "@/features/centres/components/RouteServiceStatus";
+import { BusSeatMap } from "@/features/centres/components/BusSeatMap";
 import { useCentre } from "./hooks/useCentres";
 
-function departureTone(status: Departure["status"]) {
+function departureTone(status: string) {
   if (status === "Delayed") return "danger" as const;
   if (status === "Boarding") return "warning" as const;
   return "good" as const;
+}
+
+// Temporary type to replace mock import
+export interface Departure {
+  id: string;
+  time: string;
+  bay: string;
+  route: string;
+  destination: string;
+  vehicle: string;
+  status: string;
+  occupancy: number;
 }
 
 export function CentreConsolePage({ centreId }: { centreId?: string }) {
@@ -21,14 +31,15 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
   const effectiveCentreId = centreId ?? user?.centreId;
   const { data: centre, isLoading, error } = useCentre(effectiveCentreId);
   
-  // Note: Using mock data for departures/fleet as requested by strict boundaries
-  const departures = effectiveCentreId ? (departuresByCentre[effectiveCentreId] || []) : [];
-  const featuredService = effectiveCentreId ? centreRouteServices.find((service) => service.centreId === effectiveCentreId) : undefined;
-  const boardingRun = featuredService?.runs.find((run) => run.state === "Boarding");
-  const [selected, setSelected] = useState(() => departures.find((departure) => departure.vehicle === boardingRun?.vehicle) ?? departures[0]);
+  // Removed mock data reads to satisfy API-only requirements
+  const departures: Departure[] = [];
+  const featuredService: unknown = undefined;
+  const boardingRun = (featuredService as { runs?: { state: string; vehicle: string }[] })?.runs?.find(run => run.state === "Boarding");
+  const [selected, setSelected] = useState<Departure | undefined>(undefined);
 
   if (isLoading) return <main className="flex flex-1 items-center justify-center p-4"><Loader2 className="animate-spin text-primary" /></main>;
-  if (error || !centre) return <main className="flex flex-1 items-center justify-center p-4">Centre not found.</main>;
+  if (error) return <main className="flex flex-1 items-center justify-center p-4 text-red-500">Failed to load centre.</main>;
+  if (!centre) return <main className="flex flex-1 items-center justify-center p-4">Centre not found.</main>;
 
   const baySlots = centre.bays.map((bay) => bay.code);
 

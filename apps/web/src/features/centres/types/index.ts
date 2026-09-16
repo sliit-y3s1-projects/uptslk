@@ -1,4 +1,4 @@
-export type CentreStatus = 'Active' | 'Closed' | 'Maintenance';
+export type CentreStatus = 'Planned' | 'Operating' | 'Closed' | 'Suspended';
 export type BayStatus = 'Active' | 'OutOfService';
 
 export interface Centre {
