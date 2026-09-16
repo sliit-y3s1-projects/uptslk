@@ -1,23 +1,133 @@
 import { useState } from "react";
-import { CalendarClock, Plus } from "lucide-react";
+import { CalendarClock, Plus, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeading } from "@/components/shared/PageHeading";
-import { RouteServiceStatus } from "@/features/centres/components/RouteServiceStatus";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useAuth } from "@/hooks/useAuth";
-import { centreRouteServices, type CentreRouteService } from "@/mock/centre-services";
-import { useDispatchMock } from "@/context/DispatchMockContext";
-import { dispatchResources, type Trip } from "@/mock/dispatch";
+import { useRoutes, useSchedules, useCreateSchedule, useDeactivateSchedule } from "./hooks/useRoutes";
+import { useBays } from "@/features/centres/hooks/useCentres";
+
+import { useSearchParams } from "react-router";
 
 export function TimetablesPage() {
   const { user } = useAuth();
-  const { saveTrip } = useDispatchMock();
-  const [query, setQuery] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const routeIdParam = searchParams.get("route");
+
+  const [selectedRouteId, setSelectedRouteId] = useState<string | undefined>(routeIdParam || undefined);
   const [showForm, setShowForm] = useState(false);
-  const [notice, setNotice] = useState("");
-  const [patterns, setPatterns] = useState(() => centreRouteServices.filter((item) => item.centreId === user?.centreId));
-  const services = patterns.filter((item) => `${item.route} ${item.origin} ${item.destination}`.toLowerCase().includes(query.toLowerCase()));
-  function addMinutes(time: string, minutes: number) { const [hours, mins] = time.split(":").map(Number); const date = new Date(2000, 0, 1, hours, mins + minutes); return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`; }
-  function generateTrips() { const centreId = user?.centreId ?? "makumbura"; const resources = dispatchResources[centreId as keyof typeof dispatchResources] ?? dispatchResources.makumbura; let generated = 0; try { patterns.forEach((pattern) => pattern.runs.forEach((run, index) => { const trip: Trip = { id: `TRP-G${Date.now().toString().slice(-3)}${generated}`, centreId, serviceDate: "2026-09-08", scheduledTime: run.time, route: pattern.route, origin: pattern.origin, destination: pattern.destination, vehicleId: resources.vehicles[index % resources.vehicles.length], driverId: resources.drivers[index % resources.drivers.length], bay: pattern.bay, occupancy: 0, status: "Scheduled", notes: `Generated from ${pattern.id}`, updatedAt: "Generated just now" }; saveTrip(trip); generated += 1; })); setNotice(`${generated} trips generated for Sep 8 and added to dispatch.`); } catch (reason) { setNotice(reason instanceof Error ? reason.message : "Could not generate trips."); } }
-  return <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4"><PageHeading title="Timetables" description="Manage recurring departures, headways, assigned bays, and operating vehicles." action={<div className="flex gap-2"><Button variant="outline" onClick={generateTrips}>Generate next-day trips</Button><Button onClick={() => setShowForm((value) => !value)}><Plus /> Add service pattern</Button></div>} />{notice && <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">{notice}</div>}{showForm && <form className="rounded-lg border bg-card p-5" onSubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); const first = String(form.get("first")); const interval = Number(form.get("interval")); const route = String(form.get("route")); const pattern: CentreRouteService = { id: `SVC-${Date.now()}`, centreId: user?.centreId ?? "makumbura", route, origin: "Centre terminal", destination: String(form.get("destination")), intervalMinutes: interval, bay: String(form.get("bay")), currentLocation: "Not started", runs: [0, 1, 2, 3].map((index) => ({ time: addMinutes(first, interval * index), vehicle: index === 0 ? String(form.get("vehicle")) : "Assignment pending", state: index === 0 ? "Boarding" as const : "Scheduled" as const, detail: index === 0 ? `Bay ${String(form.get("bay"))} · Boarding` : "Awaiting vehicle assignment" })) }; setPatterns((current) => [...current, pattern]); setShowForm(false); }}><h2 className="font-semibold">New recurring service</h2><div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-6"><Input name="route" placeholder="Route number" required /><Input name="destination" placeholder="Destination" required /><Input name="first" type="time" required /><Input name="interval" placeholder="Headway minutes" type="number" required /><Input name="bay" placeholder="Assigned bay" required /><Input name="vehicle" placeholder="First vehicle" required /></div><div className="mt-4 flex justify-end gap-2"><Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button><Button type="submit">Save pattern</Button></div></form>}<div className="relative max-w-md"><CalendarClock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" placeholder="Search route or destination" value={query} onChange={(event) => setQuery(event.target.value)} /></div>{services.map((service) => <RouteServiceStatus key={service.id} service={service} />)}{services.length === 0 && <div className="rounded-lg border border-dashed bg-card p-10 text-center text-sm text-muted-foreground">No service patterns match this search.</div>}</main>;
+
+  const { data: routes, isLoading: loadingRoutes } = useRoutes(user?.centreId);
+  const { data: bays } = useBays(user?.centreId);
+  const { data: schedules, isLoading: loadingSchedules } = useSchedules(selectedRouteId);
+  
+  const createMutation = useCreateSchedule(selectedRouteId || "");
+  const deactivateMutation = useDeactivateSchedule(selectedRouteId || "");
+
+  const handleRouteSelect = (val: string | null) => { if (!val) return; {
+    setSelectedRouteId(val);
+    setSearchParams({ route: val }); }
+  };
+
+  return <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
+    <PageHeading title="Timetables & Schedules" description="Manage recurring departures, headways, and assigned bays for your routes." action={<Button onClick={() => setShowForm((value) => !value)} disabled={!selectedRouteId}><Plus /> Add schedule</Button>} />
+    
+    <div className="flex items-center gap-4 bg-card p-4 rounded-lg border">
+      <span className="text-sm font-medium">Select Route:</span>
+      <div className="w-64">
+        <Select value={selectedRouteId} onValueChange={handleRouteSelect}>
+          <SelectTrigger><SelectValue placeholder={loadingRoutes ? "Loading..." : "Choose a route"} /></SelectTrigger>
+          <SelectContent>
+            {routes?.map(r => <SelectItem key={r.id} value={r.id}>{r.routeNumber} - {r.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+
+    {showForm && selectedRouteId && (
+      <form className="rounded-lg border bg-card p-5" onSubmit={(event) => { 
+        event.preventDefault(); 
+        const form = new FormData(event.currentTarget);
+        const payload = {
+          bayId: String(form.get("bayId")),
+          firstDeparture: String(form.get("firstDeparture")) + ":00",
+          lastDeparture: String(form.get("lastDeparture")) + ":00",
+          headwayMinutes: Number(form.get("headwayMinutes")),
+          operatingDays: String(form.get("operatingDays"))
+        };
+        
+        createMutation.mutate(payload, {
+          onSuccess: () => { console.log("Success"); setShowForm(false); },
+          onError: () => console.error("Error")
+        });
+      }}>
+        <h2 className="font-semibold">New Schedule Pattern</h2>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <label className="grid gap-1.5 text-sm font-medium">Assigned Bay
+            <Select name="bayId" required>
+              <SelectTrigger><SelectValue placeholder="Select bay" /></SelectTrigger>
+              <SelectContent>
+                {bays?.filter(b => b.status === "Active").map(b => <SelectItem key={b.id} value={b.id}>{b.code}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </label>
+          <label className="grid gap-1.5 text-sm font-medium">First Departure<Input name="firstDeparture" type="time" required /></label>
+          <label className="grid gap-1.5 text-sm font-medium">Last Departure<Input name="lastDeparture" type="time" required /></label>
+          <label className="grid gap-1.5 text-sm font-medium">Headway (min)<Input name="headwayMinutes" type="number" placeholder="15" required /></label>
+          <label className="grid gap-1.5 text-sm font-medium">Operating Days
+            <Select name="operatingDays" defaultValue="Everyday">
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Everyday">Everyday</SelectItem>
+                <SelectItem value="Weekdays">Weekdays</SelectItem>
+                <SelectItem value="Weekends">Weekends</SelectItem>
+              </SelectContent>
+            </Select>
+          </label>
+        </div>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+          <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? "Saving..." : "Save schedule"}</Button>
+        </div>
+      </form>
+    )}
+
+    {!selectedRouteId ? (
+      <div className="rounded-lg border border-dashed bg-card p-10 text-center text-sm text-muted-foreground">Select a route above to view and manage its schedules.</div>
+    ) : loadingSchedules ? (
+      <div className="flex justify-center p-10"><Loader2 className="animate-spin text-primary" /></div>
+    ) : schedules?.length === 0 ? (
+      <div className="rounded-lg border border-dashed bg-card p-10 text-center text-sm text-muted-foreground">No schedules exist for this route.</div>
+    ) : (
+      <div className="grid gap-4">
+        {schedules?.map((schedule) => (
+          <div key={schedule.id} className="flex items-center justify-between rounded-lg border bg-card p-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <CalendarClock className="size-4 text-primary" />
+                <h3 className="font-semibold">{schedule.operatingDays} Schedule</h3>
+                <StatusBadge label={schedule.isActive ? "Active" : "Archived"} tone={schedule.isActive ? "good" : "neutral"} />
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                First: {schedule.firstDeparture} | Last: {schedule.lastDeparture} | Headway: {schedule.headwayMinutes} mins | Bay: {schedule.bayCode}
+              </p>
+            </div>
+            {schedule.isActive && (
+              <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => {
+                deactivateMutation.mutate(schedule.id, {
+                  onSuccess: () => console.log("Success")
+                });
+              }}>
+                <Trash2 className="size-4 mr-2" /> Deactivate
+              </Button>
+            )}
+          </div>
+        ))}
+      </div>
+    )}
+  </main>;
 }
+
+
