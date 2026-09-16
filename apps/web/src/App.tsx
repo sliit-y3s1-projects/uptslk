@@ -1,7 +1,15 @@
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { SignInPanel } from "@/components/auth/SignInPanel";
+import { RegisterPage } from "@/components/auth/RegisterPage";
+import { OnboardingPage } from "@/components/auth/OnboardingPage";
+import { ProfilePage } from "@/features/profile/ProfilePage";
+import { PasswordChangePage } from "@/features/profile/PasswordChangePage";
+import { CheckoutPage } from "@/features/bookings/CheckoutPage";
+import { NotFoundPage } from "@/components/NotFoundPage";
 import { RequireRole } from "./components/auth/RequireAuth";
-import { Navigate, Route, Routes } from "react-router";
+import { Navigate, Route, Routes, useLocation } from "react-router";
+import { PublicBookingPage } from "@/features/bookings/PublicBookingPage";
 import { AdminShell } from "@/components/layout/AdminShell";
 import { DispatchPage } from "@/features/operations/DispatchPage";
 import { BayManagementPage } from "@/features/operations/BayManagementPage";
@@ -30,15 +38,38 @@ import { CentreOperationsPreviewPage, CentreRouteDetailViewPage, CentreRoutesVie
 import { SuperAdminShell } from "@/components/super-admin/SuperAdminShell";
 import { SuperAdminOverviewPage } from "@/features/super-admin/OverviewPage";
 import { EmployeesPage } from "@/features/super-admin/EmployeesPage";
+import { UsersPage } from "@/features/super-admin/UsersPage";
 import { AccessRequestsPage, RolesPage } from "@/features/super-admin/AccessPages";
 import { AuditLogPage, PlatformHealthPage, SystemSettingsPage } from "@/features/super-admin/GovernancePages";
 
 function App() {
   const { user, loading } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    const migrateLegacyBookingLink = (event: MouseEvent) => {
+      const anchor = (event.target as HTMLElement).closest<HTMLAnchorElement>('a[href="/book"]');
+      if (anchor) { event.preventDefault(); window.history.pushState({}, "", "/"); window.dispatchEvent(new PopStateEvent("popstate")); }
+    };
+    document.addEventListener("click", migrateLegacyBookingLink);
+    return () => document.removeEventListener("click", migrateLegacyBookingLink);
+  }, []);
 
   if (loading) return null;
 
-  if (!user) return <SignInPanel />;
+  if (!user) {
+    if (location.pathname === "/") return <PublicBookingPage />;
+    if (location.pathname === "/signup") return <RegisterPage />;
+    if (location.pathname === "/login") return <SignInPanel />;
+    return <NotFoundPage />;
+  }
+
+  if (location.pathname === "/onboarding") return <OnboardingPage />;
+  if (location.pathname === "/book") return <NotFoundPage />;
+  if (location.pathname === "/") return <PublicBookingPage />;
+  if (location.pathname === "/profile") return <ProfilePage />;
+  if (location.pathname === "/profile/password") return <PasswordChangePage />;
+  if (location.pathname === "/booking/checkout") return <CheckoutPage />;
 
   const isSuperAdmin = user.role === "SuperAdmin" || user.role === "Admin";
 
@@ -54,6 +85,7 @@ function App() {
     <Route path="/admin/centres/:centreId/vehicles" element={<CentreVehiclesViewPage />} />
     <Route path="/admin/centres/:centreId/vehicles/:vehicleId" element={<CentreVehicleDetailViewPage />} />
     <Route path="/admin/employees" element={<EmployeesPage />} />
+    <Route path="/admin/users" element={<UsersPage />} />
     <Route path="/admin/roles" element={<RolesPage />} />
     <Route path="/admin/access" element={<AccessRequestsPage />} />
     <Route path="/admin/audit" element={<AuditLogPage />} />
@@ -62,7 +94,7 @@ function App() {
     <Route path="*" element={<Navigate to="/admin" replace />} />
   </Routes></SuperAdminShell></RequireRole>;
 
-  return <RequireRole role="CentreManager"><AdminShell><Routes>
+  return <RequireRole role={["CentreManager", "Dispatcher", "FleetOfficer", "Driver"]}><AdminShell><Routes>
     <Route path="/operations" element={<CentreConsolePage />} />
     <Route path="/operations/dispatch" element={<DispatchPage />} />
     <Route path="/operations/dispatch/new" element={<TripFormPage />} />

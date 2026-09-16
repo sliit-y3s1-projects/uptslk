@@ -6,24 +6,13 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useAuth } from "@/hooks/useAuth";
 import { RouteServiceStatus } from "@/features/centres/components/RouteServiceStatus";
 import { BusSeatMap } from "@/features/centres/components/BusSeatMap";
+import type { Departure } from "@/mock/centres";
 import { useCentre } from "./hooks/useCentres";
 
 function departureTone(status: string) {
   if (status === "Delayed") return "danger" as const;
   if (status === "Boarding") return "warning" as const;
   return "good" as const;
-}
-
-// Temporary type to replace mock import
-export interface Departure {
-  id: string;
-  time: string;
-  bay: string;
-  route: string;
-  destination: string;
-  vehicle: string;
-  status: string;
-  occupancy: number;
 }
 
 export function CentreConsolePage({ centreId }: { centreId?: string }) {
@@ -33,8 +22,6 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
   
   // Removed mock data reads to satisfy API-only requirements
   const departures: Departure[] = [];
-  const featuredService: unknown = undefined;
-  const boardingRun = (featuredService as { runs?: { state: string; vehicle: string }[] })?.runs?.find(run => run.state === "Boarding");
   const [selected, setSelected] = useState<Departure | undefined>(undefined);
 
   if (isLoading) return <main className="flex flex-1 items-center justify-center p-4"><Loader2 className="animate-spin text-primary" /></main>;
@@ -46,9 +33,9 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
   return <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
     <section className="flex flex-col justify-between gap-3 rounded-xl bg-slate-900 p-6 text-white md:flex-row md:items-end">
       <div><p className="text-sm text-slate-300">Centre operations overview</p><h1 className="mt-1 text-2xl font-semibold">{centre.name}</h1><p className="mt-2 text-sm text-slate-300">{centre.description || "Active operations"}</p></div>
-      <div className="grid grid-cols-3 gap-2 text-sm"><Metric label="Bays active" value={`${departures.length}/${baySlots.length}`} href="/operations/bays" /><Metric label="Next departure" value={boardingRun?.time ?? departures[0]?.time ?? "--"} href="/operations/dispatch" /><Metric label="Boarding now" value={String(departures.filter((item) => item.status === "Boarding").length)} href="/operations/dispatch" /></div>
+      <div className="grid grid-cols-3 gap-2 text-sm"><Metric label="Bays active" value={`${departures.length}/${baySlots.length}`} href="/operations/bays" /><Metric label="Next departure" value={departures[0]?.time ?? "--"} href="/operations/dispatch" /><Metric label="Boarding now" value={String(departures.filter((item) => item.status === "Boarding").length)} href="/operations/dispatch" /></div>
     </section>
-    <RouteServiceStatus service={featuredService} />
+    <RouteServiceStatus />
     <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_400px]"><TerminalMap bays={baySlots} departures={departures} selected={selected} onSelect={setSelected} /><BusSeatMap departure={selected} /></section>
     <section className="rounded-lg border bg-card"><div className="flex items-center justify-between border-b px-4 py-3"><div><h2 className="font-semibold">Upcoming departures</h2><p className="text-sm text-muted-foreground">Mock operational schedule - not a live public timetable.</p></div><Button variant="outline">All departures <ChevronDown /></Button></div><div className="divide-y">{departures.map((departure) => <button type="button" key={departure.id} onClick={() => setSelected(departure)} className="grid w-full gap-2 px-4 py-3 text-left hover:bg-muted/40 md:grid-cols-[80px_100px_minmax(0,1fr)_130px_100px]"><p className="font-semibold">{departure.time}</p><p className="text-sm text-muted-foreground">{departure.bay}</p><p><span className="font-medium">{departure.route} - {departure.destination}</span><span className="ml-2 text-sm text-muted-foreground">{departure.vehicle}</span></p><StatusBadge label={departure.status} tone={departureTone(departure.status)} /><p className="text-sm font-medium">{departure.occupancy}% full</p></button>)}</div></section>
   </main>;

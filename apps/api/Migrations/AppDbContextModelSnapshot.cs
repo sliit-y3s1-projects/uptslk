@@ -594,9 +594,15 @@ namespace api.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PhoneNumber")
+                        .IsUnique();
+
+                    b.HasIndex("UserId")
                         .IsUnique();
 
                     b.ToTable("Passengers");
@@ -827,6 +833,9 @@ namespace api.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("CentreId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
@@ -841,6 +850,15 @@ namespace api.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("Gender")
+                        .HasColumnType("text");
+
+                    b.Property<string>("HomeLocation")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
 
@@ -848,6 +866,13 @@ namespace api.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("NicNumber")
+                        .HasColumnType("text");
+
+                    b.Property<string>("NicVerificationStatus")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -868,6 +893,9 @@ namespace api.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("ProfilePhotoUrl")
+                        .HasColumnType("text");
+
                     b.Property<int>("Role")
                         .HasColumnType("integer");
 
@@ -885,6 +913,8 @@ namespace api.Migrations
                         .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CentreId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -1154,6 +1184,16 @@ namespace api.Migrations
                     b.Navigation("Vehicle");
                 });
 
+            modelBuilder.Entity("api.Models.Passenger", b =>
+                {
+                    b.HasOne("api.Models.User", "User")
+                        .WithOne("Passenger")
+                        .HasForeignKey("api.Models.Passenger", "UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("api.Models.Route", b =>
                 {
                     b.HasOne("api.Models.Centre", "Centre")
@@ -1256,6 +1296,16 @@ namespace api.Migrations
                     b.Navigation("Vehicle");
                 });
 
+            modelBuilder.Entity("api.Models.User", b =>
+                {
+                    b.HasOne("api.Models.Centre", "Centre")
+                        .WithMany()
+                        .HasForeignKey("CentreId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Centre");
+                });
+
             modelBuilder.Entity("api.Models.Vehicle", b =>
                 {
                     b.HasOne("api.Models.Centre", "Centre")
@@ -1347,6 +1397,8 @@ namespace api.Migrations
             modelBuilder.Entity("api.Models.User", b =>
                 {
                     b.Navigation("Driver");
+
+                    b.Navigation("Passenger");
 
                     b.Navigation("ReportedIncidents");
 

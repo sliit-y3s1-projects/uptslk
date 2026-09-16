@@ -1,5 +1,5 @@
 // Temporary UI-only data. Replace these exports with API repository calls later.
-export type StatusTone = "good" | "warning" | "danger" | "neutral";
+export type StatusTone = "good" | "warning" | "danger" | "neutral" | "info";
 
 export type TableRow = {
   id: string;

@@ -7,7 +7,11 @@ import { cn } from "@/lib/utils"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { UnfoldMoreIcon, Tick02Icon, ArrowUp01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons"
 
-const Select = SelectPrimitive.Root
+const selectLabels = new Map<string, string>()
+
+function Select<Value, Multiple extends boolean | undefined = false>({ itemToStringLabel, ...props }: SelectPrimitive.Root.Props<Value, Multiple>) {
+  return <SelectPrimitive.Root {...props} itemToStringLabel={itemToStringLabel ?? ((item: Value) => selectLabels.get(String(item)) ?? String(item))} />
+}
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (
@@ -114,6 +118,7 @@ function SelectItem({
   children,
   ...props
 }: SelectPrimitive.Item.Props) {
+  if (typeof props.value === "string" && typeof children === "string") selectLabels.set(props.value, children)
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
@@ -122,6 +127,7 @@ function SelectItem({
         className
       )}
       {...props}
+      label={typeof children === "string" ? children : undefined}
     >
       <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
         {children}

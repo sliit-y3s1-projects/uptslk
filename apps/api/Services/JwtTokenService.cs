@@ -15,7 +15,7 @@ public class JwtTokenService
         _config = config;
     }
 
-    public string GenerateToken(User user)
+    public string GenerateToken(User user, TimeSpan? lifetime = null)
     {
         var claims = new List<Claim>
         {
@@ -25,6 +25,7 @@ public class JwtTokenService
             new(ClaimTypes.Name, user.Name),
             new(ClaimTypes.Role, user.Role.ToString())
         };
+        if (user.CentreId.HasValue) claims.Add(new Claim("centre_id", user.CentreId.Value.ToString()));
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -33,7 +34,7 @@ public class JwtTokenService
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(8),
+            expires: DateTime.UtcNow.Add(lifetime ?? TimeSpan.FromHours(8)),
             signingCredentials: creds
         );
 

@@ -41,6 +41,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<RouteModel>().HasIndex(r => new { r.CentreId, r.RouteNumber }).IsUnique();
         modelBuilder.Entity<RouteStop>().HasIndex(rs => new { rs.RouteId, rs.SequenceOrder }).IsUnique();
         modelBuilder.Entity<Passenger>().HasIndex(p => p.PhoneNumber).IsUnique();
+        modelBuilder.Entity<Passenger>().HasOne(p => p.User).WithOne(u => u.Passenger).HasForeignKey<Passenger>(p => p.UserId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<FareRule>().HasIndex(rule => new { rule.RouteId, rule.PassengerCategory }).IsUnique();
         modelBuilder.Entity<Booking>().HasIndex(booking => new { booking.TripId, booking.SeatNumber })
             .IsUnique()
@@ -96,6 +97,12 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .WithMany(c => c.Incidents)
             .HasForeignKey(i => i.CentreId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<User>()
+            .HasOne(user => user.Centre)
+            .WithMany()
+            .HasForeignKey(user => user.CentreId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<Trip>()
             .HasOne(t => t.Bay)

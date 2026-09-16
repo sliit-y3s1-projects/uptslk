@@ -4,8 +4,8 @@ using api.Data;
 using api.Enums;
 using api.Models;
 using api.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -42,6 +42,14 @@ builder.Services.AddAuthentication(options =>
     })
     .AddJwtBearer(options =>
     {
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                if (string.IsNullOrEmpty(context.Token)) context.Token = context.Request.Cookies["upts_access_token"];
+                return Task.CompletedTask;
+            }
+        };
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -62,7 +70,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowWebApp", policy =>
     {
         policy.WithOrigins("http://localhost:5173", "https://uptslk.vercel.app")
-              .AllowAnyHeader()
+              .AllowAnyHeader().AllowCredentials()
               .AllowAnyMethod();
     });
 });
@@ -74,28 +82,15 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 
-    if (app.Environment.IsDevelopment())
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+    var adminEmail = builder.Configuration["BootstrapAdmin:Email"] ?? "admin@upts.lk";
+    var adminPassword = builder.Configuration["BootstrapAdmin:Password"] ?? "admin123";
+    if (await userManager.FindByEmailAsync(adminEmail) is null)
     {
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-        const string adminEmail = "admin@upts.lk";
-
-        if (await userManager.FindByEmailAsync(adminEmail) is null)
-        {
-            var admin = new User
-            {
-                UserName = adminEmail,
-                Email = adminEmail,
-                Name = "UPTS Administrator",
-                Role = UserRole.Admin
-            };
-
-            var result = await userManager.CreateAsync(admin, "admin123");
-            if (!result.Succeeded)
-            {
-                throw new InvalidOperationException(
-                    $"Could not create the development admin: {string.Join(", ", result.Errors.Select(error => error.Description))}");
-            }
-        }
+        var admin = new User { UserName = adminEmail, Email = adminEmail, Name = "UPTSLK Super Admin", Role = UserRole.Admin };
+        var result = await userManager.CreateAsync(admin, adminPassword);
+        if (!result.Succeeded)
+            throw new InvalidOperationException($"Could not create the bootstrap admin: {string.Join(", ", result.Errors.Select(error => error.Description))}");
     }
 }
 

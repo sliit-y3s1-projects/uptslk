@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Eye, EyeOff, UserRound } from "lucide-react";
+import { Link, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +13,8 @@ export function RegisterPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -20,23 +24,30 @@ export function RegisterPage() {
       // register() always creates a Commuter account, role is not
       // exposed to the client, see AuthContext
       await register(name, email, password);
-    } catch {
-      setError("Could not create account, please try again");
+      navigate("/onboarding");
+    } catch (cause) {
+      let message = "Could not create account, please try again";
+      if (cause instanceof Error) {
+        try {
+          const body = JSON.parse(cause.message) as { error?: string[] | string };
+          message = Array.isArray(body.error) ? body.error.join(" ") : body.error ?? message;
+        } catch {
+          message = cause.message || message;
+        }
+      }
+      setError(message);
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-6">
-      <section className="flex w-full max-w-sm flex-col items-center gap-6 rounded-xl border bg-card p-8 text-center">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Create Account
-          </h1>
-          <p className="text-sm leading-6 text-muted-foreground">
-            Sign up as a commuter to book and track trips.
-          </p>
+    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
+      <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-7 sm:p-9">
+        <div className="mb-8 space-y-3">
+          <div className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground"><UserRound className="size-5" /></div>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-950">Create your account</h1>
+          <p className="text-sm leading-6 text-slate-500">Join UPTSLK to book seats and manage your journeys.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="w-full space-y-4 text-left">
@@ -46,6 +57,8 @@ export function RegisterPage() {
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              placeholder="Your full name"
+              autoComplete="name"
               required
             />
           </div>
@@ -56,27 +69,34 @@ export function RegisterPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              autoComplete="email"
               required
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="relative space-y-1.5">
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="At least 8 characters"
+              autoComplete="new-password"
               required
               minLength={8}
+              className="pr-11"
             />
+            <button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-muted-foreground">{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button>
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <Button type="submit" className="w-full" disabled={submitting}>
+          <Button type="submit" className="h-11 w-full rounded-lg" disabled={submitting}>
             {submitting ? "Creating account..." : "Sign Up"}
           </Button>
         </form>
+        <p className="mt-6 text-center text-sm text-slate-500">Already have an account? <Link to="/login" className="font-medium text-primary">Sign in</Link></p>
       </section>
     </main>
   );

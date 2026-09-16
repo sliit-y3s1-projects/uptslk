@@ -4,6 +4,8 @@ using api.Enums;
 using api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace api.Controllers;
 
@@ -78,6 +80,24 @@ public class BookingsController(AppDbContext db) : ControllerBase
         }
 
         return CreatedAtAction(nameof(Get), new { bookingId = booking.Id }, new { booking.Id, booking.TripId, booking.PassengerId, booking.SeatNumber, booking.Fare, booking.Status, booking.QrCode });
+    }
+
+    [HttpPost("me")]
+    [Authorize(Roles = "Commuter")]
+    public async Task<IActionResult> CreateForCurrentUser(CreateMyBookingRequest request)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userId, out var parsedUserId)) return Unauthorized();
+
+        var passenger = await db.Passengers.AsNoTracking().SingleOrDefaultAsync(item => item.UserId == parsedUserId);
+        if (passenger is null) return BadRequest(new { error = "No passenger profile is linked to this account." });
+
+        return await Create(new CreateBookingRequest
+        {
+            TripId = request.TripId,
+            PassengerId = passenger.Id,
+            SeatNumber = request.SeatNumber
+        });
     }
 
     [HttpPost("{bookingId:guid}/seat")]

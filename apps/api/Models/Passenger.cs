@@ -5,6 +5,8 @@ namespace api.Models;
 public class Passenger
 {
     public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid? UserId { get; set; }
+    public User? User { get; set; }
     public string FullName { get; set; } = default!;
     public string PhoneNumber { get; set; } = default!;
     public string? Email { get; set; }
