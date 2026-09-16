@@ -12,9 +12,11 @@ namespace api.Controllers;
 public class CentresController(AppDbContext db) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] CentreStatus? status, [FromQuery] string? district, [FromQuery] string? search)
+    public async Task<IActionResult> List([FromQuery] CentreStatus? status, [FromQuery] string? district, [FromQuery] string? search, [FromQuery] bool includeClosed = false)
     {
         var query = db.Centres.AsNoTracking().AsQueryable();
+
+        if (!includeClosed && !status.HasValue) query = query.Where(centre => centre.Status != CentreStatus.Closed);
 
         if (status.HasValue) query = query.Where(centre => centre.Status == status.Value);
         if (!string.IsNullOrWhiteSpace(district)) query = query.Where(centre => centre.District == district.Trim());

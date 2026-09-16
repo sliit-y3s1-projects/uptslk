@@ -9,7 +9,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRoutes, useSchedules, useCreateSchedule, useDeactivateSchedule } from "./hooks/useRoutes";
 import { useBays } from "@/features/centres/hooks/useCentres";
 
-import { useEffect } from "react";
 import { useSearchParams } from "react-router";
 
 export function TimetablesPage() {
@@ -17,13 +16,8 @@ export function TimetablesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const routeIdParam = searchParams.get("route");
 
-  const [selectedRouteId, setSelectedRouteId] = useState<string | undefined>(routeIdParam || undefined);
+  const selectedRouteId = routeIdParam || undefined;
   const [showForm, setShowForm] = useState(false);
-
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => {
-    setSelectedRouteId(routeIdParam || undefined);
-  }, [routeIdParam]);
 
   const { data: routes, isLoading: loadingRoutes, error: routesError } = useRoutes(user?.centreId);
   const selectedRoute = routes?.find(r => r.id === selectedRouteId);
@@ -34,7 +28,6 @@ export function TimetablesPage() {
   const deactivateMutation = useDeactivateSchedule(selectedRouteId || "");
 
   const handleRouteSelect = (val: string | null) => { if (!val) return; {
-    setSelectedRouteId(val);
     setSearchParams({ route: val }); }
   };
 
@@ -76,7 +69,7 @@ export function TimetablesPage() {
             <Select name="bayId" required>
               <SelectTrigger><SelectValue placeholder="Select bay" /></SelectTrigger>
               <SelectContent>
-                {bays?.filter(b => b.status === "Active").map(b => <SelectItem key={b.id} value={b.id}>{b.code}</SelectItem>)}
+                {bays?.filter(b => b.status === "Available").map(b => <SelectItem key={b.id} value={b.id}>{b.code}</SelectItem>)}
               </SelectContent>
             </Select>
           </label>
@@ -138,5 +131,3 @@ export function TimetablesPage() {
     )}
   </main>;
 }
-
-

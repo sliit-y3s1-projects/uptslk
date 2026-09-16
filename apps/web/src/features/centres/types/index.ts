@@ -1,5 +1,5 @@
 export type CentreStatus = 'Planned' | 'Operating' | 'Closed' | 'Suspended';
-export type BayStatus = 'Active' | 'OutOfService';
+export type BayStatus = 'Available' | 'Occupied' | 'OutOfService';
 
 export interface Centre {
   id: string;

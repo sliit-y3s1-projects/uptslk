@@ -4,6 +4,11 @@ export interface User {
   email: string;
   role: string;
   centreId?: string;
+  isActive?: boolean;
+  homeLocation?: string | null;
+  nicNumber?: string | null;
+  gender?: string | null;
+  profilePhotoUrl?: string | null;
 }
 
 export interface AuthContextType {
@@ -12,6 +17,5 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  loginDemo: (role: string, centreId?: string) => void;
   loading: boolean;
 }

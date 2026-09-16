@@ -17,7 +17,7 @@ export function CentreRoutesViewPage() {
 
 export function CentreRouteDetailViewPage() {
   const { centreId = "" } = useParams();
-  return <RouteDetailPage centreId={centreId} basePath={`/admin/centres/${centreId}/routes`} readOnly />;
+  return <RouteDetailPage basePath={`/admin/centres/${centreId}/routes`} readOnly />;
 }
 
 export function CentreVehiclesViewPage() {

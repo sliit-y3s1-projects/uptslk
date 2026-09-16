@@ -1,5 +1,5 @@
 import { Check, Clock3 } from "lucide-react";
-import type { TripStatus } from "@/mock/dispatch";
+import type { TripStatus } from "../types/trips";
 
 const stages: TripStatus[] = ["Scheduled", "Ready", "Boarding", "Dispatched", "Completed"];
 

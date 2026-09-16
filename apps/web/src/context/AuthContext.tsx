@@ -5,9 +5,7 @@ import { API_BASE_URL } from "@/lib/api/api-client";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem("upts_token"),
-  );
+  const [token, setToken] = useState<string | null>("cookie-session");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,14 +15,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (token === "demo-session") {
-        setLoading(false);
-        return;
-      }
-
       try {
         const res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
         });
 
         if (!res.ok) throw new Error();
@@ -35,9 +28,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: data.name,
           email: data.email,
           role: data.role,
+          centreId: data.centreId,
+          isActive: data.isActive,
+          homeLocation: data.homeLocation,
+          nicNumber: data.nicNumber,
+          gender: data.gender,
+          profilePhotoUrl: data.profilePhotoUrl,
         });
       } catch {
-        localStorage.removeItem("upts_token");
         setToken(null);
         setUser(null);
       } finally {
@@ -53,16 +51,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
+      credentials: "include",
     });
     if (!res.ok) throw new Error("Invalid credentials");
     const data = await res.json();
-    localStorage.setItem("upts_token", data.token);
-    setToken(data.token);
+    setToken("cookie-session");
     setUser({
       id: data.userId,
       name: data.name,
       email: data.email,
       role: data.role,
+      centreId: data.centreId,
+      isActive: data.isActive,
+      homeLocation: data.homeLocation,
+      nicNumber: data.nicNumber,
+      gender: data.gender,
+      profilePhotoUrl: data.profilePhotoUrl,
     });
   }
 
@@ -71,41 +75,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password }),
+      credentials: "include",
     });
     if (!res.ok) throw new Error("Registration failed");
     const data = await res.json();
-    localStorage.setItem("upts_token", data.token);
-    setToken(data.token);
+    setToken("cookie-session");
     setUser({
       id: data.userId,
       name: data.name,
       email: data.email,
       role: data.role,
+      centreId: data.centreId,
+      isActive: data.isActive,
+      homeLocation: data.homeLocation,
+      nicNumber: data.nicNumber,
+      gender: data.gender,
+      profilePhotoUrl: data.profilePhotoUrl,
     });
   }
 
   function logout() {
-    localStorage.removeItem("upts_token");
+    void fetch(`${API_BASE_URL}/api/v1/auth/logout`, { method: "POST", credentials: "include" });
     setToken(null);
     setUser(null);
   }
 
-  function loginDemo(role: string, centreId?: string) {
-    const user = {
-      id: `demo-${role.toLowerCase()}`,
-      name: role === "SuperAdmin" ? "System Administrator" : "Centre Operations Manager",
-      email: "demo@upts.lk",
-      role,
-      centreId,
-    };
-    localStorage.setItem("upts_token", "demo-session");
-    setToken("demo-session");
-    setUser(user);
-  }
-
   return (
     <AuthContext.Provider
-      value={{ user, token, login, register, logout, loginDemo, loading }}
+      value={{ user, token, login, register, logout, loading }}
     >
       {children}
     </AuthContext.Provider>

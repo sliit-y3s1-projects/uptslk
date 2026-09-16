@@ -10,6 +10,12 @@ public sealed class CreateBookingRequest
     [Required, StringLength(8)] public string SeatNumber { get; init; } = default!;
 }
 
+public sealed class CreateMyBookingRequest
+{
+    public Guid TripId { get; init; }
+    [Required, StringLength(8)] public string SeatNumber { get; init; } = default!;
+}
+
 public sealed class ChangeBookingSeatRequest
 {
     [Required, StringLength(8)] public string SeatNumber { get; init; } = default!;

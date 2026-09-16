@@ -4,5 +4,8 @@ public enum UserRole
 {
     Commuter,
     Driver,
-    Admin
+    Admin,
+    CentreManager,
+    Dispatcher,
+    FleetOfficer
 }
