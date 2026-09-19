@@ -89,4 +89,3 @@ export interface UpdateRouteScheduleRequest {
   operatingDays: string;
   isActive: boolean;
 }
-

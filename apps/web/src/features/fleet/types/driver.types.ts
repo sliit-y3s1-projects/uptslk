@@ -46,4 +46,3 @@ export interface DriverQueryParams {
   status?: DriverStatus;
   search?: string;
 }
-

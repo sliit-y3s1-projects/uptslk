@@ -85,12 +85,18 @@ using (var scope = app.Services.CreateScope())
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
     var adminEmail = builder.Configuration["BootstrapAdmin:Email"] ?? "admin@upts.lk";
     var adminPassword = builder.Configuration["BootstrapAdmin:Password"] ?? "admin123";
-    if (await userManager.FindByEmailAsync(adminEmail) is null)
+    var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
+    if (existingAdmin is null)
     {
         var admin = new User { UserName = adminEmail, Email = adminEmail, Name = "UPTSLK Super Admin", Role = UserRole.Admin };
         var result = await userManager.CreateAsync(admin, adminPassword);
         if (!result.Succeeded)
             throw new InvalidOperationException($"Could not create the bootstrap admin: {string.Join(", ", result.Errors.Select(error => error.Description))}");
+    }
+    else if (!existingAdmin.IsActive)
+    {
+        existingAdmin.IsActive = true;
+        await userManager.UpdateAsync(existingAdmin);
     }
 }
 

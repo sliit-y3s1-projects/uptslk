@@ -16,7 +16,21 @@ export function RequireRole({
   if (!user) return null;
 
   const allowedRoles = Array.isArray(role) ? role : [role];
-  const knownArea = ["/admin", "/operations", "/network", "/fleet", "/passengers", "/riders", "/fares", "/reports", "/settings"].some((prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`));
+  const knownArea = [
+    "/admin",
+    "/operations",
+    "/network",
+    "/fleet",
+    "/passengers",
+    "/riders",
+    "/fares",
+    "/reports",
+    "/settings",
+  ].some(
+    (prefix) =>
+      location.pathname === prefix ||
+      location.pathname.startsWith(`${prefix}/`),
+  );
   if (!knownArea) return <NotFoundPage />;
   if (!allowedRoles.includes(user.role)) {
     return (

@@ -13,8 +13,21 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const centre = centres.find((item) => item.id === user?.centreId);
   return (
-    <MockDataProvider><DispatchMockProvider><OperationalScopeProvider initialDistrict={centre?.district}><SidebarProvider style={{ "--sidebar-width": "14.5rem" } as React.CSSProperties}>
-      <AppSidebar /><SidebarInset><DashboardHeader /><OperationalScopeBar />{children}</SidebarInset>
-    </SidebarProvider></OperationalScopeProvider></DispatchMockProvider></MockDataProvider>
+    <MockDataProvider>
+      <DispatchMockProvider>
+        <OperationalScopeProvider initialDistrict={centre?.district}>
+          <SidebarProvider
+            style={{ "--sidebar-width": "14.5rem" } as React.CSSProperties}
+          >
+            <AppSidebar />
+            <SidebarInset>
+              <DashboardHeader />
+              <OperationalScopeBar />
+              {children}
+            </SidebarInset>
+          </SidebarProvider>
+        </OperationalScopeProvider>
+      </DispatchMockProvider>
+    </MockDataProvider>
   );
 }

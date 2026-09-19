@@ -4,7 +4,13 @@ import { Link, useNavigate, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PageHeading } from "@/components/shared/PageHeading";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,7 +23,12 @@ import {
   useUpdateVehicle,
   useDeactivateVehicle,
 } from "./hooks";
-import type { VehicleType, VehicleStatus, VehicleDetail, CentreOption } from "./types";
+import type {
+  VehicleType,
+  VehicleStatus,
+  VehicleDetail,
+  CentreOption,
+} from "./types";
 import { extractErrorMessage } from "./services/error.utils";
 
 export function VehiclesPage({
@@ -31,9 +42,11 @@ export function VehiclesPage({
 } = {}) {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
-  const { effectiveCentreId, centres, isLoading: centresLoading } = useEffectiveCentreGuid(
-    centreId ?? user?.centreId,
-  );
+  const {
+    effectiveCentreId,
+    centres,
+    isLoading: centresLoading,
+  } = useEffectiveCentreGuid(centreId ?? user?.centreId);
 
   const {
     data: vehicles = [],
@@ -59,7 +72,18 @@ export function VehiclesPage({
         }
         action={
           readOnly ? (
-            <Button variant="outline" render={<Link to={effectiveCentreId ? `/admin/centres/${effectiveCentreId}` : "/admin/centres"} />}>
+            <Button
+              variant="outline"
+              render={
+                <Link
+                  to={
+                    effectiveCentreId
+                      ? `/admin/centres/${effectiveCentreId}`
+                      : "/admin/centres"
+                  }
+                />
+              }
+            >
               Back to centre
             </Button>
           ) : (
@@ -72,8 +96,10 @@ export function VehiclesPage({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
-          {vehicles.length} vehicle{vehicles.length === 1 ? "" : "s"} assigned to{" "}
-          {centre?.name ?? (effectiveCentreId ? "selected centre" : "all centres")}
+          {vehicles.length} vehicle{vehicles.length === 1 ? "" : "s"} assigned
+          to{" "}
+          {centre?.name ??
+            (effectiveCentreId ? "selected centre" : "all centres")}
         </p>
         <div className="relative w-full sm:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -170,14 +196,21 @@ export function VehicleProfilePage({
 } = {}) {
   const { vehicleId } = useParams();
   const navigate = useNavigate();
-  const { data: vehicle, isLoading, isError, error, refetch } = useVehicle(vehicleId);
+  const {
+    data: vehicle,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useVehicle(vehicleId);
   const deactivateMutation = useDeactivateVehicle();
   const [actionError, setActionError] = useState<string | null>(null);
 
   if (isLoading) {
     return (
       <main className="flex flex-1 items-center justify-center p-12 text-sm text-muted-foreground">
-        <Loader2 className="mr-2 size-5 animate-spin" /> Loading vehicle profile...
+        <Loader2 className="mr-2 size-5 animate-spin" /> Loading vehicle
+        profile...
       </main>
     );
   }
@@ -203,7 +236,11 @@ export function VehicleProfilePage({
 
   async function handleDeactivate() {
     if (!vehicleId) return;
-    if (!confirm(`Are you sure you want to deactivate vehicle ${vehicle?.plateNumber}?`)) {
+    if (
+      !confirm(
+        `Are you sure you want to deactivate vehicle ${vehicle?.plateNumber}?`,
+      )
+    ) {
       return;
     }
     setActionError(null);
@@ -227,7 +264,10 @@ export function VehicleProfilePage({
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button variant="outline" render={<Link to={`/fleet/vehicles/${vehicle.id}/edit`} />}>
+              <Button
+                variant="outline"
+                render={<Link to={`/fleet/vehicles/${vehicle.id}/edit`} />}
+              >
                 Edit vehicle
               </Button>
               {vehicle.status !== "Inactive" && (
@@ -236,7 +276,9 @@ export function VehicleProfilePage({
                   disabled={deactivateMutation.isPending}
                   onClick={handleDeactivate}
                 >
-                  {deactivateMutation.isPending ? "Deactivating..." : "Deactivate"}
+                  {deactivateMutation.isPending
+                    ? "Deactivating..."
+                    : "Deactivate"}
                 </Button>
               )}
             </div>
@@ -264,9 +306,16 @@ export function VehicleProfilePage({
             <Info label="Seat capacity" value={`${vehicle.capacity} seats`} />
             <Info
               label="Accessibility"
-              value={vehicle.isAccessible ? "Wheelchair accessible" : "Standard access"}
+              value={
+                vehicle.isAccessible
+                  ? "Wheelchair accessible"
+                  : "Standard access"
+              }
             />
-            <Info label="Assigned centre" value={vehicle.centre?.name ?? "Not assigned"} />
+            <Info
+              label="Assigned centre"
+              value={vehicle.centre?.name ?? "Not assigned"}
+            />
             <Info label="Operating status" value={vehicle.status} />
           </div>
         </article>
@@ -274,7 +323,9 @@ export function VehicleProfilePage({
         <article className="rounded-lg border bg-card p-5">
           <h2 className="font-semibold">Current centre assignment</h2>
           <div className="mt-4 rounded-md bg-muted/60 p-4">
-            <p className="text-sm font-medium">{vehicle.centre?.name ?? "Unassigned"}</p>
+            <p className="text-sm font-medium">
+              {vehicle.centre?.name ?? "Unassigned"}
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">
               Centre Code: {vehicle.centre?.code ?? "—"}
             </p>
@@ -332,7 +383,9 @@ export function VehicleProfilePage({
                       }
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">{m.description}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {m.description}
+                  </p>
                   {m.completedAt && (
                     <p className="text-xs text-emerald-600">
                       Completed: {new Date(m.completedAt).toLocaleString()}
@@ -352,7 +405,10 @@ export function VehicleProfilePage({
           <h2 className="font-semibold">Service profile</h2>
           <div className="mt-4 grid grid-cols-3 gap-3">
             <Info label="Seating" value={String(vehicle.capacity)} />
-            <Info label="Accessibility" value={vehicle.isAccessible ? "Yes" : "No"} />
+            <Info
+              label="Accessibility"
+              value={vehicle.isAccessible ? "Yes" : "No"}
+            />
             <Info label="Status" value={vehicle.status} />
           </div>
         </article>
@@ -368,17 +424,21 @@ export function VehicleFormPage() {
 
   const { data: existing, isLoading: existingLoading } = useVehicle(vehicleId);
   const { data: centres = [], isLoading: centresLoading } = useCentres();
-  const { effectiveCentreId: userCentreGuid } = useEffectiveCentreGuid(user?.centreId);
+  const { effectiveCentreId: userCentreGuid } = useEffectiveCentreGuid(
+    user?.centreId,
+  );
 
   if ((editing && existingLoading) || centresLoading) {
     return (
       <main className="flex flex-1 items-center justify-center p-12 text-sm text-muted-foreground">
-        <Loader2 className="mr-2 size-5 animate-spin" /> Loading vehicle details...
+        <Loader2 className="mr-2 size-5 animate-spin" /> Loading vehicle
+        details...
       </main>
     );
   }
 
-  const defaultCentreId = existing?.centreId ?? userCentreGuid ?? centres[0]?.id ?? "";
+  const defaultCentreId =
+    existing?.centreId ?? userCentreGuid ?? centres[0]?.id ?? "";
 
   return (
     <VehicleFormInner
@@ -409,11 +469,17 @@ function VehicleFormInner({
 
   const [plateNumber, setPlateNumber] = useState(existing?.plateNumber ?? "");
   const [model, setModel] = useState(existing?.model ?? "");
-  const [centreId, setCentreId] = useState(existing?.centreId ?? defaultCentreId);
+  const [centreId, setCentreId] = useState(
+    existing?.centreId ?? defaultCentreId,
+  );
   const [type, setType] = useState<VehicleType>(existing?.type ?? "Normal");
   const [capacity, setCapacity] = useState(String(existing?.capacity ?? 52));
-  const [isAccessible, setIsAccessible] = useState(existing?.isAccessible ?? false);
-  const [status, setStatus] = useState<VehicleStatus>(existing?.status ?? "Active");
+  const [isAccessible, setIsAccessible] = useState(
+    existing?.isAccessible ?? false,
+  );
+  const [status, setStatus] = useState<VehicleStatus>(
+    existing?.status ?? "Active",
+  );
   const [formError, setFormError] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent) {
@@ -467,11 +533,18 @@ function VehicleFormInner({
   return (
     <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
       <PageHeading
-        title={editing ? `Edit ${existing?.plateNumber ?? "Vehicle"}` : "Register vehicle"}
+        title={
+          editing
+            ? `Edit ${existing?.plateNumber ?? "Vehicle"}`
+            : "Register vehicle"
+        }
         description="All fields map directly to the backend Vehicle create and update APIs."
       />
 
-      <form className="max-w-3xl rounded-lg border bg-card p-5" onSubmit={handleSubmit}>
+      <form
+        className="max-w-3xl rounded-lg border bg-card p-5"
+        onSubmit={handleSubmit}
+      >
         {formError && (
           <div className="mb-4 flex items-center gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
             <AlertCircle className="size-4 shrink-0" />
@@ -502,7 +575,10 @@ function VehicleFormInner({
 
           <label className="grid gap-1.5 text-sm font-medium">
             Assigned centre
-            <Select value={centreId} onValueChange={(val) => val && setCentreId(val)}>
+            <Select
+              value={centreId}
+              onValueChange={(val) => val && setCentreId(val)}
+            >
               <SelectTrigger className="w-full bg-muted/60">
                 <SelectValue placeholder="Select centre" />
               </SelectTrigger>
@@ -518,7 +594,10 @@ function VehicleFormInner({
 
           <label className="grid gap-1.5 text-sm font-medium">
             Vehicle type
-            <Select value={type} onValueChange={(val) => val && setType(val as VehicleType)}>
+            <Select
+              value={type}
+              onValueChange={(val) => val && setType(val as VehicleType)}
+            >
               <SelectTrigger className="w-full bg-muted/60">
                 <SelectValue />
               </SelectTrigger>
@@ -545,7 +624,10 @@ function VehicleFormInner({
 
           <label className="grid gap-1.5 text-sm font-medium">
             Operating status
-            <Select value={status} onValueChange={(val) => val && setStatus(val as VehicleStatus)}>
+            <Select
+              value={status}
+              onValueChange={(val) => val && setStatus(val as VehicleStatus)}
+            >
               <SelectTrigger className="w-full bg-muted/60">
                 <SelectValue />
               </SelectTrigger>
@@ -567,12 +649,17 @@ function VehicleFormInner({
         </label>
 
         <p className="mt-3 text-xs text-muted-foreground">
-          Centre, plate number, model, type, capacity, accessibility, and status are sent
-          directly to the Vehicles API.
+          Centre, plate number, model, type, capacity, accessibility, and status
+          are sent directly to the Vehicles API.
         </p>
 
         <div className="mt-5 flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={isSubmitting}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate(-1)}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
@@ -599,7 +686,15 @@ function Info({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Meter({ label, value, width }: { label: string; value: string; width: string }) {
+function Meter({
+  label,
+  value,
+  width,
+}: {
+  label: string;
+  value: string;
+  width: string;
+}) {
   return (
     <div>
       <div className="flex justify-between text-sm">

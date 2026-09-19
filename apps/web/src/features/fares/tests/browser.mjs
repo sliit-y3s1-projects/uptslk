@@ -328,11 +328,9 @@ try {
   await visible("Fare rule updated.");
   await button("Bookings & tickets").click();
   await button("Create booking").click();
-  const form = page
-    .locator("section")
-    .filter({
-      has: page.getByRole("heading", { name: "New booking", exact: true }),
-    });
+  const form = page.locator("section").filter({
+    has: page.getByRole("heading", { name: "New booking", exact: true }),
+  });
   await form.getByLabel("Centre", { exact: true }).selectOption(centreId);
   await page.getByLabel("Scheduled trip", { exact: true }).selectOption(tripId);
   await page.getByLabel("Passenger", { exact: true }).selectOption(passengerId);

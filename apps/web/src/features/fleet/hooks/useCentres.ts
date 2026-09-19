@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getCentres } from "../services/centres.service";
 import type { CentreOption } from "../types";
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function useCentres() {
   return useQuery<CentreOption[]>({
@@ -12,7 +13,10 @@ export function useCentres() {
   });
 }
 
-export function resolveCentreGuid(centres: CentreOption[] | undefined, centreIdOrSlug?: string): string | undefined {
+export function resolveCentreGuid(
+  centres: CentreOption[] | undefined,
+  centreIdOrSlug?: string,
+): string | undefined {
   if (!centreIdOrSlug || !centreIdOrSlug.trim()) return undefined;
   const trimmed = centreIdOrSlug.trim();
 
@@ -47,4 +51,3 @@ export function useEffectiveCentreGuid(centreIdOrSlug?: string) {
     error,
   };
 }
-

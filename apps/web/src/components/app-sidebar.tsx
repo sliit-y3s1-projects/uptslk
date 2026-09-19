@@ -114,7 +114,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { logout } = useAuth();
   const { pathname } = useLocation();
   const [openItems, setOpenItems] = React.useState<string[]>(defaultOpenItems);
-  const matchesPath = (url: string) => url === "/operations" ? pathname === url : pathname.startsWith(url);
+  const matchesPath = (url: string) =>
+    url === "/operations" ? pathname === url : pathname.startsWith(url);
 
   function toggleItem(title: string) {
     setOpenItems((current) =>
@@ -131,7 +132,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              render={<a href="/operations" aria-label="UPTSLK Console"><span className="text-2xl font-bold tracking-tight">UPTSLK Console</span></a>}
+              render={
+                <a href="/operations" aria-label="UPTSLK Console">
+                  <span className="text-2xl font-bold tracking-tight">
+                    UPTSLK Console
+                  </span>
+                </a>
+              }
             />
           </SidebarMenuItem>
         </SidebarMenu>
@@ -141,7 +148,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenu>
             {data.navMain.map((item) => {
               const isOpen = openItems.includes(item.title);
-              const isActive = item.items.some((subItem) => matchesPath(subItem.url));
+              const isActive = item.items.some((subItem) =>
+                matchesPath(subItem.url),
+              );
 
               return (
                 <SidebarMenuItem key={item.title}>

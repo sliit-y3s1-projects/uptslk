@@ -32,7 +32,8 @@ export function useMaintenanceRecord(recordId?: string) {
 export function useCreateMaintenanceRecord() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateMaintenanceRequest) => createMaintenanceRecord(data),
+    mutationFn: (data: CreateMaintenanceRequest) =>
+      createMaintenanceRecord(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["maintenance-records"] });
       queryClient.invalidateQueries({ queryKey: ["vehicles"] });
@@ -43,8 +44,13 @@ export function useCreateMaintenanceRecord() {
 export function useUpdateMaintenanceRecord() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateMaintenanceRequest }) =>
-      updateMaintenanceRecord(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateMaintenanceRequest;
+    }) => updateMaintenanceRecord(id, data),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["maintenance-records"] });
       queryClient.invalidateQueries({
@@ -68,4 +74,3 @@ export function useCancelMaintenanceRecord() {
     },
   });
 }
-

@@ -3,7 +3,13 @@ import { Link, useNavigate, useParams } from "react-router";
 import { Plus, Search, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PageHeading } from "@/components/shared/PageHeading";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,7 +22,11 @@ import {
   useUpdateMaintenanceRecord,
   useCancelMaintenanceRecord,
 } from "./hooks";
-import type { MaintenanceStatus, MaintenanceDetail, VehicleListItem } from "./types";
+import type {
+  MaintenanceStatus,
+  MaintenanceDetail,
+  VehicleListItem,
+} from "./types";
 import { extractErrorMessage } from "./services/error.utils";
 
 export function MaintenancePage() {
@@ -59,7 +69,8 @@ export function MaintenancePage() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
-          {filteredRecords.length} maintenance record{filteredRecords.length === 1 ? "" : "s"}
+          {filteredRecords.length} maintenance record
+          {filteredRecords.length === 1 ? "" : "s"}
         </p>
         <div className="relative w-full sm:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -76,7 +87,9 @@ export function MaintenancePage() {
         <div className="flex items-center justify-between rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
           <div className="flex items-center gap-2">
             <AlertCircle className="size-4" />
-            <span>Failed to load maintenance records: {extractErrorMessage(error)}</span>
+            <span>
+              Failed to load maintenance records: {extractErrorMessage(error)}
+            </span>
           </div>
           <Button variant="outline" size="sm" onClick={() => refetch()}>
             Retry
@@ -86,7 +99,8 @@ export function MaintenancePage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center p-12 text-sm text-muted-foreground">
-          <Loader2 className="mr-2 size-5 animate-spin" /> Loading maintenance records...
+          <Loader2 className="mr-2 size-5 animate-spin" /> Loading maintenance
+          records...
         </div>
       ) : (
         <section className="overflow-hidden rounded-lg border bg-card">
@@ -99,12 +113,18 @@ export function MaintenancePage() {
               <div>
                 <p className="font-medium">{record.type}</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">{record.vehicle}</span> · {record.description}
+                  <span className="font-semibold text-foreground">
+                    {record.vehicle}
+                  </span>{" "}
+                  · {record.description}
                 </p>
               </div>
               <p className="text-sm text-muted-foreground">
                 {new Date(record.scheduledFor).toLocaleDateString()}{" "}
-                {new Date(record.scheduledFor).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                {new Date(record.scheduledFor).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </p>
               <StatusBadge label={record.status} tone={tone(record.status)} />
             </Link>
@@ -125,14 +145,21 @@ export function MaintenancePage() {
 export function MaintenanceDetailPage() {
   const { recordId } = useParams();
   const navigate = useNavigate();
-  const { data: record, isLoading, isError, error, refetch } = useMaintenanceRecord(recordId);
+  const {
+    data: record,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useMaintenanceRecord(recordId);
   const cancelMutation = useCancelMaintenanceRecord();
   const [actionError, setActionError] = useState<string | null>(null);
 
   if (isLoading) {
     return (
       <main className="flex flex-1 items-center justify-center p-12 text-sm text-muted-foreground">
-        <Loader2 className="mr-2 size-5 animate-spin" /> Loading maintenance record...
+        <Loader2 className="mr-2 size-5 animate-spin" /> Loading maintenance
+        record...
       </main>
     );
   }
@@ -158,7 +185,11 @@ export function MaintenanceDetailPage() {
 
   async function handleCancel() {
     if (!recordId) return;
-    if (!confirm(`Are you sure you want to cancel this ${record?.type} maintenance record?`)) {
+    if (
+      !confirm(
+        `Are you sure you want to cancel this ${record?.type} maintenance record?`,
+      )
+    ) {
       return;
     }
     setActionError(null);
@@ -166,11 +197,14 @@ export function MaintenanceDetailPage() {
       await cancelMutation.mutateAsync(recordId);
       navigate("/fleet/maintenance");
     } catch (err) {
-      setActionError(extractErrorMessage(err, "Failed to cancel maintenance record."));
+      setActionError(
+        extractErrorMessage(err, "Failed to cancel maintenance record."),
+      );
     }
   }
 
-  const canCancel = record.status !== "Completed" && record.status !== "Cancelled";
+  const canCancel =
+    record.status !== "Completed" && record.status !== "Cancelled";
 
   return (
     <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
@@ -179,7 +213,10 @@ export function MaintenanceDetailPage() {
         description={`${record.vehicle?.plateNumber ?? "Vehicle"} maintenance record`}
         action={
           <div className="flex gap-2">
-            <Button variant="outline" render={<Link to={`/fleet/maintenance/${record.id}/edit`} />}>
+            <Button
+              variant="outline"
+              render={<Link to={`/fleet/maintenance/${record.id}/edit`} />}
+            >
               Edit record
             </Button>
             {canCancel && (
@@ -188,7 +225,9 @@ export function MaintenanceDetailPage() {
                 disabled={cancelMutation.isPending}
                 onClick={handleCancel}
               >
-                {cancelMutation.isPending ? "Cancelling..." : "Cancel maintenance"}
+                {cancelMutation.isPending
+                  ? "Cancelling..."
+                  : "Cancel maintenance"}
               </Button>
             )}
           </div>
@@ -244,8 +283,11 @@ export function MaintenanceFormPage() {
   const editing = Boolean(recordId);
   const { user } = useAuth();
 
-  const { data: existing, isLoading: existingLoading } = useMaintenanceRecord(recordId);
-  const { effectiveCentreId: userCentreGuid } = useEffectiveCentreGuid(user?.centreId);
+  const { data: existing, isLoading: existingLoading } =
+    useMaintenanceRecord(recordId);
+  const { effectiveCentreId: userCentreGuid } = useEffectiveCentreGuid(
+    user?.centreId,
+  );
 
   const { data: vehicles = [], isLoading: vehiclesLoading } = useVehicles({
     centreId: userCentreGuid,
@@ -254,7 +296,8 @@ export function MaintenanceFormPage() {
   if ((editing && existingLoading) || vehiclesLoading) {
     return (
       <main className="flex flex-1 items-center justify-center p-12 text-sm text-muted-foreground">
-        <Loader2 className="mr-2 size-5 animate-spin" /> Loading maintenance details...
+        <Loader2 className="mr-2 size-5 animate-spin" /> Loading maintenance
+        details...
       </main>
     );
   }
@@ -294,12 +337,18 @@ function MaintenanceFormInner({
     return toDateTimeLocalString(tomorrow.toISOString());
   };
 
-  const [vehicleId, setVehicleId] = useState(existing?.vehicleId ?? vehicles[0]?.id ?? "");
+  const [vehicleId, setVehicleId] = useState(
+    existing?.vehicleId ?? vehicles[0]?.id ?? "",
+  );
   const [type, setType] = useState(existing?.type ?? "");
   const [scheduledFor, setScheduledFor] = useState(getDefaultScheduledFor());
   const [description, setDescription] = useState(existing?.description ?? "");
-  const [status, setStatus] = useState<MaintenanceStatus>(existing?.status ?? "Scheduled");
-  const [completedAt, setCompletedAt] = useState(toDateTimeLocalString(existing?.completedAt));
+  const [status, setStatus] = useState<MaintenanceStatus>(
+    existing?.status ?? "Scheduled",
+  );
+  const [completedAt, setCompletedAt] = useState(
+    toDateTimeLocalString(existing?.completedAt),
+  );
   const [formError, setFormError] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent) {
@@ -333,12 +382,16 @@ function MaintenanceFormInner({
             description: description.trim(),
             status,
             scheduledFor: new Date(scheduledFor).toISOString(),
-            completedAt: completedAt ? new Date(completedAt).toISOString() : null,
+            completedAt: completedAt
+              ? new Date(completedAt).toISOString()
+              : null,
           },
         });
         navigate(`/fleet/maintenance/${recordId}`);
       } catch (err) {
-        setFormError(extractErrorMessage(err, "Failed to update maintenance record."));
+        setFormError(
+          extractErrorMessage(err, "Failed to update maintenance record."),
+        );
       }
     } else {
       if (!vehicleId) {
@@ -355,7 +408,9 @@ function MaintenanceFormInner({
         });
         navigate(`/fleet/maintenance/${created.id}`);
       } catch (err) {
-        setFormError(extractErrorMessage(err, "Failed to schedule maintenance."));
+        setFormError(
+          extractErrorMessage(err, "Failed to schedule maintenance."),
+        );
       }
     }
   }
@@ -365,7 +420,11 @@ function MaintenanceFormInner({
   return (
     <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
       <PageHeading
-        title={editing ? `Edit ${existing?.type ?? "Maintenance"}` : "Schedule maintenance"}
+        title={
+          editing
+            ? `Edit ${existing?.type ?? "Maintenance"}`
+            : "Schedule maintenance"
+        }
         description={
           editing
             ? "Fields map directly to UpdateMaintenanceRecordRequest."
@@ -373,7 +432,10 @@ function MaintenanceFormInner({
         }
       />
 
-      <form className="max-w-3xl rounded-lg border bg-card p-5" onSubmit={handleSubmit}>
+      <form
+        className="max-w-3xl rounded-lg border bg-card p-5"
+        onSubmit={handleSubmit}
+      >
         {formError && (
           <div className="mb-4 flex items-center gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
             <AlertCircle className="size-4 shrink-0" />
@@ -385,7 +447,10 @@ function MaintenanceFormInner({
           {!editing ? (
             <label className="grid gap-1.5 text-sm font-medium">
               Vehicle
-              <Select value={vehicleId} onValueChange={(val) => val && setVehicleId(val)}>
+              <Select
+                value={vehicleId}
+                onValueChange={(val) => val && setVehicleId(val)}
+              >
                 <SelectTrigger className="w-full bg-muted/60">
                   <SelectValue placeholder="Select vehicle" />
                 </SelectTrigger>
@@ -431,7 +496,9 @@ function MaintenanceFormInner({
                 Maintenance status
                 <Select
                   value={status}
-                  onValueChange={(val) => val && setStatus(val as MaintenanceStatus)}
+                  onValueChange={(val) =>
+                    val && setStatus(val as MaintenanceStatus)
+                  }
                 >
                   <SelectTrigger className="w-full bg-muted/60">
                     <SelectValue />
@@ -446,7 +513,10 @@ function MaintenanceFormInner({
               </label>
 
               <label className="grid gap-1.5 text-sm font-medium">
-                Completed at {status === "Completed" && <span className="text-destructive">*</span>}
+                Completed at{" "}
+                {status === "Completed" && (
+                  <span className="text-destructive">*</span>
+                )}
                 <Input
                   type="datetime-local"
                   value={completedAt}
@@ -470,12 +540,18 @@ function MaintenanceFormInner({
 
         {editing && (
           <p className="mt-4 text-xs text-muted-foreground">
-            The API requires a completion time whenever status is set to Completed.
+            The API requires a completion time whenever status is set to
+            Completed.
           </p>
         )}
 
         <div className="mt-5 flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={isSubmitting}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate(-1)}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>

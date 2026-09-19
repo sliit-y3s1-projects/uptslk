@@ -8,4 +8,3 @@ export interface CentreOption {
   bayCount: number;
   routeCount: number;
 }
-

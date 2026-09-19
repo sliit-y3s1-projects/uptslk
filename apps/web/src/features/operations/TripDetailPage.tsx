@@ -96,18 +96,33 @@ export function TripDetailPage() {
               label="Date and time"
               value={new Date(trip.scheduledTime).toLocaleString()}
             />
-            <Fact label="Assigned bay" value={trip.bayDetails?.code ?? "Unassigned"} />
+            <Fact
+              label="Assigned bay"
+              value={trip.bayDetails?.code ?? "Unassigned"}
+            />
             <Fact
               label="Vehicle"
-              value={trip.vehicleDetails ? `${trip.vehicleDetails.plateNumber} · ${trip.vehicleDetails.model}` : "Unassigned"}
+              value={
+                trip.vehicleDetails
+                  ? `${trip.vehicleDetails.plateNumber} · ${trip.vehicleDetails.model}`
+                  : "Unassigned"
+              }
             />
             <Fact
               label="Driver"
-              value={trip.driverDetails ? `${trip.driverDetails.fullName} · ${trip.driverDetails.licenseNumber}` : "Unassigned"}
+              value={
+                trip.driverDetails
+                  ? `${trip.driverDetails.fullName} · ${trip.driverDetails.licenseNumber}`
+                  : "Unassigned"
+              }
             />
             <Fact
               label="Capacity"
-              value={trip.vehicleDetails ? `${trip.vehicleDetails.capacity} seats` : "—"}
+              value={
+                trip.vehicleDetails
+                  ? `${trip.vehicleDetails.capacity} seats`
+                  : "—"
+              }
             />
             <Fact
               label="Last update"

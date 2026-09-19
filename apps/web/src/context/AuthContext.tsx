@@ -17,7 +17,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         const res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
-        credentials: "include",
+          credentials: "include",
         });
 
         if (!res.ok) throw new Error();
@@ -68,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       gender: data.gender,
       profilePhotoUrl: data.profilePhotoUrl,
     });
+    return data.role as string;
   }
 
   async function register(name: string, email: string, password: string) {
@@ -95,9 +96,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
-    void fetch(`${API_BASE_URL}/api/v1/auth/logout`, { method: "POST", credentials: "include" });
+    void fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
     setToken(null);
     setUser(null);
+    window.setTimeout(() => {
+      window.history.pushState({}, "", "/login");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }, 0);
   }
 
   return (

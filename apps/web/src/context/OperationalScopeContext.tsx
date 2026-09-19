@@ -8,16 +8,42 @@ type OperationalScope = {
   resetScope: () => void;
 };
 
-const OperationalScopeContext = createContext<OperationalScope | undefined>(undefined);
+const OperationalScopeContext = createContext<OperationalScope | undefined>(
+  undefined,
+);
 
-export function OperationalScopeProvider({ children, initialDistrict = "All" }: { children: ReactNode; initialDistrict?: string }) {
+export function OperationalScopeProvider({
+  children,
+  initialDistrict = "All",
+}: {
+  children: ReactNode;
+  initialDistrict?: string;
+}) {
   const [district, setDistrict] = useState(initialDistrict);
   const [dateRange, setDateRange] = useState("Today");
-  return <OperationalScopeContext.Provider value={{ district, setDistrict, dateRange, setDateRange, resetScope: () => { setDistrict(initialDistrict); setDateRange("Today"); } }}>{children}</OperationalScopeContext.Provider>;
+  return (
+    <OperationalScopeContext.Provider
+      value={{
+        district,
+        setDistrict,
+        dateRange,
+        setDateRange,
+        resetScope: () => {
+          setDistrict(initialDistrict);
+          setDateRange("Today");
+        },
+      }}
+    >
+      {children}
+    </OperationalScopeContext.Provider>
+  );
 }
 
 export function useOperationalScope() {
   const context = useContext(OperationalScopeContext);
-  if (!context) throw new Error("useOperationalScope must be used within OperationalScopeProvider");
+  if (!context)
+    throw new Error(
+      "useOperationalScope must be used within OperationalScopeProvider",
+    );
   return context;
 }

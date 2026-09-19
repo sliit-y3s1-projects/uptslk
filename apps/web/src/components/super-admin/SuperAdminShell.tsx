@@ -4,5 +4,15 @@ import { SuperAdminSidebar } from "@/components/super-admin/SuperAdminSidebar";
 import { SuperAdminHeader } from "@/components/super-admin/SuperAdminHeader";
 
 export function SuperAdminShell({ children }: { children: ReactNode }) {
-  return <SidebarProvider style={{ "--sidebar-width": "16rem" } as React.CSSProperties}><SuperAdminSidebar /><SidebarInset><SuperAdminHeader />{children}</SidebarInset></SidebarProvider>;
+  return (
+    <SidebarProvider
+      style={{ "--sidebar-width": "16rem" } as React.CSSProperties}
+    >
+      <SuperAdminSidebar />
+      <SidebarInset>
+        <SuperAdminHeader />
+        {children}
+      </SidebarInset>
+    </SidebarProvider>
+  );
 }
