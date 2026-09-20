@@ -29,8 +29,8 @@ export function SignInPanel() {
             : "/operations",
         { replace: true },
       );
-    } catch {
-      setError("Invalid email or password.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Invalid email or password.");
     } finally {
       setSubmitting(false);
     }

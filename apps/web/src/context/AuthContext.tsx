@@ -53,7 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ email, password }),
       credentials: "include",
     });
-    if (!res.ok) throw new Error("Invalid credentials");
+    if (!res.ok) {
+      const body = await res.json().catch(() => null) as { error?: string } | null;
+      throw new Error(body?.error ?? "Invalid credentials");
+    }
     const data = await res.json();
     setToken("cookie-session");
     setUser({

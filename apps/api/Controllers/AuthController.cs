@@ -69,8 +69,10 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login(LoginRequest req)
     {
         var user = await _userManager.FindByEmailAsync(req.Email);
-        if (user is null || !user.IsActive)
+        if (user is null)
             return Unauthorized(new { error = "Invalid credentials" });
+        if (!user.IsActive)
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Your account is temporarily disabled. Contact an administrator." });
 
         var valid = await _userManager.CheckPasswordAsync(user, req.Password);
         if (!valid)
@@ -207,10 +209,13 @@ public class AuthController : ControllerBase
 
     [HttpGet("users")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Users()
+    public async Task<IActionResult> Users([FromQuery] bool staffOnly = false)
     {
-        var users = await _userManager.Users
-            .AsNoTracking()
+        var query = _userManager.Users.AsNoTracking();
+        if (staffOnly)
+            query = query.Where(user => user.Role != UserRole.Commuter && user.Role != UserRole.Admin);
+
+        var users = await query
             .OrderBy(user => user.Name)
             .Select(user => new { user.Id, user.Name, user.Email, Role = user.Role.ToString(), user.CentreId, user.IsActive })
             .ToListAsync();

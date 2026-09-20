@@ -51,7 +51,7 @@ export function EmployeesPage() {
     error,
   } = useQuery({
     queryKey: ["admin", "users"],
-    queryFn: () => apiClient<Employee[]>("/api/v1/auth/users"),
+    queryFn: () => apiClient<Employee[]>("/api/v1/auth/users?staffOnly=true"),
   });
   const queryClient = useQueryClient();
   const createUser = useMutation({
@@ -77,6 +77,7 @@ export function EmployeesPage() {
     () =>
       employees.filter(
         (item) =>
+          roles.includes(item.role) &&
           `${item.name} ${item.email} ${item.id}`
             .toLowerCase()
             .includes(query.toLowerCase()) &&

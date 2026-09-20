@@ -41,6 +41,11 @@ export function PublicBookingPage() {
   const [passengers, setPassengers] = useState(1);
   const [busType, setBusType] = useState("all");
   const [selected, setSelected] = useState<Route | null>(null);
+  const portal = user?.role === "Admin" || user?.role === "SuperAdmin"
+    ? { label: "Go to Admin portal", path: "/admin" }
+    : user && ["CentreManager", "Dispatcher", "FleetOfficer", "Driver"].includes(user.role)
+      ? { label: "Go to Operations portal", path: "/operations" }
+      : null;
   const { data: routes = [], isLoading } = useQuery({
     queryKey: ["public", "routes"],
     queryFn: () => apiClient<Route[]>("/api/v1/routes"),
@@ -74,6 +79,15 @@ export function PublicBookingPage() {
           <div className="flex items-center gap-3">
             {user ? (
               <>
+                {portal && (
+                  <Button
+                    variant="outline"
+                    className="h-12 rounded-full border-primary/30 bg-primary/5 px-6 text-primary hover:bg-primary/10"
+                    onClick={() => navigate(portal.path)}
+                  >
+                    {portal.label}
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   className="h-12 rounded-full border-slate-300 bg-white px-6"

@@ -135,7 +135,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               render={
                 <a href="/operations" aria-label="UPTSLK Console">
                   <span className="text-2xl font-bold tracking-tight">
-                    UPTSLK Console
+                    UPTS Center OPS
                   </span>
                 </a>
               }

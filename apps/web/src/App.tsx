@@ -152,6 +152,10 @@ function App() {
               path="/admin/centres/:centreId/vehicles/:vehicleId"
               element={<CentreVehicleDetailViewPage />}
             />
+            <Route path="/network/routes" element={<RoutesPage />} />
+            <Route path="/network/routes/new" element={<RouteFormPage />} />
+            <Route path="/network/routes/:routeId" element={<RouteDetailPage />} />
+            <Route path="/network/routes/:routeId/edit" element={<RouteFormPage />} />
             <Route path="/admin/employees" element={<EmployeesPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
             <Route path="/admin/roles" element={<RolesPage />} />

@@ -5,6 +5,7 @@ import {
   Gauge,
   KeyRound,
   LogOut,
+  Route,
   Settings,
   ShieldCheck,
   UserPlus,
@@ -32,12 +33,14 @@ const groups = [
     items: [
       { title: "Overview", url: "/admin", icon: Gauge },
       { title: "Multimodal centres", url: "/admin/centres", icon: Building2 },
+      { title: "Routes", url: "/network/routes", icon: Route },
     ],
   },
   {
     label: "People & access",
     items: [
       { title: "Employees", url: "/admin/employees", icon: UsersRound },
+      { title: "Users", url: "/admin/users", icon: UserPlus },
       { title: "Roles & permissions", url: "/admin/roles", icon: KeyRound },
       { title: "Access requests", url: "/admin/access", icon: UserPlus },
     ],
@@ -65,7 +68,7 @@ export function SuperAdminSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<NavLink to="/admin" />}>
               <span className="text-2xl font-bold tracking-tight">
-                UPTSLK Console
+                UPTS Admin Ops
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
