@@ -3,6 +3,7 @@ export interface PassengerRequest {
   fullName: string;
   phoneNumber: string;
   email: string | null;
+  password?: string;
   category: PassengerCategory;
 }
 export interface UpdatePassengerRequest extends PassengerRequest {
@@ -49,6 +50,7 @@ export interface CreatedPassenger {
   phoneNumber: string;
   category: PassengerCategory;
   balance: number;
+  portalAccountCreated?: boolean;
 }
 export interface TopUpWalletRequest {
   amount: number;

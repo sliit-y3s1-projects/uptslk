@@ -5,7 +5,15 @@ import {
   Gauge as SteeringWheel,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Departure } from "@/mock/centres";
+import { useSeats } from "@/features/fares/hooks/useBookings";
+type Departure = {
+  id: string;
+  route: string;
+  destination: string;
+  time: string;
+  vehicle: string;
+  occupancy?: number;
+};
 
 type SeatState = "occupied" | "reserved" | "available" | "accessible";
 
@@ -21,7 +29,13 @@ export function BusSeatMap({ departure }: { departure?: Departure }) {
     );
 
   const capacity = 44;
-  const occupied = Math.round((departure.occupancy / 100) * capacity);
+  const seats = useSeats(departure.id);
+  const liveSeats = seats.data ?? [];
+  const occupied = liveSeats.length
+    ? liveSeats.filter((seat) => !seat.isAvailable).length
+    : departure.occupancy === undefined
+      ? 0
+      : Math.round((departure.occupancy / 100) * capacity);
   const reserved = Math.min(4, Math.max(1, Math.round(capacity * 0.08)));
   const rows = Array.from({ length: 10 }, (_, row) => [
     row * 4 + 1,
@@ -30,6 +44,8 @@ export function BusSeatMap({ departure }: { departure?: Departure }) {
     row * 4 + 4,
   ]);
   const stateFor = (seat: number): SeatState => {
+    const liveSeat = liveSeats.find((item) => item.seatNumber === String(seat));
+    if (liveSeat && !liveSeat.isAvailable) return "occupied";
     if (seat === 1 || seat === 2) return "accessible";
     if (seat <= occupied) return "occupied";
     if (seat <= occupied + reserved) return "reserved";
@@ -46,7 +62,7 @@ export function BusSeatMap({ departure }: { departure?: Departure }) {
           </p>
         </div>
         <span className="rounded-md bg-muted px-2 py-1 text-xs font-medium">
-          44 seats
+          {liveSeats.length ? `${liveSeats.length} seats` : departure.occupancy === undefined ? "Occupancy unavailable" : "44 seats"}
         </span>
       </div>
       <div className="mt-4 flex flex-wrap gap-x-3 gap-y-2 text-[11px] text-muted-foreground">
@@ -55,6 +71,8 @@ export function BusSeatMap({ departure }: { departure?: Departure }) {
         <Legend state="available" label="Available" />
         <Legend state="accessible" label="Accessible" />
       </div>
+      {seats.isLoading && <p className="mt-3 text-sm text-muted-foreground">Refreshing live seat availability...</p>}
+      {seats.error && <p className="mt-3 text-sm text-red-600">Seat availability is temporarily unavailable.</p>}
       <div className="mx-auto mt-4 w-full max-w-[370px]">
         <div className="border-4 border-slate-300 bg-slate-100 p-3 shadow-inner">
           <div className="bg-slate-700 p-2.5 text-slate-100">

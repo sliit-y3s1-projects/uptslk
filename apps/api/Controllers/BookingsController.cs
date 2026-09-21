@@ -43,6 +43,7 @@ public class BookingsController(AppDbContext db) : ControllerBase
         var trip = await db.Trips.Include(item => item.Vehicle).Include(item => item.Route).SingleOrDefaultAsync(item => item.Id == request.TripId);
         if (passenger is null || !passenger.IsActive) return BadRequest(new { error = "The selected passenger is not active." });
         if (trip is null) return BadRequest(new { error = "The selected trip does not exist." });
+        if (trip.Vehicle is null || trip.Vehicle.Capacity < 1) return BadRequest(new { error = "This trip has no valid vehicle capacity configured." });
         if (trip.Status is not (TripStatus.Scheduled or TripStatus.Ready or TripStatus.Boarding)) return BadRequest(new { error = "Bookings are not available for this trip." });
 
         var seatNumber = NormalizeSeat(request.SeatNumber, trip.Vehicle.Capacity);

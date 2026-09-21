@@ -31,6 +31,7 @@ export function PassengerForm({
   const [fullName, setFullName] = useState(passenger?.fullName ?? "");
   const [phoneNumber, setPhoneNumber] = useState(passenger?.phoneNumber ?? "");
   const [email, setEmail] = useState(passenger?.email ?? "");
+  const [password, setPassword] = useState("");
   const [category, setCategory] = useState<PassengerCategory>(
     passenger?.category ?? "Adult",
   );
@@ -46,6 +47,7 @@ export function PassengerForm({
             fullName: fullName.trim(),
             phoneNumber: phoneNumber.trim(),
             email: email.trim() || null,
+            ...(passenger || !password ? {} : { password }),
             category,
           };
           if (!body.fullName || !body.phoneNumber) return;
@@ -82,6 +84,16 @@ export function PassengerForm({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
+            {!passenger && (
+              <Field
+                label="Portal password (optional)"
+                type="password"
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
+              />
+            )}
             <SelectField
               label="Category"
               value={category}
@@ -120,11 +132,12 @@ export function PassengerForm({
 
 export function PassengerProfile({ id }: { id: string }) {
   const query = usePassenger(id);
-  const { deactivate, topUp } = usePassengerMutations();
+  const { deactivate, restore, resetPassword, topUp } = usePassengerMutations();
   const [editing, setEditing] = useState(false);
   const [confirmDeactivate, setConfirmDeactivate] = useState(false);
   const [amount, setAmount] = useState("");
   const [notice, setNotice] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const passenger = query.data;
   return (
     <div className="space-y-4">
@@ -158,6 +171,11 @@ export function PassengerProfile({ id }: { id: string }) {
                     onClick={() => setConfirmDeactivate(true)}
                   >
                     Deactivate account
+                  </Button>
+                )}
+                {!passenger.isActive && (
+                  <Button variant="outline" disabled={restore.isPending} onClick={() => restore.mutate(id, { onSuccess: () => setNotice("Passenger account restored.") })}>
+                    {restore.isPending ? "Restoring..." : "Restore account"}
                   </Button>
                 )}
               </div>
@@ -195,6 +213,14 @@ export function PassengerProfile({ id }: { id: string }) {
               <Feedback error={deactivate.error} success={notice} />
             </Panel>
           )}
+          <Panel title="Portal access">
+            <p className="text-sm text-muted-foreground">Set a new password for this passenger’s linked commuter account.</p>
+            <form className="flex flex-wrap items-end gap-3" onSubmit={(event) => { event.preventDefault(); resetPassword.mutate({ id, password: newPassword }, { onSuccess: () => { setNewPassword(""); setNotice("Portal password reset successfully."); } }); }}>
+              <Field label="New password" type="password" minLength={8} required value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="At least 8 characters" />
+              <Button type="submit" disabled={newPassword.length < 8 || resetPassword.isPending}>{resetPassword.isPending ? "Resetting..." : "Reset password"}</Button>
+            </form>
+            <Feedback error={resetPassword.error} success={resetPassword.isSuccess && "Password reset. Share the new credentials securely."} />
+          </Panel>
           <Panel title="Wallet">
             <p className="text-2xl font-semibold tabular-nums">
               {passenger.wallet

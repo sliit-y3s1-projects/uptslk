@@ -23,6 +23,9 @@ export const passengersService = {
     apiClient<void>(`${path}/${id}`, jsonBody("PUT", body)),
   deactivate: (id: string) =>
     apiClient<void>(`${path}/${id}`, { method: "DELETE" }),
+  restore: (id: string) => apiClient<void>(`${path}/${id}/restore`, { method: "POST" }),
+  resetPassword: (id: string, password: string) =>
+    apiClient<void>(`${path}/${id}/reset-password`, jsonBody("POST", { password })),
   topUp: (id: string, amount: number) =>
     apiClient<TopUpWalletResponse>(
       `${path}/${id}/wallet/top-ups`,

@@ -28,6 +28,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<AgentWorkflow> AgentWorkflows => Set<AgentWorkflow>();
     public DbSet<AgentStep> AgentSteps => Set<AgentStep>();
     public DbSet<ApprovalRequest> ApprovalRequests => Set<ApprovalRequest>();
+    public DbSet<SupportRequest> SupportRequests => Set<SupportRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -61,6 +62,9 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<Booking>().Property(booking => booking.RefundAmount).HasPrecision(12, 2);
         modelBuilder.Entity<Wallet>().Property(wallet => wallet.Balance).HasPrecision(12, 2);
         modelBuilder.Entity<Transaction>().Property(transaction => transaction.Amount).HasPrecision(12, 2);
+        modelBuilder.Entity<SupportRequest>().Property(request => request.Subject).HasMaxLength(200);
+        modelBuilder.Entity<SupportRequest>().Property(request => request.Description).HasMaxLength(2000);
+        modelBuilder.Entity<SupportRequest>().Property(request => request.Resolution).HasMaxLength(2000);
 
         modelBuilder.Entity<Bay>()
             .HasOne(b => b.Centre)
@@ -214,6 +218,22 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .HasOne(t => t.Booking)
             .WithMany(b => b.Transactions)
             .HasForeignKey(t => t.BookingId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<SupportRequest>()
+            .HasOne(request => request.Passenger)
+            .WithMany()
+            .HasForeignKey(request => request.PassengerId)
+            .OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<SupportRequest>()
+            .HasOne(request => request.Trip)
+            .WithMany()
+            .HasForeignKey(request => request.TripId)
+            .OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<SupportRequest>()
+            .HasOne(request => request.Centre)
+            .WithMany()
+            .HasForeignKey(request => request.CentreId)
             .OnDelete(DeleteBehavior.SetNull);
 
         // Booking <-> AgentWorkflow (1:1, nullable)

@@ -4,6 +4,13 @@ import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -105,7 +112,12 @@ export function BayManagementPage() {
           </div>
         }
       />
-      {showCreate && (
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create bay</DialogTitle>
+            <DialogDescription>Add a boarding bay to {centre?.name ?? "this centre"}.</DialogDescription>
+          </DialogHeader>
         <form
           className="rounded-lg border bg-card p-4"
           onSubmit={(event) => {
@@ -173,7 +185,8 @@ export function BayManagementPage() {
             </Button>
           </div>
         </form>
-      )}
+        </DialogContent>
+      </Dialog>
       <section className="grid gap-3 sm:grid-cols-3">
         <Metric
           label="Active bays"

@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useAuth } from "@/hooks/useAuth";
-import { RouteServiceStatus } from "@/features/centres/components/RouteServiceStatus";
 import { BusSeatMap } from "@/features/centres/components/BusSeatMap";
-import type { Departure } from "@/mock/centres";
 import { useCentre } from "./hooks/useCentres";
+import { useTrips } from "@/features/operations/hooks/useTrips";
+
+type Departure = { id: string; time: string; bay: string; route: string; destination: string; vehicle: string; status: string; occupancy?: number };
 
 function departureTone(status: string) {
   if (status === "Delayed") return "danger" as const;
@@ -19,9 +20,8 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
   const { user } = useAuth();
   const effectiveCentreId = centreId ?? user?.centreId;
   const { data: centre, isLoading, error } = useCentre(effectiveCentreId);
-
-  // Removed mock data reads to satisfy API-only requirements
-  const departures: Departure[] = [];
+  const { data: trips = [], isLoading: tripsLoading, error: tripsError } = useTrips({ centreId: effectiveCentreId });
+  const departures: Departure[] = trips.filter((trip) => !["Completed", "Cancelled"].includes(trip.status)).map((trip) => ({ id: trip.id, time: new Date(trip.scheduledTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), bay: trip.bay, route: trip.routeNumber, destination: trip.routeName, vehicle: trip.vehicle, status: trip.status }));
   const [selected, setSelected] = useState<Departure | undefined>(undefined);
 
   if (isLoading)
@@ -30,7 +30,7 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
         <Loader2 className="animate-spin text-primary" />
       </main>
     );
-  if (error)
+  if (error || tripsError)
     return (
       <main className="flex flex-1 items-center justify-center p-4 text-red-500">
         Failed to load centre.
@@ -75,7 +75,9 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
           />
         </div>
       </section>
-      <RouteServiceStatus />
+      {tripsLoading ? (
+        <p className="rounded-lg border bg-card p-5 text-sm text-muted-foreground">Loading live departures...</p>
+      ) : (
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_400px]">
         <TerminalMap
           bays={baySlots}
@@ -85,12 +87,13 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
         />
         <BusSeatMap departure={selected} />
       </section>
+      )}
       <section className="rounded-lg border bg-card">
         <div className="flex items-center justify-between border-b px-4 py-3">
           <div>
             <h2 className="font-semibold">Upcoming departures</h2>
             <p className="text-sm text-muted-foreground">
-              Mock operational schedule - not a live public timetable.
+              Live trips and bay assignments from the operations API.
             </p>
           </div>
           <Button variant="outline">
@@ -98,6 +101,7 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
           </Button>
         </div>
         <div className="divide-y">
+          {!tripsLoading && departures.length === 0 && <p className="p-6 text-sm text-muted-foreground">No upcoming trips are scheduled for this centre.</p>}
           {departures.map((departure) => (
             <button
               type="button"
@@ -119,7 +123,7 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
                 label={departure.status}
                 tone={departureTone(departure.status)}
               />
-              <p className="text-sm font-medium">{departure.occupancy}% full</p>
+              <p className="text-sm font-medium">{departure.occupancy === undefined ? "Occupancy unavailable" : `${departure.occupancy}% full`}</p>
             </button>
           ))}
         </div>
@@ -174,7 +178,7 @@ function TerminalMap({
                       {departure.destination}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {departure.time} - {departure.occupancy}%
+                      {departure.time} - {departure.occupancy === undefined ? "Occupancy unavailable" : `${departure.occupancy}% full`}
                     </p>
                   </>
                 ) : (

@@ -46,7 +46,7 @@ api-build:
 	dotnet build $(API_DIR)
 
 api:
-	dotnet run --project $(API_DIR)
+	dotnet watch run --project $(API_DIR)
 
 web-install:
 	cd $(WEB_DIR) && pnpm install
@@ -64,7 +64,7 @@ check: api-build web-lint web-build
 
 dev: db-up db-migrate
 	@trap 'kill 0' INT TERM EXIT; \
-	(dotnet run --project $(API_DIR)) & \
+	(dotnet watch run --project $(API_DIR)) & \
 	(cd $(WEB_DIR) && pnpm dev) & \
 	wait
 

@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { PageHeading } from "@/components/shared/PageHeading";
 import { Button } from "@/components/ui/button";
-import { PassengerWorkspace } from "./RiderPages";
 import {
   Panel,
   SelectField,
@@ -17,6 +16,7 @@ import {
   useSeats,
 } from "@/features/fares/hooks/useBookings";
 import { CentrePicker } from "@/features/fares/components/CentrePicker";
+import { RequestQueue } from "./RequestQueue";
 export function PassengerFlowPage() {
   const [params, setParams] = useSearchParams();
   const tripId = params.get("tripId") ?? "";
@@ -49,7 +49,7 @@ export function PassengerFlowPage() {
           <option value="">Select a trip</option>
           {trips.data?.map((t) => (
             <option key={t.id} value={t.id}>
-              {t.routeNumber} · {t.routeName} · {dateTime(t.scheduledTime)} ?{" "}
+              {t.routeNumber} · {t.routeName} · {dateTime(t.scheduledTime)} ·{" "}
               {t.status}
             </option>
           ))}
@@ -132,10 +132,5 @@ export function PassengerFlowPage() {
   );
 }
 export function AssistancePage() {
-  return (
-    <PassengerWorkspace
-      title="Passenger assistance"
-      description="Find passenger contact details and review bookings or wallet issues. Open a ticket to arrange a seat change or cancellation."
-    />
-  );
+  return <RequestQueue type="Assistance" title="Passenger assistance" description="Track accessibility and journey assistance from request to resolution." />;
 }

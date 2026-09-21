@@ -15,6 +15,7 @@ import {
   Feedback,
 } from "./components/FeatureUi";
 import { money } from "./components/format";
+import { RequestQueue } from "./RequestQueue";
 
 export function PassengerWorkspace({
   title,
@@ -128,10 +129,5 @@ export function RidersPage() {
   );
 }
 export function SupportPage() {
-  return (
-    <PassengerWorkspace
-      title="Passenger support"
-      description="Find a passenger to review their contact details, tickets, charges and refunds."
-    />
-  );
+  return <RequestQueue type="Support" title="Passenger support" description="Triage passenger questions and keep each request visible through resolution." />;
 }
