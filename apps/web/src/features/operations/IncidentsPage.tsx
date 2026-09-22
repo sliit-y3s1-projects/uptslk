@@ -52,7 +52,9 @@ export function IncidentsPage() {
                             {incident.title}
                           </p>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            {incident.id} · {incident.tripId ?? "Centre-wide"}
+                            {incident.tripRouteNumber
+                              ? `Route ${incident.tripRouteNumber} · ${incident.tripRouteName}`
+                              : "Centre-wide incident"}
                           </p>
                         </div>
                       </div>
@@ -83,7 +85,7 @@ export function IncidentsPage() {
                             data: {
                               severity: incident.severity,
                               title: incident.title,
-                              description: incident.title,
+                              description: incident.description,
                               assignedTo: incident.assignedTo,
                               status:
                                 incident.status === "Open"

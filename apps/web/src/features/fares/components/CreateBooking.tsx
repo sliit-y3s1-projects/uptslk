@@ -1,25 +1,20 @@
-import { useCentreSelection } from "@/features/fares/hooks/useCentreSelection";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePassengers } from "@/features/riders/hooks/usePassengers";
 import {
   Panel,
-  SelectField,
   Feedback,
   QueryState,
 } from "@/features/riders/components/FeatureUi";
 import { money, dateTime } from "@/features/riders/components/format";
 import { useTrips, useSeats, useBookingMutations } from "../hooks/useBookings";
 import { useFareQuote } from "../hooks/useFareRules";
-import { CentrePicker } from "./CentrePicker";
 import { SeatPicker } from "./SeatPicker";
-export function CreateBooking({
-  onCreated,
-}: {
-  onCreated: (id: string) => void;
-}) {
-  const [selectedCentre, setCentre] = useState("");
-  const { centreId } = useCentreSelection(selectedCentre);
+export function CreateBooking() {
+  const { user } = useAuth();
+  const centreId = user?.centreId ?? "";
   const trips = useTrips(centreId);
   const passengers = usePassengers({ active: "true" });
   const [tripId, setTrip] = useState("");
@@ -27,7 +22,7 @@ export function CreateBooking({
   const [seatNumber, setSeat] = useState("");
   const quote = useFareQuote(tripId, passengerId);
   const seats = useSeats(tripId);
-  const { create } = useBookingMutations();
+  const { checkout } = useBookingMutations();
   const trip = trips.data?.find((t) => t.id === tripId);
   const eligible =
     trip && ["Scheduled", "Ready", "Boarding"].includes(trip.status);
@@ -46,22 +41,18 @@ export function CreateBooking({
             )
           )
             return;
-          create.mutate(
+          checkout.mutate(
             { tripId, passengerId, seatNumber },
-            { onSuccess: (data) => onCreated(data.id) },
+            {
+              onSuccess: (session) => {
+                window.location.assign(session.url);
+              },
+            },
           );
         }}
       >
-        <fieldset disabled={create.isPending} className="space-y-4">
-          <CentrePicker
-            selected={selectedCentre}
-            onChange={(id) => {
-              setCentre(id);
-              setTrip("");
-              setSeat("");
-              create.reset();
-            }}
-          />
+        <fieldset disabled={checkout.isPending} className="space-y-4">
+          {!centreId && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">Your account is not assigned to a centre, so a booking cannot be created.</p>}
           {centreId && (
             <QueryState
               query={trips}
@@ -73,44 +64,31 @@ export function CreateBooking({
             />
           )}
           <div className="grid gap-3 sm:grid-cols-2">
-            <SelectField
-              label="Scheduled trip"
-              required
-              value={tripId}
-              onChange={(e) => {
-                setTrip(e.target.value);
+            <div className="flex min-w-0 flex-col gap-1.5 text-sm">
+              <label className="font-medium">Scheduled trip</label>
+              <Select value={tripId || undefined} onValueChange={(value) => {
+                setTrip(String(value ?? ""));
                 setSeat("");
-                create.reset();
-              }}
-            >
-              <option value="">Select a trip</option>
-              {trips.data
-                ?.filter((t) =>
-                  ["Scheduled", "Ready", "Boarding"].includes(t.status),
-                )
-                .map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.routeNumber} · {t.routeName} ?{" "}
-                    {dateTime(t.scheduledTime)} · {t.status}
-                  </option>
-                ))}
-            </SelectField>
-            <SelectField
-              label="Passenger"
-              required
-              value={passengerId}
-              onChange={(e) => {
-                setPassenger(e.target.value);
-                create.reset();
-              }}
-            >
-              <option value="">Select a passenger</option>
-              {passengers.data?.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.fullName} · {p.phoneNumber} · {p.category}
-                </option>
-              ))}
-            </SelectField>
+                checkout.reset();
+              }}>
+                <SelectTrigger className="h-11 w-full"><SelectValue placeholder="Select a trip" /></SelectTrigger>
+                <SelectContent>{trips.data?.filter((tripOption) => ["Scheduled", "Ready", "Boarding"].includes(tripOption.status)).map((tripOption) => (
+                  <SelectItem key={tripOption.id} value={tripOption.id}>
+                    {tripOption.routeNumber} · {tripOption.routeName} · {dateTime(tripOption.scheduledTime)} · {tripOption.status}
+                  </SelectItem>
+                ))}</SelectContent>
+              </Select>
+            </div>
+            <div className="flex min-w-0 flex-col gap-1.5 text-sm">
+              <label className="font-medium">Passenger</label>
+              <Select value={passengerId || undefined} onValueChange={(value) => {
+                setPassenger(String(value ?? ""));
+                checkout.reset();
+              }}>
+                <SelectTrigger className="h-11 w-full"><SelectValue placeholder="Select a passenger" /></SelectTrigger>
+                <SelectContent>{passengers.data?.map((passenger) => <SelectItem key={passenger.id} value={passenger.id}>{passenger.fullName} · {passenger.phoneNumber} · {passenger.category}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
           </div>
           <QueryState query={passengers} empty={!passengers.data?.length} />
           {trip && (
@@ -137,14 +115,14 @@ export function CreateBooking({
               tripId={tripId}
               value={seatNumber}
               onChange={setSeat}
-              disabled={create.isPending}
+              disabled={checkout.isPending}
             />
           )}
-          <Feedback error={create.error} />
+          <Feedback error={checkout.error} />
           <Button
             type="submit"
             disabled={
-              create.isPending ||
+              checkout.isPending ||
               !eligible ||
               !quote.data ||
               !!quote.error ||
@@ -155,10 +133,10 @@ export function CreateBooking({
               )
             }
           >
-            {create.isPending
-              ? "Confirming..."
+            {checkout.isPending
+              ? "Opening secure checkout..."
               : seatNumber
-                ? `Confirm seat ${seatNumber} and pay`
+                ? `Continue to payment for seat ${seatNumber}`
                 : "Select a seat to continue"}
           </Button>
         </fieldset>

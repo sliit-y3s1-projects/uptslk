@@ -7,6 +7,10 @@ import type {
   RouteSchedule,
   CreateRouteScheduleRequest,
   UpdateRouteScheduleRequest,
+  GenerateScheduleTripsRequest,
+  GenerateScheduleTripsResult,
+  RouteDirection,
+  CreateRouteDirectionRequest,
 } from "../types";
 
 export const routesApi = {
@@ -51,4 +55,13 @@ export const routesApi = {
     apiClient<void>("/api/v1/routes/schedules/" + scheduleId, {
       method: "DELETE",
     }),
+  generateScheduleTrips: (scheduleId: string, data: GenerateScheduleTripsRequest) =>
+    apiClient<GenerateScheduleTripsResult>(`/api/v1/routes/schedules/${scheduleId}/generate-trips`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: { "Content-Type": "application/json" },
+    }),
+  getDirections: (routeId: string) => apiClient<RouteDirection[]>(`/api/v1/routes/${routeId}/directions`),
+  createDirection: (routeId: string, data: CreateRouteDirectionRequest) =>
+    apiClient<RouteDirection>(`/api/v1/routes/${routeId}/directions`, { method: "POST", body: JSON.stringify(data), headers: { "Content-Type": "application/json" } }),
 };

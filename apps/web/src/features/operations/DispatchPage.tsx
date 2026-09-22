@@ -6,7 +6,7 @@ import {
   Search,
   TriangleAlert,
 } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +25,7 @@ import type { TripStatus } from "./types/trips";
 export function DispatchPage() {
   const { user } = useAuth();
   const centreId = user?.centreId;
+  const [searchParams] = useSearchParams();
   const { data: trips = [], isLoading, error } = useTrips({ centreId });
   const statusMutation = useUpdateTripStatus();
   const scoped = useMemo(
@@ -35,7 +36,7 @@ export function DispatchPage() {
   const [selectedId, setSelectedId] = useState(scoped[0]?.id);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All");
-  const [serviceDate, setServiceDate] = useState("All");
+  const [serviceDate, setServiceDate] = useState(searchParams.get("date") ?? "All");
   const selected = scoped.find((trip) => trip.id === selectedId);
   const dates = [
     ...new Set(

@@ -6,10 +6,13 @@ export interface IncidentListItem {
   centreId: string;
   tripId?: string;
   tripTime?: string;
+  tripRouteNumber?: string;
+  tripRouteName?: string;
   reportedByName: string;
   type: IncidentType;
   severity: IncidentSeverity;
   title: string;
+  description: string;
   assignedTo?: string;
   status: IncidentStatus;
   slaDueAt: string;

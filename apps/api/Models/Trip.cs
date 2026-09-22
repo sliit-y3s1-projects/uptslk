@@ -11,6 +11,8 @@ public class Trip
 
     public Guid RouteId { get; set; }
     public Route Route { get; set; } = default!;
+    public Guid? RouteDirectionId { get; set; }
+    public RouteDirection? RouteDirection { get; set; }
 
     public Guid VehicleId { get; set; }
     public Vehicle Vehicle { get; set; } = default!;

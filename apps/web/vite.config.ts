@@ -11,4 +11,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // A temporary HTTPS tunnel forwards its public Host header to this local dev server.
+  server: { allowedHosts: true },
 });

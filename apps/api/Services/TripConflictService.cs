@@ -7,6 +7,8 @@ namespace api.Services;
 public class TripConflictService(AppDbContext db)
 {
     private static readonly TripStatus[] ActiveStatuses = [TripStatus.Scheduled, TripStatus.Ready, TripStatus.Boarding, TripStatus.Delayed, TripStatus.Dispatched];
+    // A bay is needed while a bus boards and leaves, not for the whole journey.
+    private const int BayOccupancyMinutes = 10;
 
     public async Task<IReadOnlyList<string>> FindConflicts(Guid vehicleId, Guid driverId, Guid bayId, DateTime scheduledTime, int durationMinutes, Guid? excludedTripId = null)
     {
@@ -23,11 +25,14 @@ public class TripConflictService(AppDbContext db)
         foreach (var trip in candidates)
         {
             var existingEnd = trip.ScheduledTime.AddMinutes(trip.Route.EstimatedDurationMin);
-            if (trip.ScheduledTime >= requestedEnd || scheduledTime >= existingEnd) continue;
+            var journeysOverlap = trip.ScheduledTime < requestedEnd && scheduledTime < existingEnd;
+            var existingBayEnd = trip.ScheduledTime.AddMinutes(BayOccupancyMinutes);
+            var requestedBayEnd = scheduledTime.AddMinutes(BayOccupancyMinutes);
+            var baysOverlap = trip.ScheduledTime < requestedBayEnd && scheduledTime < existingBayEnd;
 
-            if (trip.VehicleId == vehicleId) conflicts.Add($"Vehicle is already assigned to trip {trip.Id} at this time.");
-            if (trip.DriverId == driverId) conflicts.Add($"Driver is already assigned to trip {trip.Id} at this time.");
-            if (trip.BayId == bayId) conflicts.Add($"Bay is already assigned to trip {trip.Id} at this time.");
+            if (journeysOverlap && trip.VehicleId == vehicleId) conflicts.Add($"Vehicle is already assigned to trip {trip.Id} at this time.");
+            if (journeysOverlap && trip.DriverId == driverId) conflicts.Add($"Driver is already assigned to trip {trip.Id} at this time.");
+            if (baysOverlap && trip.BayId == bayId) conflicts.Add($"Bay is already assigned to trip {trip.Id} at this time.");
         }
 
         return conflicts.ToList();

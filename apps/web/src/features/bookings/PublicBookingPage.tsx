@@ -8,7 +8,7 @@ import {
   SlidersHorizontal,
   Ticket,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,92 +30,29 @@ type Route = {
   origin: string;
   destination: string;
   isActive: boolean;
+  directions?: { id: string; startCentre: { name: string }; endCentre: { name: string }; name: string; isActive: boolean }[];
 };
+
+type JourneyOption = { id: string; routeId: string; routeNumber: string; name: string; origin: string; destination: string };
 
 export function PublicBookingPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [date, setDate] = useState("");
   const [passengers, setPassengers] = useState(1);
   const [busType, setBusType] = useState("all");
-  const [selected, setSelected] = useState<Route | null>(null);
-  const portal = user?.role === "Admin" || user?.role === "SuperAdmin"
-    ? { label: "Go to Admin portal", path: "/admin" }
-    : user && ["CentreManager", "Dispatcher", "FleetOfficer", "Driver"].includes(user.role)
-      ? { label: "Go to Operations portal", path: "/operations" }
-      : null;
+  const [selected, setSelected] = useState<JourneyOption | null>(null);
   const { data: routes = [], isLoading } = useQuery({
     queryKey: ["public", "routes"],
     queryFn: () => apiClient<Route[]>("/api/v1/routes"),
   });
-  const results = useMemo(
-    () =>
-      routes.filter(
-        (route) =>
-          route.isActive &&
-          (!origin ||
-            route.origin.toLowerCase().includes(origin.toLowerCase())) &&
-          (!destination ||
-            route.destination
-              .toLowerCase()
-              .includes(destination.toLowerCase())),
-      ),
-    [destination, origin, routes],
-  );
+  const results = useMemo(() => routes.filter((route) => route.isActive).flatMap((route) => (route.directions?.length ? route.directions.filter((direction) => direction.isActive).map((direction) => ({ id: direction.id, routeId: route.id, routeNumber: route.routeNumber, name: route.name, origin: direction.startCentre.name, destination: direction.endCentre.name })) : [{ id: "", routeId: route.id, routeNumber: route.routeNumber, name: route.name, origin: route.origin, destination: route.destination }])).filter((journey) => (!origin || journey.origin.toLowerCase().includes(origin.toLowerCase())) && (!destination || journey.destination.toLowerCase().includes(destination.toLowerCase()))), [destination, origin, routes]);
 
   return (
     <main className="min-h-screen bg-white">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link
-            to="/"
-            className="text-2xl font-bold tracking-tight text-indigo-950"
-          >
-            UPTSLK{" "}
-            <span className="font-normal text-slate-500">Seat Reservation</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            {user ? (
-              <>
-                {portal && (
-                  <Button
-                    variant="outline"
-                    className="h-12 rounded-full border-primary/30 bg-primary/5 px-6 text-primary hover:bg-primary/10"
-                    onClick={() => navigate(portal.path)}
-                  >
-                    {portal.label}
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  className="h-12 rounded-full border-slate-300 bg-white px-6"
-                  onClick={() => navigate("/profile")}
-                >
-                  My Profile
-                </Button>
-                <Button
-                  className="h-12 rounded-full bg-red-600 px-6 hover:bg-red-700"
-                  onClick={() => {
-                    logout();
-                    navigate("/");
-                  }}
-                >
-                  Sign out
-                </Button>
-              </>
-            ) : (
-              <Link to="/login">
-                <Button className="h-12 rounded-full bg-indigo-950 px-6">
-                  Sign in
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
-      </header>
-      <div className="mx-auto max-w-6xl space-y-5 px-6 py-7">
+      <div className="w-full space-y-5 px-6 py-7">
         <section className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className="mb-4 flex gap-2">
             <Button size="sm" className="rounded-full bg-primary">
@@ -261,16 +198,18 @@ export function PublicBookingPage() {
             </p>
             <p className="mt-1 text-sm text-slate-500">
               {passengers} passenger{passengers === 1 ? "" : "s"}. Sign in to
-              choose a departure, select seats, and pay.
+              choose a departure and pay. Seating is first-come, first-served.
             </p>
             <Button
               className="mt-4 rounded-full bg-primary"
               onClick={() =>
                 user
                   ? navigate(
-                      `/booking/checkout?routeId=${selected.id}&passengers=${passengers}`,
+                      `/booking/checkout?routeId=${selected.routeId}&directionId=${selected.id}&passengers=${passengers}&date=${date}`,
                     )
-                  : navigate("/login")
+                  : navigate(
+                      `/login?returnTo=${encodeURIComponent(`/booking/checkout?routeId=${selected.routeId}&directionId=${selected.id}&passengers=${passengers}&date=${date}`)}`,
+                    )
               }
             >
               {user ? "Continue to booking" : "Sign in to continue"}

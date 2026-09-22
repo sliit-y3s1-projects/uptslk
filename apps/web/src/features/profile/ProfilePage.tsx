@@ -83,24 +83,6 @@ export function ProfilePage() {
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
-          <Link
-            to="/book"
-            className="text-xl font-semibold tracking-tight text-slate-900"
-          >
-            UPTSLK{" "}
-            <span className="font-normal text-slate-500">Seat Reservation</span>
-          </Link>
-          <Button
-            variant="outline"
-            className="rounded-full hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-            onClick={logout}
-          >
-            Sign out
-          </Button>
-        </div>
-      </header>
       <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
         <Link
           to="/book"

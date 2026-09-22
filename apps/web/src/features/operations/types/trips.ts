@@ -11,8 +11,12 @@ export interface TripListItem {
   id: string;
   centreId: string;
   routeId: string;
+  routeDirectionId?: string | null;
   routeNumber: string;
   routeName: string;
+  directionName?: string | null;
+  origin?: string;
+  destination?: string;
   vehicleId: string;
   vehicle: string;
   driverId: string;
@@ -53,6 +57,7 @@ export interface TripDetail extends TripListItem {
 export interface CreateTripRequest {
   centreId: string;
   routeId: string;
+  routeDirectionId?: string | null;
   vehicleId: string;
   driverId: string;
   bayId: string;

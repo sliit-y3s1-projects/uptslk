@@ -5,6 +5,8 @@ import type {
   UpdateRouteRequest,
   CreateRouteScheduleRequest,
   UpdateRouteScheduleRequest,
+  GenerateScheduleTripsRequest,
+  CreateRouteDirectionRequest,
 } from "../types";
 
 export function useRoutes(centreId?: string, search?: string) {
@@ -94,4 +96,29 @@ export function useDeactivateSchedule(routeId: string) {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["routes", routeId] }),
   });
+}
+
+export function useGenerateScheduleTrips(routeId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ scheduleId, data }: { scheduleId: string; data: GenerateScheduleTripsRequest }) =>
+      routesApi.generateScheduleTrips(scheduleId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["trips"] });
+      queryClient.invalidateQueries({ queryKey: ["routes", routeId, "schedules"] });
+    },
+  });
+}
+
+export function useDirections(routeId?: string) {
+  return useQuery({ queryKey: ["routes", routeId, "directions"], queryFn: () => routesApi.getDirections(routeId!), enabled: !!routeId });
+}
+
+export function useCreateDirection(routeId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: (data: CreateRouteDirectionRequest) => routesApi.createDirection(routeId, data), onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["routes", routeId] });
+    queryClient.invalidateQueries({ queryKey: ["routes", routeId, "directions"] });
+    queryClient.invalidateQueries({ queryKey: ["routes"] });
+  }});
 }

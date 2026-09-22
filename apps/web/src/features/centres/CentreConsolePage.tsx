@@ -20,8 +20,8 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
   const { user } = useAuth();
   const effectiveCentreId = centreId ?? user?.centreId;
   const { data: centre, isLoading, error } = useCentre(effectiveCentreId);
-  const { data: trips = [], isLoading: tripsLoading, error: tripsError } = useTrips({ centreId: effectiveCentreId });
-  const departures: Departure[] = trips.filter((trip) => !["Completed", "Cancelled"].includes(trip.status)).map((trip) => ({ id: trip.id, time: new Date(trip.scheduledTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), bay: trip.bay, route: trip.routeNumber, destination: trip.routeName, vehicle: trip.vehicle, status: trip.status }));
+  const { data: trips = [], isLoading: tripsLoading, error: tripsError } = useTrips({ terminalId: effectiveCentreId });
+  const departures: Departure[] = trips.filter((trip) => !["Completed", "Cancelled"].includes(trip.status)).map((trip) => ({ id: trip.id, time: new Date(trip.scheduledTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), bay: trip.bay, route: trip.routeNumber, destination: trip.destination ?? trip.routeName, vehicle: trip.vehicle, status: trip.status }));
   const [selected, setSelected] = useState<Departure | undefined>(undefined);
 
   if (isLoading)

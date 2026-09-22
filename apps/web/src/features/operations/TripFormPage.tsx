@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { TimePicker } from "@/components/custom/TimePicker";
 import {
   Select,
   SelectContent,
@@ -24,30 +28,36 @@ export function TripFormPage() {
   const editing = Boolean(tripId);
   const { data: existing, isLoading } = useTrip(tripId);
   const { data: routes = [] } = useRoutes(centreId);
+  const [selectedRouteId, setSelectedRouteId] = useState("");
+  const [selectedDirectionId, setSelectedDirectionId] = useState("");
+  const selectedRoute = routes.find((route) => route.id === (selectedRouteId || existing?.routeId));
+  const activeDirectionId = selectedDirectionId || existing?.routeDirectionId || selectedRoute?.directions?.[0]?.id || "";
+  const selectedDirection = selectedRoute?.directions?.find((direction) => direction.id === activeDirectionId);
   const { data: vehicles = [] } = useVehicles({ centreId, status: "Active" });
   const { data: drivers = [] } = useDrivers({ centreId, status: "Active" });
-  const { data: bays = [] } = useBays(centreId);
+  const { data: bays = [] } = useBays(selectedDirection?.startCentreId ?? centreId);
   const createMutation = useCreateTrip();
   const updateMutation = useUpdateTrip(tripId ?? "");
   const [error, setError] = useState("");
+  const [serviceDate, setServiceDate] = useState("");
   if (editing && isLoading) return <main className="p-5">Loading trip...</main>;
   if (editing && !existing) return <main className="p-5">Trip not found.</main>;
   const scheduled = existing?.scheduledTime
     ? new Date(existing.scheduledTime)
     : undefined;
+  const dateValue = serviceDate || scheduled?.toISOString().slice(0, 10) || "";
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
     const form = new FormData(event.currentTarget);
     const data = {
       centreId: centreId ?? "",
-      routeId: String(form.get("routeId")),
+      routeId: selectedRoute?.id ?? String(form.get("routeId")),
+      routeDirectionId: activeDirectionId || undefined,
       vehicleId: String(form.get("vehicleId")),
       driverId: String(form.get("driverId")),
       bayId: String(form.get("bayId")),
-      scheduledTime: new Date(
-        `${form.get("date")}T${form.get("time")}`,
-      ).toISOString(),
+      scheduledTime: new Date(`${dateValue}T${form.get("time")}`).toISOString(),
       notes: String(form.get("notes") || ""),
     };
     const mutation = editing ? updateMutation : createMutation;
@@ -78,18 +88,10 @@ export function TripFormPage() {
         onSubmit={submit}
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Service date">
-            <Input
-              name="date"
-              type="date"
-              defaultValue={scheduled?.toISOString().slice(0, 10)}
-              required
-            />
-          </Field>
+          <ServiceDatePicker value={dateValue} onChange={setServiceDate} />
           <Field label="Departure time">
-            <Input
+            <TimePicker
               name="time"
-              type="time"
               defaultValue={scheduled?.toTimeString().slice(0, 5)}
               required
             />
@@ -97,11 +99,19 @@ export function TripFormPage() {
           <SelectField
             label="Route"
             name="routeId"
-            value={existing?.routeId}
+            value={selectedRoute?.id ?? existing?.routeId}
+            onValueChange={(value) => { setSelectedRouteId(value); setSelectedDirectionId(""); }}
             options={routes.map((route) => ({
               value: route.id,
               label: `${route.routeNumber} · ${route.name}`,
             }))}
+          />
+          <SelectField
+            label="Travel direction"
+            name="routeDirectionId"
+            value={activeDirectionId}
+            onValueChange={setSelectedDirectionId}
+            options={(selectedRoute?.directions ?? []).filter((direction) => direction.isActive).map((direction) => ({ value: direction.id, label: `${direction.startCentre.name} → ${direction.endCentre.name}` }))}
           />
           <SelectField
             label="Bay"
@@ -138,8 +148,7 @@ export function TripFormPage() {
           </Field>
         </div>
         <div className="mt-5 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
-          The API validates centre ownership, readiness, eligibility, bay
-          availability, and scheduling conflicts before saving.
+          The bus and driver belong to your operating centre. The departure bay belongs to the selected direction’s start centre; the API validates availability and conflicts before saving.
         </div>
         <div className="mt-5 flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={() => navigate(-1)}>
@@ -174,20 +183,36 @@ function Field({
     </label>
   );
 }
+
+function ServiceDatePicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const selected = value ? new Date(`${value}T00:00:00`) : undefined;
+  return <Field label="Service date"><input type="hidden" name="date" value={value} required /><Popover open={open} onOpenChange={setOpen}><PopoverTrigger render={<Button type="button" variant="outline" className="h-10 w-full justify-start font-normal" />}><CalendarDays className="mr-2 size-4" />{selected ? selected.toLocaleDateString() : "Select service date"}</PopoverTrigger><PopoverContent align="start" className="w-auto p-0"><Calendar mode="single" selected={selected} onSelect={(day) => { if (day) { onChange(day.toISOString().slice(0, 10)); setOpen(false); } }} /></PopoverContent></Popover></Field>;
+}
 function SelectField({
   label,
   name,
   value,
+  onValueChange,
   options,
 }: {
   label: string;
   name: string;
   value?: string;
+  onValueChange?: (value: string) => void;
   options: { value: string; label: string }[];
 }) {
   return (
     <Field label={label}>
-      <Select name={name} defaultValue={value ?? options[0]?.value} required>
+      <Select
+        name={name}
+        value={value || options[0]?.value || null}
+        onValueChange={(selected) => onValueChange?.(String(selected ?? ""))}
+        itemToStringLabel={(selected) =>
+          options.find((option) => option.value === selected)?.label ?? selected
+        }
+        required
+      >
         <SelectTrigger className="w-full bg-muted/60">
           <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
         </SelectTrigger>

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using api.Models;
 using RouteModel = api.Models.Route;
+using RouteDirectionModel = api.Models.RouteDirection;
 
 namespace api.Data;
 
@@ -15,6 +16,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<Bay> Bays => Set<Bay>();
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<RouteModel> Routes => Set<RouteModel>();
+    public DbSet<RouteDirectionModel> RouteDirections => Set<RouteDirectionModel>();
     public DbSet<RouteStop> RouteStops => Set<RouteStop>();
     public DbSet<RouteSchedule> RouteSchedules => Set<RouteSchedule>();
     public DbSet<MaintenanceRecord> MaintenanceRecords => Set<MaintenanceRecord>();
@@ -24,6 +26,9 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<PaymentRefund> PaymentRefunds => Set<PaymentRefund>();
+    public DbSet<PaymentWebhookEvent> PaymentWebhookEvents => Set<PaymentWebhookEvent>();
     public DbSet<Incident> Incidents => Set<Incident>();
     public DbSet<AgentWorkflow> AgentWorkflows => Set<AgentWorkflow>();
     public DbSet<AgentStep> AgentSteps => Set<AgentStep>();
@@ -41,12 +46,15 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<Bay>().HasIndex(b => new { b.CentreId, b.Code }).IsUnique();
         modelBuilder.Entity<RouteModel>().HasIndex(r => new { r.CentreId, r.RouteNumber }).IsUnique();
         modelBuilder.Entity<RouteStop>().HasIndex(rs => new { rs.RouteId, rs.SequenceOrder }).IsUnique();
+        modelBuilder.Entity<RouteDirectionModel>().HasIndex(direction => new { direction.RouteId, direction.StartCentreId, direction.EndCentreId }).IsUnique();
         modelBuilder.Entity<Passenger>().HasIndex(p => p.PhoneNumber).IsUnique();
         modelBuilder.Entity<Passenger>().HasOne(p => p.User).WithOne(u => u.Passenger).HasForeignKey<Passenger>(p => p.UserId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<FareRule>().HasIndex(rule => new { rule.RouteId, rule.PassengerCategory }).IsUnique();
         modelBuilder.Entity<Booking>().HasIndex(booking => new { booking.TripId, booking.SeatNumber })
             .IsUnique()
             .HasFilter("\"Status\" IN (0, 1)");
+        modelBuilder.Entity<Payment>().HasIndex(payment => new { payment.Provider, payment.ProviderOrderId }).IsUnique();
+        modelBuilder.Entity<PaymentWebhookEvent>().HasIndex(webhook => new { webhook.Provider, webhook.ProviderEventId }).IsUnique();
 
         modelBuilder.Entity<Centre>().Property(c => c.Code).HasMaxLength(32);
         modelBuilder.Entity<Centre>().Property(c => c.Name).HasMaxLength(160);
@@ -62,6 +70,15 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<Booking>().Property(booking => booking.RefundAmount).HasPrecision(12, 2);
         modelBuilder.Entity<Wallet>().Property(wallet => wallet.Balance).HasPrecision(12, 2);
         modelBuilder.Entity<Transaction>().Property(transaction => transaction.Amount).HasPrecision(12, 2);
+        modelBuilder.Entity<Payment>().Property(payment => payment.Amount).HasPrecision(12, 2);
+        modelBuilder.Entity<Payment>().Property(payment => payment.Currency).HasMaxLength(3);
+        modelBuilder.Entity<Payment>().Property(payment => payment.ProviderOrderId).HasMaxLength(96);
+        modelBuilder.Entity<Payment>().Property(payment => payment.ProviderCheckoutId).HasMaxLength(128);
+        modelBuilder.Entity<Payment>().Property(payment => payment.ProviderPaymentId).HasMaxLength(96);
+        modelBuilder.Entity<PaymentWebhookEvent>().Property(webhook => webhook.ProviderEventId).HasMaxLength(128);
+        modelBuilder.Entity<PaymentWebhookEvent>().Property(webhook => webhook.EventType).HasMaxLength(128);
+        modelBuilder.Entity<PaymentRefund>().Property(refund => refund.Amount).HasPrecision(12, 2);
+        modelBuilder.Entity<PaymentRefund>().Property(refund => refund.Reason).HasMaxLength(1000);
         modelBuilder.Entity<SupportRequest>().Property(request => request.Subject).HasMaxLength(200);
         modelBuilder.Entity<SupportRequest>().Property(request => request.Description).HasMaxLength(2000);
         modelBuilder.Entity<SupportRequest>().Property(request => request.Resolution).HasMaxLength(2000);
@@ -152,6 +169,37 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .HasForeignKey(s => s.BayId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<RouteDirectionModel>()
+            .HasOne(direction => direction.Route)
+            .WithMany(route => route.Directions)
+            .HasForeignKey(direction => direction.RouteId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<RouteDirectionModel>()
+            .HasOne(direction => direction.StartCentre)
+            .WithMany()
+            .HasForeignKey(direction => direction.StartCentreId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<RouteDirectionModel>()
+            .HasOne(direction => direction.EndCentre)
+            .WithMany()
+            .HasForeignKey(direction => direction.EndCentreId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<RouteStop>()
+            .HasOne(stop => stop.RouteDirection)
+            .WithMany(direction => direction.Stops)
+            .HasForeignKey(stop => stop.RouteDirectionId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<RouteSchedule>()
+            .HasOne(schedule => schedule.RouteDirection)
+            .WithMany(direction => direction.Schedules)
+            .HasForeignKey(schedule => schedule.RouteDirectionId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Trip>()
+            .HasOne(trip => trip.RouteDirection)
+            .WithMany(direction => direction.Trips)
+            .HasForeignKey(trip => trip.RouteDirectionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // Route <-> Trip (1:N)
         modelBuilder.Entity<Trip>()
             .HasOne(t => t.Route)
@@ -219,6 +267,18 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .WithMany(b => b.Transactions)
             .HasForeignKey(t => t.BookingId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Payment>()
+            .HasOne(payment => payment.Booking)
+            .WithMany(booking => booking.Payments)
+            .HasForeignKey(payment => payment.BookingId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PaymentRefund>()
+            .HasOne(refund => refund.Payment)
+            .WithMany(payment => payment.Refunds)
+            .HasForeignKey(refund => refund.PaymentId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<SupportRequest>()
             .HasOne(request => request.Passenger)

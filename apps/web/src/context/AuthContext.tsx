@@ -16,9 +16,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
-          credentials: "include",
-        });
+        let res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, { credentials: "include" });
+        if (res.status === 401) {
+          const refresh = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+            method: "POST",
+            credentials: "include",
+          });
+          if (refresh.ok) {
+            res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, { credentials: "include" });
+          }
+        }
 
         if (!res.ok) throw new Error();
         const data = await res.json();

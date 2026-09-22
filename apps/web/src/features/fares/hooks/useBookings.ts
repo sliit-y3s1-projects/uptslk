@@ -70,6 +70,10 @@ export function useBookingMutations() {
     onSuccess: refresh,
     onError: refresh,
   });
+  const checkout = useMutation({
+    mutationFn: service.startCheckout,
+    onError: refresh,
+  });
   const seat = useMutation({
     mutationFn: ({ id, seatNumber }: { id: string; seatNumber: string }) =>
       service.seat(id, seatNumber),
@@ -85,5 +89,5 @@ export function useBookingMutations() {
       service.cancel(id, reason),
     onSuccess: refresh,
   });
-  return { create, seat, complete, cancel };
+  return { create, checkout, seat, complete, cancel };
 }

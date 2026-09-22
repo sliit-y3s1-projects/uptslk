@@ -7,7 +7,7 @@ import type {
   UpdateTripRequest,
 } from "../types/trips";
 export function useTrips(
-  params: { centreId?: string; status?: string; date?: string } = {},
+  params: { centreId?: string; terminalId?: string; routeId?: string; directionId?: string; status?: string; date?: string } = {},
 ) {
   return useQuery({
     queryKey: ["trips", params],

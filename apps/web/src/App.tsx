@@ -5,7 +5,9 @@ import { RegisterPage } from "@/components/auth/RegisterPage";
 import { OnboardingPage } from "@/components/auth/OnboardingPage";
 import { ProfilePage } from "@/features/profile/ProfilePage";
 import { PasswordChangePage } from "@/features/profile/PasswordChangePage";
-import { CheckoutPage } from "@/features/bookings/CheckoutPage";
+import { BookingPaymentStatusPage, CheckoutPage } from "@/features/bookings/CheckoutPage";
+import { MyTicketsPage } from "@/features/bookings/MyTicketsPage";
+import { CommuterLayout } from "@/features/bookings/CommuterHeader";
 import { NotFoundPage } from "@/components/NotFoundPage";
 import { RequireRole } from "./components/auth/RequireAuth";
 import { Navigate, Route, Routes, useLocation } from "react-router";
@@ -46,7 +48,7 @@ import {
   AssistancePage,
   PassengerFlowPage,
 } from "@/features/riders/PassengerOperationsPages";
-import { PaymentsPage, TicketsPage } from "@/features/fares/FarePages";
+import { BookingManagementPage, FareRulesManagementPage, PaymentReturnPage, PaymentsPage, TicketsPage } from "@/features/fares/FarePages";
 import { ReconciliationPage } from "@/features/fares/ReconciliationPage";
 import { RidershipPage, RevenuePage } from "@/features/reports/ReportsPages";
 import { IntegrationsPage } from "@/features/settings/SettingsPages";
@@ -101,7 +103,7 @@ function App() {
   if (loading) return null;
 
   if (!user) {
-    if (location.pathname === "/") return <PublicBookingPage />;
+    if (location.pathname === "/") return <CommuterLayout><PublicBookingPage /></CommuterLayout>;
     if (location.pathname === "/signup") return <RegisterPage />;
     if (location.pathname === "/login") return <SignInPanel />;
     return <NotFoundPage />;
@@ -109,10 +111,13 @@ function App() {
 
   if (location.pathname === "/onboarding") return <OnboardingPage />;
   if (location.pathname === "/book") return <NotFoundPage />;
-  if (location.pathname === "/") return <PublicBookingPage />;
-  if (location.pathname === "/profile") return <ProfilePage />;
-  if (location.pathname === "/profile/password") return <PasswordChangePage />;
-  if (location.pathname === "/booking/checkout") return <CheckoutPage />;
+  if (location.pathname === "/") return <CommuterLayout><PublicBookingPage /></CommuterLayout>;
+  if (location.pathname === "/profile") return <CommuterLayout><ProfilePage /></CommuterLayout>;
+  if (location.pathname === "/profile/password") return <CommuterLayout><PasswordChangePage /></CommuterLayout>;
+  if (location.pathname === "/booking/checkout") return <CommuterLayout><CheckoutPage /></CommuterLayout>;
+  if (location.pathname === "/booking/payment-return") return <CommuterLayout><BookingPaymentStatusPage /></CommuterLayout>;
+  if (location.pathname === "/booking/payment-cancel") return <CommuterLayout><BookingPaymentStatusPage cancelled /></CommuterLayout>;
+  if (location.pathname === "/my-tickets") return <CommuterLayout><MyTicketsPage /></CommuterLayout>;
 
   const isSuperAdmin = user.role === "SuperAdmin" || user.role === "Admin";
 
@@ -244,6 +249,10 @@ function App() {
           <Route path="/riders/accounts" element={<RidersPage />} />
           <Route path="/riders/support" element={<SupportPage />} />
           <Route path="/fares/tickets" element={<TicketsPage />} />
+          <Route path="/fares/bookings" element={<BookingManagementPage />} />
+          <Route path="/fares/fare-rules" element={<FareRulesManagementPage />} />
+          <Route path="/fares/bookings/payment-return" element={<PaymentReturnPage />} />
+          <Route path="/fares/bookings/payment-cancel" element={<PaymentReturnPage cancelled />} />
           <Route path="/fares/payments" element={<PaymentsPage />} />
           <Route
             path="/fares/reconciliation"

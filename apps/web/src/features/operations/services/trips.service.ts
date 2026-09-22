@@ -9,7 +9,7 @@ import type {
 } from "../types/trips";
 
 export function getTrips(
-  params: { centreId?: string; status?: string; date?: string } = {},
+  params: { centreId?: string; terminalId?: string; routeId?: string; directionId?: string; status?: string; date?: string } = {},
 ) {
   const q = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {

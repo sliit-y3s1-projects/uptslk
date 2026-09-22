@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,11 @@ export function IncidentFormPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const scopedTrips = trips.filter((trip) => trip.status !== "Cancelled");
+  const defaultTripId =
+    params.get("tripId") ?? scopedTrips[0]?.id ?? "centre-wide";
+  const [selectedTripId, setSelectedTripId] = useState(params.get("tripId") ?? "");
+  const effectiveTripId = selectedTripId || defaultTripId;
+  const selectedTrip = scopedTrips.find((trip) => trip.id === effectiveTripId);
   return (
     <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
       <PageHeading
@@ -27,14 +33,17 @@ export function IncidentFormPage() {
         description="Connect the issue to a trip so dispatch staff can respond with full context."
       />
       <form
-        className="max-w-3xl rounded-lg border bg-card p-5"
+        className="w-full rounded-xl border border-slate-300 bg-card p-6"
         onSubmit={(event) => {
           event.preventDefault();
           const form = new FormData(event.currentTarget);
           createMutation.mutate(
             {
               centreId: user?.centreId ?? "",
-              tripId: String(form.get("tripId")) || undefined,
+              tripId:
+                form.get("tripId") === "centre-wide"
+                  ? undefined
+                  : String(form.get("tripId") || ""),
               reportedByName: user?.name ?? "Dispatch operator",
               type:
                 String(form.get("category")) === "Vehicle"
@@ -54,21 +63,37 @@ export function IncidentFormPage() {
           );
         }}
       >
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="grid gap-1.5 text-sm font-medium">
+        <div className="space-y-6">
+          <section className="rounded-xl border border-slate-300 p-5">
+            <div className="mb-4">
+              <h2 className="font-semibold">Trip context</h2>
+              <p className="text-sm text-muted-foreground">
+                Link this report to the affected departure, or keep it centre-wide.
+              </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="grid gap-1.5 text-sm font-medium">
             Related trip
             <Select
               name="tripId"
-              defaultValue={params.get("tripId") ?? scopedTrips[0]?.id}
+              value={effectiveTripId}
+              onValueChange={(value) => setSelectedTripId(value ?? "centre-wide")}
+              itemToStringLabel={(selected) => {
+                if (selected === "centre-wide") return "Centre-wide incident";
+                const trip = scopedTrips.find((item) => item.id === selected);
+                return trip
+                  ? `${trip.routeNumber} · ${trip.routeName}`
+                  : selected;
+              }}
             >
               <SelectTrigger className="w-full bg-muted/60">
                 <SelectValue placeholder="Centre-wide incident" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="centre-wide">Centre-wide incident</SelectItem>
                 {scopedTrips.map((trip) => (
                   <SelectItem key={trip.id} value={trip.id}>
-                    {trip.id} · Route {trip.routeNumber} ·{" "}
-                    {new Date(trip.scheduledTime).toLocaleString()}
+                    {trip.routeNumber} · {trip.routeName}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -89,7 +114,31 @@ export function IncidentFormPage() {
               </SelectContent>
             </Select>
           </label>
-          <label className="grid gap-1.5 text-sm font-medium sm:col-span-2">
+            </div>
+            {selectedTrip ? (
+              <div className="mt-4 flex flex-col gap-3 rounded-lg border border-emerald-300 bg-emerald-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                    <p className="font-medium text-emerald-900">{selectedTrip.routeNumber} · {selectedTrip.routeName}</p>
+                    <p className="text-sm text-emerald-700">Affected scheduled departure</p>
+                </div>
+                <div className="text-sm font-medium text-emerald-800 sm:text-right">
+                  {new Date(selectedTrip.scheduledTime).toLocaleString()}
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 rounded-lg border border-dashed border-slate-300 px-4 py-3 text-sm text-muted-foreground">
+                This report applies to the centre, not a single departure.
+              </div>
+            )}
+          </section>
+
+          <section className="rounded-xl border border-slate-300 p-5">
+            <div className="mb-4">
+              <h2 className="font-semibold">Incident details</h2>
+              <p className="text-sm text-muted-foreground">Record what happened and how urgently it needs attention.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="grid gap-1.5 text-sm font-medium md:col-span-2">
             Incident summary
             <Input
               name="title"
@@ -97,7 +146,7 @@ export function IncidentFormPage() {
               required
             />
           </label>
-          <label className="grid gap-1.5 text-sm font-medium sm:col-span-2">
+              <label className="grid gap-1.5 text-sm font-medium md:col-span-2">
             Details
             <Input
               name="description"
@@ -124,6 +173,8 @@ export function IncidentFormPage() {
             Assigned owner
             <Input name="owner" placeholder="Dispatch desk" />
           </label>
+            </div>
+          </section>
         </div>
         <div className="mt-5 flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={() => navigate(-1)}>

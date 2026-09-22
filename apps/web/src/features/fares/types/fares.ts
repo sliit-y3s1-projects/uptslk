@@ -38,6 +38,17 @@ export interface CreateBookingRequest {
   passengerId: string;
   seatNumber: string;
 }
+export interface CheckoutSession {
+  url: string;
+}
+export interface PaymentOrderStatus {
+  bookingId: string;
+  status: "Initiated" | "Pending" | "Succeeded" | "Failed" | "Cancelled" | "Chargebacked" | "RefundPending" | "Refunded";
+  amount: number;
+  currency: string;
+  provider: "Mock";
+  updatedAt: string;
+}
 export interface Booking {
   id: string;
   tripId: string;

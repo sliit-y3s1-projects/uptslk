@@ -4,6 +4,7 @@ using api.Data;
 using api.Enums;
 using api.Models;
 using api.Services;
+using api.Services.Payments;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +35,8 @@ builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
 
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<TripConflictService>();
+builder.Services.AddSingleton<IPaymentGateway, StripePaymentGateway>();
+builder.Services.AddScoped<BookingPaymentService>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -69,7 +72,17 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowWebApp", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "https://uptslk.vercel.app")
+        var webOrigins = new[]
+            {
+                "http://localhost:5173",
+                "https://uptslk.vercel.app",
+                builder.Configuration["Payments:Stripe:WebAppBaseUrl"]
+            }
+            .OfType<string>()
+            .Where(origin => !string.IsNullOrWhiteSpace(origin))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        policy.WithOrigins(webOrigins)
               .AllowAnyHeader().AllowCredentials()
               .AllowAnyMethod();
     });

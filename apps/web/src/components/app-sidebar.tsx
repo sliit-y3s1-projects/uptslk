@@ -77,10 +77,11 @@ const data = {
     },
     {
       title: "Fares & finance",
-      url: "/fares/tickets",
+      url: "/fares/bookings",
       icon: Ticket01Icon,
       items: [
-        { title: "Tickets", url: "/fares/tickets" },
+        { title: "Bookings", url: "/fares/bookings" },
+        { title: "Fare rules", url: "/fares/fare-rules" },
         { title: "Payments", url: "/fares/payments" },
         { title: "Reconciliation", url: "/fares/reconciliation" },
       ],

@@ -17,6 +17,8 @@ import type {
   TripDetail,
   RouteOption,
   CentreOption,
+  CheckoutSession,
+  PaymentOrderStatus,
 } from "../types/fares";
 const path = "/api/v1/bookings";
 export const bookingsService = {
@@ -25,6 +27,10 @@ export const bookingsService = {
   detail: (id: string) => apiClient<BookingDetail>(`${path}/${id}`),
   create: (body: CreateBookingRequest) =>
     apiClient<CreatedBooking>(path, jsonBody("POST", body)),
+  startCheckout: (body: CreateBookingRequest) =>
+    apiClient<CheckoutSession>("/api/v1/payments/checkout", jsonBody("POST", body)),
+  paymentOrder: (orderId: string) =>
+    apiClient<PaymentOrderStatus>(`/api/v1/payments/orders/${encodeURIComponent(orderId)}`),
   seat: (id: string, seatNumber: string) =>
     apiClient<void>(
       `${path}/${id}/seat`,

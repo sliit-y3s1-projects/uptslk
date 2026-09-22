@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 export function SignInPanel() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -21,8 +22,14 @@ export function SignInPanel() {
     setSubmitting(true);
     try {
       const role = await login(email, password);
+      const returnTo = params.get("returnTo");
+      const safeReturnTo = returnTo?.startsWith("/booking/checkout")
+        ? returnTo
+        : null;
       navigate(
-        role === "Admin" || role === "SuperAdmin"
+        role === "Commuter" && safeReturnTo
+          ? safeReturnTo
+          : role === "Admin" || role === "SuperAdmin"
           ? "/admin"
           : role === "Commuter"
             ? "/"
