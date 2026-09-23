@@ -410,6 +410,9 @@ function DriverFormInner({
             <Select
               value={centreId}
               onValueChange={(val) => val && setCentreId(val)}
+              itemToStringLabel={(value) =>
+                centres.find((centre) => centre.id === value)?.name ?? value
+              }
             >
               <SelectTrigger className="w-full bg-muted/60">
                 <SelectValue placeholder="Select centre" />
@@ -446,6 +449,9 @@ function DriverFormInner({
             <Select
               value={status}
               onValueChange={(val) => val && setStatus(val as DriverStatus)}
+              itemToStringLabel={(value) =>
+                ({ Active: "Active", Inactive: "Inactive" })[value] ?? value
+              }
             >
               <SelectTrigger className="w-full bg-muted/60">
                 <SelectValue />

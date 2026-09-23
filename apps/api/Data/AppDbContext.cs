@@ -45,7 +45,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<Centre>().HasIndex(c => c.Code).IsUnique();
         modelBuilder.Entity<Bay>().HasIndex(b => new { b.CentreId, b.Code }).IsUnique();
         modelBuilder.Entity<RouteModel>().HasIndex(r => new { r.CentreId, r.RouteNumber }).IsUnique();
-        modelBuilder.Entity<RouteStop>().HasIndex(rs => new { rs.RouteId, rs.SequenceOrder }).IsUnique();
+        modelBuilder.Entity<RouteStop>().HasIndex(rs => new { rs.RouteDirectionId, rs.SequenceOrder }).IsUnique();
         modelBuilder.Entity<RouteDirectionModel>().HasIndex(direction => new { direction.RouteId, direction.StartCentreId, direction.EndCentreId }).IsUnique();
         modelBuilder.Entity<Passenger>().HasIndex(p => p.PhoneNumber).IsUnique();
         modelBuilder.Entity<Passenger>().HasOne(p => p.User).WithOne(u => u.Passenger).HasForeignKey<Passenger>(p => p.UserId).OnDelete(DeleteBehavior.SetNull);

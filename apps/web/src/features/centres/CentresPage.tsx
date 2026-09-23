@@ -10,6 +10,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,9 +29,25 @@ import {
   useUpdateCentre,
 } from "./hooks/useCentres";
 import type { CentreStatus } from "./types";
+import { apiClient } from "@/lib/api/api-client";
+
+type CentreEmployee = {
+  id: string;
+  name: string;
+  role: string;
+  centreId?: string | null;
+};
+
+function useCentreEmployees() {
+  return useQuery({
+    queryKey: ["admin", "users"],
+    queryFn: () => apiClient<CentreEmployee[]>("/api/v1/auth/users?staffOnly=true"),
+  });
+}
 
 export function CentresPage() {
   const { data: centres, isLoading, error } = useCentres();
+  const { data: employees = [] } = useCentreEmployees();
 
   if (isLoading)
     return (
@@ -65,7 +82,14 @@ export function CentresPage() {
             No centres found. Create one to get started.
           </div>
         ) : (
-          centres?.map((centre) => (
+          centres?.map((centre) => {
+            const centreEmployees = employees.filter(
+              (employee) => employee.centreId === centre.id,
+            );
+            const manager = centreEmployees.find(
+              (employee) => employee.role === "CentreManager",
+            );
+            return (
             <Link
               key={centre.id}
               to={`/admin/centres/${centre.id}`}
@@ -87,12 +111,15 @@ export function CentresPage() {
                 tone={centre.status === "Operating" ? "good" : "neutral"}
               />
               <p className="text-sm text-muted-foreground">
-                Manager data unavailable
+                {manager?.name ?? "Unassigned"}
               </p>
-              <p className="text-sm font-medium">—</p>
+              <p className="text-sm font-medium">
+                {centreEmployees.length}
+              </p>
               <ChevronRight className="size-4 text-muted-foreground" />
             </Link>
-          ))
+            );
+          })
         )}
       </section>
     </main>
@@ -102,6 +129,7 @@ export function CentresPage() {
 export function CentreProfilePage() {
   const { centreId } = useParams();
   const { data: centre, isLoading, error } = useCentre(centreId);
+  const { data: employees = [] } = useCentreEmployees();
 
   if (isLoading)
     return (
@@ -112,6 +140,13 @@ export function CentreProfilePage() {
   if (error)
     return <main className="p-5 text-red-500">Failed to load centre.</main>;
   if (!centre) return <main className="p-5">Centre not found.</main>;
+
+  const centreEmployees = employees.filter(
+    (employee) => employee.centreId === centre.id,
+  );
+  const manager = centreEmployees.find(
+    (employee) => employee.role === "CentreManager",
+  );
 
   return (
     <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-5">
@@ -158,9 +193,9 @@ export function CentreProfilePage() {
             />
             <Fact
               label="Centre manager"
-              value="Managed through employee service"
+              value={manager?.name ?? "Unassigned"}
             />
-            <Fact label="Employees" value="Managed through employee service" />
+            <Fact label="Employees" value={String(centreEmployees.length)} />
           </div>
           <p className="mt-5 border-t pt-4 text-sm leading-6 text-muted-foreground">
             {centre.description || "No description provided."}
@@ -169,7 +204,7 @@ export function CentreProfilePage() {
         <article className="rounded-lg border bg-card p-5">
           <h2 className="font-semibold">Governance readiness</h2>
           <div className="mt-4 space-y-3">
-            <Check label="Centre manager assigned" complete={false} />
+            <Check label="Centre manager assigned" complete={!!manager} />
             <Check
               label="Emergency contacts configured"
               complete={centre.status === "Operating"}
@@ -178,7 +213,10 @@ export function CentreProfilePage() {
               label="Transport integrations connected"
               complete={centre.status === "Operating"}
             />
-            <Check label="Employee roles reviewed" complete={false} />
+            <Check
+              label="Employee roles reviewed"
+              complete={centreEmployees.length > 0}
+            />
           </div>
           <Button
             className="mt-5 w-full"

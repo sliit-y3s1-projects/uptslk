@@ -175,7 +175,7 @@ export function RouteDetailPage({
             />
           </div>
           <div className="mt-5 space-y-3">
-            {route.directions.length === 0 ? <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">Add the first direction before building its timetable.</p> : route.directions.map((direction) => <article key={direction.id} className="rounded-lg border border-slate-300 p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-medium text-muted-foreground">DIRECTION</p><h3 className="mt-1 font-semibold">{direction.startCentre.name} <ArrowRight className="mx-1 inline size-4 text-primary" /> {direction.endCentre.name}</h3><p className="mt-1 text-sm text-muted-foreground">{direction.estimatedDurationMin} min · {direction.distanceKm} km · {direction.schedules.filter((schedule) => schedule.isActive).length} active timetable{direction.schedules.filter((schedule) => schedule.isActive).length === 1 ? "" : "s"}</p></div><StatusBadge label={direction.isActive ? "Active" : "Archived"} tone={direction.isActive ? "good" : "neutral"} /></div><p className="mt-3 text-sm text-muted-foreground">{direction.stops.length > 0 ? direction.stops.map((stop) => stop.stopName).join(" → ") : "No intermediate stops recorded"}</p>{!readOnly && <div className="mt-4 flex gap-2"><Button size="sm" variant="outline" onClick={() => setEditingDirection(direction)}>Edit direction</Button><Button size="sm" variant="outline" className="text-destructive" onClick={() => updateDirection.mutate({ directionId: direction.id, data: { startCentreId: direction.startCentreId, endCentreId: direction.endCentreId, name: direction.name, distanceKm: direction.distanceKm, estimatedDurationMin: direction.estimatedDurationMin, stops: direction.stops.map((stop) => ({ stopName: stop.stopName, latitude: stop.latitude ?? 0, longitude: stop.longitude ?? 0 })), isActive: !direction.isActive } })}>{direction.isActive ? "Deactivate" : "Reactivate"}</Button></div>}</article>)}
+            {route.directions.length === 0 ? <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">Add the first direction before building its timetable.</p> : route.directions.map((direction) => <article key={direction.id} className="rounded-lg border border-slate-300 p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-medium text-muted-foreground">DIRECTION</p><h3 className="mt-1 font-semibold">{direction.startCentre.name} <ArrowRight className="mx-1 inline size-4 text-primary" /> {direction.endCentre.name}</h3><p className="mt-1 text-sm text-muted-foreground">{direction.estimatedDurationMin} min · {direction.distanceKm} km · {direction.schedules.filter((schedule) => schedule.isActive).length} active timetable{direction.schedules.filter((schedule) => schedule.isActive).length === 1 ? "" : "s"}</p></div><StatusBadge label={direction.isActive ? "Active" : "Archived"} tone={direction.isActive ? "good" : "neutral"} /></div><div className="mt-4 rounded-md border bg-muted/20 p-3"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Stops in travel order</p>{direction.stops.length > 0 ? <ol className="mt-2 flex flex-wrap items-center gap-2">{direction.stops.map((stop, index) => <li key={stop.id} className="flex items-center gap-2 text-sm"><span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{index + 1}</span><span>{stop.stopName}</span>{index < direction.stops.length - 1 && <ArrowRight className="size-3.5 text-muted-foreground" />}</li>)}</ol> : <p className="mt-2 text-sm text-muted-foreground">No stops have been recorded for this direction.</p>}</div>{!readOnly && <div className="mt-4 flex gap-2"><Button size="sm" variant="outline" onClick={() => setEditingDirection(direction)}>Edit direction</Button><Button size="sm" variant="outline" className="text-destructive" onClick={() => updateDirection.mutate({ directionId: direction.id, data: { startCentreId: direction.startCentreId, endCentreId: direction.endCentreId, name: direction.name, distanceKm: direction.distanceKm, estimatedDurationMin: direction.estimatedDurationMin, stops: direction.stops.map((stop) => ({ stopName: stop.stopName, latitude: stop.latitude ?? 0, longitude: stop.longitude ?? 0 })), isActive: !direction.isActive } })}>{direction.isActive ? "Deactivate" : "Reactivate"}</Button></div>}</article>)}
           </div>
         </article>
         <article className="rounded-lg border bg-card p-5">
@@ -211,7 +211,8 @@ export function RouteFormPage() {
   const [startCentreId, setStartCentreId] = useState("");
   const [endCentreId, setEndCentreId] = useState("");
   const [stops, setStops] = useState([
-    { stopName: "", latitude: "", longitude: "" },
+    { stopName: "", latitude: "0", longitude: "0" },
+    { stopName: "", latitude: "0", longitude: "0" },
   ]);
   const [initialized, setInitialized] = useState(false);
 
@@ -228,6 +229,17 @@ export function RouteFormPage() {
   }
 
   const editing = Boolean(routeId);
+
+  function setRouteTerminal(terminal: "start" | "end", centreId: string) {
+    const centreName = centres.find((centre) => centre.id === centreId)?.name ?? "";
+    setStops((current) =>
+      current.map((stop, index) =>
+        index === (terminal === "start" ? 0 : current.length - 1)
+          ? { ...stop, stopName: centreName }
+          : stop,
+      ),
+    );
+  }
 
   if (editing && isLoading)
     return (
@@ -307,7 +319,7 @@ export function RouteFormPage() {
             value={existing?.name}
             placeholder="Maharagama - Pettah"
           />
-          {editing ? <><Field name="origin" label="Origin" value={existing?.origin} placeholder="Maharagama" /><Field name="destination" label="Destination" value={existing?.destination} placeholder="Pettah" /></> : <><label className="grid gap-1.5 text-sm font-medium">Departure centre<Select value={startCentreId || null} onValueChange={(value) => setStartCentreId(value ?? "")}><SelectTrigger className="w-full bg-muted/60"><SelectValue placeholder="Choose departure centre" /></SelectTrigger><SelectContent>{centres.filter((centre) => centre.status === "Operating").map((centre) => <SelectItem key={centre.id} value={centre.id}>{centre.name} ({centre.code})</SelectItem>)}</SelectContent></Select></label><label className="grid gap-1.5 text-sm font-medium">Arrival centre<Select value={endCentreId || null} onValueChange={(value) => setEndCentreId(value ?? "")}><SelectTrigger className="w-full bg-muted/60"><SelectValue placeholder="Choose arrival centre" /></SelectTrigger><SelectContent>{centres.filter((centre) => centre.status === "Operating" && centre.id !== startCentreId).map((centre) => <SelectItem key={centre.id} value={centre.id}>{centre.name} ({centre.code})</SelectItem>)}</SelectContent></Select></label><input type="hidden" name="origin" value={centres.find((centre) => centre.id === startCentreId)?.name ?? "Pending selection"} /><input type="hidden" name="destination" value={centres.find((centre) => centre.id === endCentreId)?.name ?? "Pending selection"} /></>}
+          {editing ? <><Field name="origin" label="Origin" value={existing?.origin} placeholder="Maharagama" /><Field name="destination" label="Destination" value={existing?.destination} placeholder="Pettah" /></> : <><label className="grid gap-1.5 text-sm font-medium">Outbound departure centre<Select value={startCentreId || null} onValueChange={(value) => { const nextValue = value ?? ""; setStartCentreId(nextValue); setRouteTerminal("start", nextValue); }} itemToStringLabel={(value) => { const centre = centres.find((item) => item.id === value); return centre ? `${centre.name} (${centre.code})` : value; }}><SelectTrigger className="w-full bg-muted/60"><SelectValue placeholder="Choose departure centre" /></SelectTrigger><SelectContent>{centres.filter((centre) => centre.status === "Operating").map((centre) => <SelectItem key={centre.id} value={centre.id}>{centre.name} ({centre.code})</SelectItem>)}</SelectContent></Select></label><label className="grid gap-1.5 text-sm font-medium">Outbound arrival centre<Select value={endCentreId || null} onValueChange={(value) => { const nextValue = value ?? ""; setEndCentreId(nextValue); setRouteTerminal("end", nextValue); }} itemToStringLabel={(value) => { const centre = centres.find((item) => item.id === value); return centre ? `${centre.name} (${centre.code})` : value; }}><SelectTrigger className="w-full bg-muted/60"><SelectValue placeholder="Choose arrival centre" /></SelectTrigger><SelectContent>{centres.filter((centre) => centre.status === "Operating" && centre.id !== startCentreId).map((centre) => <SelectItem key={centre.id} value={centre.id}>{centre.name} ({centre.code})</SelectItem>)}</SelectContent></Select></label><input type="hidden" name="origin" value={centres.find((centre) => centre.id === startCentreId)?.name ?? "Pending selection"} /><input type="hidden" name="destination" value={centres.find((centre) => centre.id === endCentreId)?.name ?? "Pending selection"} /></>}
           <Field
             name="distanceKm"
             label="Distance (km)"
@@ -330,6 +342,7 @@ export function RouteFormPage() {
             <Select
               name="serviceType"
               defaultValue={String(existing?.serviceType ?? "0")}
+              itemToStringLabel={(value) => ({ "0": "Normal", "1": "Semi-luxury", "2": "AC express" })[value] ?? value}
             >
               <SelectTrigger className="w-full bg-muted/60">
                 <SelectValue />
@@ -337,17 +350,20 @@ export function RouteFormPage() {
               <SelectContent>
                 <SelectItem value="0">Normal</SelectItem>
                 <SelectItem value="1">Semi-Luxury</SelectItem>
-                <SelectItem value="2">Luxury</SelectItem>
+                <SelectItem value="2">AC express</SelectItem>
               </SelectContent>
             </Select>
           </label>
         </div>
-        <div className="mt-5">
-          <p className="text-sm font-medium">Ordered stops</p>
+        <div className="mt-5 rounded-lg border border-primary/20 bg-primary/5 p-4">
+          <p className="text-sm font-medium">{editing ? "Ordered stops" : "Outbound stops"}</p>
+          {!editing && <p className="mt-1 text-sm text-muted-foreground">The first and last stops are your selected terminals. Add the intermediate stops in travel order. You will add the return journey after this route is saved.</p>}
           <div className="mt-2 space-y-2">
-            {stops.map((stop, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <span className="flex size-8 items-center justify-center rounded border bg-muted/60 text-xs">
+            {stops.map((stop, index) => {
+              const isTerminal = !editing && (index === 0 || index === stops.length - 1);
+              return (
+              <div key={`${index}-${stop.stopName}`} className="flex items-center gap-2">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                   {index + 1}
                 </span>
                 <Input
@@ -357,66 +373,25 @@ export function RouteFormPage() {
                     newStops[index].stopName = e.target.value;
                     setStops(newStops);
                   }}
-                  placeholder="Stop name"
+                  readOnly={isTerminal}
+                  className={isTerminal ? "border-emerald-200 bg-emerald-50 font-medium text-emerald-900 focus-visible:border-emerald-400 focus-visible:ring-emerald-200" : undefined}
+                  placeholder={isTerminal ? "Select a terminal centre above" : "Intermediate stop name"}
                   required
                 />
-                <Input
-                  type="number"
-                  step="any"
-                  min="-90"
-                  max="90"
-                  value={stop.latitude}
-                  onChange={(e) => {
-                    const newStops = [...stops];
-                    newStops[index].latitude = e.target.value;
-                    setStops(newStops);
-                  }}
-                  placeholder="Lat"
-                  required
-                  className="w-24"
-                />
-                <Input
-                  type="number"
-                  step="any"
-                  min="-180"
-                  max="180"
-                  value={stop.longitude}
-                  onChange={(e) => {
-                    const newStops = [...stops];
-                    newStops[index].longitude = e.target.value;
-                    setStops(newStops);
-                  }}
-                  placeholder="Lng"
-                  required
-                  className="w-24"
-                />
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => {
-                    const newStops = [...stops];
-                    newStops.splice(index, 1);
-                    setStops(newStops);
-                  }}
-                >
-                  <Trash2 />
-                </Button>
+                {isTerminal ? <span className="w-20 shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-center text-xs font-semibold text-emerald-800">Terminal</span> : <Button type="button" size="icon" variant="ghost" className="shrink-0 text-destructive" onClick={() => setStops((current) => current.filter((_, stopIndex) => stopIndex !== index))}><Trash2 /></Button>}
               </div>
-            ))}
+              );
+            })}
           </div>
           <Button
             type="button"
             variant="outline"
             className="mt-3"
             onClick={() =>
-              setStops([
-                ...stops,
-                { stopName: "", latitude: "", longitude: "" },
-              ])
+              setStops((current) => !editing ? [...current.slice(0, -1), { stopName: "", latitude: "0", longitude: "0" }, current[current.length - 1]] : [...current, { stopName: "", latitude: "0", longitude: "0" }])
             }
           >
-            Add stop
+            <Plus /> Add {editing ? "stop" : "intermediate stop"}
           </Button>
         </div>
         <div className="mt-5 flex justify-end gap-2">
@@ -449,7 +424,131 @@ export function RouteFormPage() {
 function DirectionForm({ direction, centres, pending, onCancel, onSubmit }: { direction?: RouteDirection; centres: { id: string; name: string; code: string; status: string }[]; pending: boolean; onCancel: () => void; onSubmit: (data: { startCentreId: string; endCentreId: string; name: string; distanceKm: number; estimatedDurationMin: number; stops: { stopName: string; latitude: number; longitude: number }[] }) => void }) {
   const [startCentreId, setStartCentreId] = useState(direction?.startCentreId ?? "");
   const [endCentreId, setEndCentreId] = useState(direction?.endCentreId ?? "");
-  return <form className="grid gap-4" onSubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); onSubmit({ startCentreId, endCentreId, name: String(form.get("name")), distanceKm: Number(form.get("distanceKm")), estimatedDurationMin: Number(form.get("estimatedDurationMin")), stops: direction?.stops.map((stop) => ({ stopName: stop.stopName, latitude: stop.latitude ?? 0, longitude: stop.longitude ?? 0 })) ?? [{ stopName: centres.find((centre) => centre.id === startCentreId)?.name ?? "Start", latitude: 0, longitude: 0 }, { stopName: centres.find((centre) => centre.id === endCentreId)?.name ?? "End", latitude: 0, longitude: 0 }] }); }}><div className="grid gap-4 sm:grid-cols-2"><label className="grid gap-1.5 text-sm font-medium">Departure centre<Select value={startCentreId || null} onValueChange={(value) => setStartCentreId(value ?? "")}><SelectTrigger><SelectValue placeholder="Choose centre" /></SelectTrigger><SelectContent>{centres.filter((centre) => centre.status === "Operating").map((centre) => <SelectItem key={centre.id} value={centre.id}>{centre.name}</SelectItem>)}</SelectContent></Select></label><label className="grid gap-1.5 text-sm font-medium">Arrival centre<Select value={endCentreId || null} onValueChange={(value) => setEndCentreId(value ?? "")}><SelectTrigger><SelectValue placeholder="Choose centre" /></SelectTrigger><SelectContent>{centres.filter((centre) => centre.status === "Operating" && centre.id !== startCentreId).map((centre) => <SelectItem key={centre.id} value={centre.id}>{centre.name}</SelectItem>)}</SelectContent></Select></label><Field name="name" label="Direction name" value={direction?.name} placeholder="Kadawatha MMC to Kaduwela" /><Field name="distanceKm" label="Distance (km)" value={direction ? String(direction.distanceKm) : undefined} type="number" min="0.1" step="0.1" placeholder="18" /><Field name="estimatedDurationMin" label="Estimated duration (min)" value={direction ? String(direction.estimatedDurationMin) : undefined} type="number" min="1" placeholder="45" /></div><p className="text-sm text-muted-foreground">Stops can be refined later. The two terminal centres are recorded automatically.</p><div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={onCancel}>Cancel</Button><Button type="submit" disabled={pending || !startCentreId || !endCentreId}>{pending ? "Saving..." : direction ? "Save direction" : "Add direction"}</Button></div></form>;
+  const [stops, setStops] = useState(() =>
+    direction?.stops.length
+      ? direction.stops.map((stop) => ({
+          stopName: stop.stopName,
+          latitude: stop.latitude ?? 0,
+          longitude: stop.longitude ?? 0,
+        }))
+      : [
+          { stopName: "", latitude: 0, longitude: 0 },
+          { stopName: "", latitude: 0, longitude: 0 },
+        ],
+  );
+  const centreLabel = (value: string) => {
+    const centre = centres.find((item) => item.id === value);
+    return centre ? `${centre.name} (${centre.code})` : value;
+  };
+  function setTerminal(terminal: "start" | "end", centreId: string) {
+    const centreName = centres.find((centre) => centre.id === centreId)?.name ?? "";
+    setStops((current) =>
+      current.map((stop, index) =>
+        index === (terminal === "start" ? 0 : current.length - 1)
+          ? { ...stop, stopName: centreName }
+          : stop,
+      ),
+    );
+  }
+  function updateIntermediateStop(index: number, stopName: string) {
+    setStops((current) =>
+      current.map((stop, stopIndex) =>
+        stopIndex === index ? { ...stop, stopName } : stop,
+      ),
+    );
+  }
+  return (
+    <form
+      className="grid gap-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        onSubmit({
+          startCentreId,
+          endCentreId,
+          name: String(form.get("name")),
+          distanceKm: Number(form.get("distanceKm")),
+          estimatedDurationMin: Number(form.get("estimatedDurationMin")),
+          stops,
+        });
+      }}
+    >
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="grid gap-1.5 text-sm font-medium">
+          Departure centre
+          <Select
+            value={startCentreId || null}
+            onValueChange={(value) => {
+              const nextValue = value ?? "";
+              setStartCentreId(nextValue);
+              setTerminal("start", nextValue);
+            }}
+            itemToStringLabel={centreLabel}
+          >
+            <SelectTrigger><SelectValue placeholder="Choose departure centre" /></SelectTrigger>
+            <SelectContent>{centres.filter((centre) => centre.status === "Operating").map((centre) => <SelectItem key={centre.id} value={centre.id}>{centre.name} ({centre.code})</SelectItem>)}</SelectContent>
+          </Select>
+        </label>
+        <label className="grid gap-1.5 text-sm font-medium">
+          Arrival centre
+          <Select
+            value={endCentreId || null}
+            onValueChange={(value) => {
+              const nextValue = value ?? "";
+              setEndCentreId(nextValue);
+              setTerminal("end", nextValue);
+            }}
+            itemToStringLabel={centreLabel}
+          >
+            <SelectTrigger><SelectValue placeholder="Choose arrival centre" /></SelectTrigger>
+            <SelectContent>{centres.filter((centre) => centre.status === "Operating" && centre.id !== startCentreId).map((centre) => <SelectItem key={centre.id} value={centre.id}>{centre.name} ({centre.code})</SelectItem>)}</SelectContent>
+          </Select>
+        </label>
+        <Field name="name" label="Direction name" value={direction?.name} placeholder="Kadawatha Centre to Makumbura Centre" />
+        <Field name="distanceKm" label="Distance (km)" value={direction ? String(direction.distanceKm) : undefined} type="number" min="0.1" step="0.1" placeholder="32" />
+        <Field name="estimatedDurationMin" label="Estimated duration (min)" value={direction ? String(direction.estimatedDurationMin) : undefined} type="number" min="1" placeholder="45" />
+      </div>
+      <section className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h3 className="font-medium">Ordered stops</h3>
+            <p className="mt-1 text-sm text-muted-foreground">The first and last stops follow the selected terminal centres. Add the intermediate stops in travel order.</p>
+          </div>
+          <span className="rounded-full bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground">{stops.length} stops</span>
+        </div>
+        <div className="mt-4 space-y-2">
+          {stops.map((stop, index) => {
+            const isTerminal = index === 0 || index === stops.length - 1;
+            return (
+              <div key={`${index}-${stop.stopName}`} className="flex items-center gap-2">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{index + 1}</span>
+                <Input
+                  value={stop.stopName}
+                  onChange={(event) => updateIntermediateStop(index, event.target.value)}
+                  readOnly={isTerminal}
+                  className={isTerminal ? "border-emerald-200 bg-emerald-50 font-medium text-emerald-900 focus-visible:border-emerald-400 focus-visible:ring-emerald-200" : undefined}
+                  placeholder={isTerminal ? "Select a terminal centre above" : "Intermediate stop name"}
+                  required
+                />
+                {isTerminal ? (
+                  <span className="w-20 shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-center text-xs font-semibold text-emerald-800">Terminal</span>
+                ) : (
+                  <Button type="button" size="icon" variant="ghost" className="shrink-0 text-destructive" onClick={() => setStops((current) => current.filter((_, stopIndex) => stopIndex !== index))} aria-label={`Remove stop ${index + 1}`}><Trash2 /></Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <Button type="button" variant="outline" className="mt-3" onClick={() => setStops((current) => [...current.slice(0, -1), { stopName: "", latitude: 0, longitude: 0 }, current[current.length - 1]])}>
+          <Plus /> Add intermediate stop
+        </Button>
+      </section>
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button type="submit" disabled={pending || !startCentreId || !endCentreId || stops.some((stop) => !stop.stopName.trim())}>{pending ? "Saving..." : direction ? "Save direction" : "Add direction"}</Button>
+      </div>
+    </form>
+  );
 }
 
 function Field({

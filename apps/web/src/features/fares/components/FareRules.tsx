@@ -23,7 +23,7 @@ import { useRoutes } from "../hooks/useBookings";
 import { useAuth } from "@/hooks/useAuth";
 
 function FilterSelect({ label, value, onValueChange, items }: { label: string; value: string; onValueChange: (value: string) => void; items: { value: string; label: string }[] }) {
-  return <div className="flex flex-col gap-1.5"><label className="text-sm font-medium">{label}</label><Select value={value} onValueChange={(nextValue) => onValueChange(String(nextValue ?? "all"))}><SelectTrigger className="h-11 w-full"><SelectValue /></SelectTrigger><SelectContent>{items.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select></div>;
+  return <div className="flex flex-col gap-1.5"><label className="text-sm font-medium">{label}</label><Select value={value} onValueChange={(nextValue) => onValueChange(String(nextValue ?? "all"))} itemToStringLabel={(nextValue) => items.find((item) => item.value === nextValue)?.label ?? nextValue}><SelectTrigger className="h-11 w-full"><SelectValue /></SelectTrigger><SelectContent>{items.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select></div>;
 }
 
 function FareForm({
@@ -74,7 +74,7 @@ function FareForm({
             ) : (
               <div className="flex min-w-0 flex-col gap-1.5 text-sm">
                 <label className="font-medium">Route</label>
-                <Select value={routeId || undefined} onValueChange={(value) => setRouteId(String(value ?? ""))}>
+                <Select value={routeId || undefined} onValueChange={(value) => setRouteId(String(value ?? ""))} itemToStringLabel={(value) => { const route = routes.find((item) => item.id === value); return route ? `${route.routeNumber} · ${route.name}` : value; }}>
                   <SelectTrigger className="h-12 w-full"><SelectValue placeholder="Select an active route" /></SelectTrigger>
                   <SelectContent>
                     {routes.filter((route) => route.isActive).map((route) => <SelectItem key={route.id} value={route.id}>{route.routeNumber} · {route.name}</SelectItem>)}

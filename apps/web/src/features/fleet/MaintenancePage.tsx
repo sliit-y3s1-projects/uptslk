@@ -450,6 +450,10 @@ function MaintenanceFormInner({
               <Select
                 value={vehicleId}
                 onValueChange={(val) => val && setVehicleId(val)}
+                itemToStringLabel={(value) => {
+                  const vehicle = vehicles.find((item) => item.id === value);
+                  return vehicle ? `${vehicle.plateNumber} (${vehicle.model})` : value;
+                }}
               >
                 <SelectTrigger className="w-full bg-muted/60">
                   <SelectValue placeholder="Select vehicle" />
@@ -498,6 +502,9 @@ function MaintenanceFormInner({
                   value={status}
                   onValueChange={(val) =>
                     val && setStatus(val as MaintenanceStatus)
+                  }
+                  itemToStringLabel={(value) =>
+                    ({ Scheduled: "Scheduled", InProgress: "In progress", Completed: "Completed", Cancelled: "Cancelled" })[value] ?? value
                   }
                 >
                   <SelectTrigger className="w-full bg-muted/60">

@@ -26,6 +26,11 @@ export function IncidentFormPage() {
   const [selectedTripId, setSelectedTripId] = useState(params.get("tripId") ?? "");
   const effectiveTripId = selectedTripId || defaultTripId;
   const selectedTrip = scopedTrips.find((trip) => trip.id === effectiveTripId);
+  const tripLabel = (trip: (typeof scopedTrips)[number]) => {
+    const departure = new Date(trip.scheduledTime).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    const direction = trip.directionName ?? `${trip.origin ?? "Origin"} → ${trip.destination ?? "Destination"}`;
+    return `${departure} · ${direction} · ${trip.vehicle} · ${trip.bay}`;
+  };
   return (
     <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
       <PageHeading
@@ -81,9 +86,7 @@ export function IncidentFormPage() {
               itemToStringLabel={(selected) => {
                 if (selected === "centre-wide") return "Centre-wide incident";
                 const trip = scopedTrips.find((item) => item.id === selected);
-                return trip
-                  ? `${trip.routeNumber} · ${trip.routeName}`
-                  : selected;
+                return trip ? tripLabel(trip) : selected;
               }}
             >
               <SelectTrigger className="w-full bg-muted/60">
@@ -93,7 +96,10 @@ export function IncidentFormPage() {
                 <SelectItem value="centre-wide">Centre-wide incident</SelectItem>
                 {scopedTrips.map((trip) => (
                   <SelectItem key={trip.id} value={trip.id}>
-                    {trip.routeNumber} · {trip.routeName}
+                    <span className="flex min-w-0 flex-col py-0.5">
+                      <span className="font-medium">{new Date(trip.scheduledTime).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })} · {trip.directionName ?? `${trip.origin ?? "Origin"} → ${trip.destination ?? "Destination"}`}</span>
+                      <span className="text-xs text-muted-foreground">{trip.vehicle} · {trip.bay} · {trip.driver}</span>
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -118,8 +124,8 @@ export function IncidentFormPage() {
             {selectedTrip ? (
               <div className="mt-4 flex flex-col gap-3 rounded-lg border border-emerald-300 bg-emerald-50 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                    <p className="font-medium text-emerald-900">{selectedTrip.routeNumber} · {selectedTrip.routeName}</p>
-                    <p className="text-sm text-emerald-700">Affected scheduled departure</p>
+                    <p className="font-medium text-emerald-900">{selectedTrip.routeNumber} · {selectedTrip.directionName ?? `${selectedTrip.origin ?? "Origin"} → ${selectedTrip.destination ?? "Destination"}`}</p>
+                    <p className="text-sm text-emerald-700">Affected scheduled departure · {selectedTrip.vehicle} · {selectedTrip.bay}</p>
                 </div>
                 <div className="text-sm font-medium text-emerald-800 sm:text-right">
                   {new Date(selectedTrip.scheduledTime).toLocaleString()}

@@ -1,5 +1,14 @@
 import { useMemo, useState } from "react";
-import { Loader2, Search, ShieldCheck, UserRound } from "lucide-react";
+import {
+  KeyRound,
+  Loader2,
+  Pencil,
+  Search,
+  ShieldCheck,
+  UserCheck,
+  UserRound,
+  UserX,
+} from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +34,10 @@ type Account = {
 export function UsersPage() {
   const [query, setQuery] = useState("");
   const [resetUser, setResetUser] = useState<Account | null>(null);
+  const [editUser, setEditUser] = useState<Account | null>(null);
   const [password, setPassword] = useState("");
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
   const client = useQueryClient();
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin", "users"],
@@ -52,6 +64,25 @@ export function UsersPage() {
       setPassword("");
     },
   });
+  const updateDetails = useMutation({
+    mutationFn: ({ id, name, email }: { id: string; name: string; email: string }) =>
+      apiClient<Account>(`/api/v1/auth/users/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email }),
+      }),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["admin", "users"] });
+      setEditUser(null);
+      setEditName("");
+      setEditEmail("");
+    },
+  });
+  function openEdit(user: Account) {
+    setEditUser(user);
+    setEditName(user.name);
+    setEditEmail(user.email);
+  }
   const filtered = useMemo(
     () =>
       users.filter((user) =>
@@ -114,20 +145,33 @@ export function UsersPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-full"
+                className="rounded-full border-sky-200 bg-sky-50 text-sky-800 hover:bg-sky-100 hover:text-sky-900"
+                onClick={() => openEdit(user)}
+              >
+                <Pencil /> Edit
+              </Button>
+              <Button
+                variant={user.isActive ? "destructive" : "outline"}
+                size="sm"
+                className={
+                  user.isActive
+                    ? "rounded-full"
+                    : "rounded-full border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"
+                }
                 disabled={status.isPending}
                 onClick={() =>
                   status.mutate({ id: user.id, active: !user.isActive })
                 }
               >
+                {user.isActive ? <UserX /> : <UserCheck />}
                 {user.isActive ? "Disable" : "Enable"}
               </Button>
               <Button
-                variant="outline"
                 size="sm"
-                className="rounded-full"
+                className="rounded-full border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 hover:text-amber-900"
                 onClick={() => setResetUser(user)}
               >
+                <KeyRound />
                 Reset password
               </Button>
             </div>
@@ -139,6 +183,69 @@ export function UsersPage() {
           </p>
         )}
       </section>
+      <Dialog
+        open={!!editUser}
+        onOpenChange={(open) => {
+          if (!open) setEditUser(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit user details</DialogTitle>
+            <DialogDescription>
+              Update the account name and sign-in email for {editUser?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <label className="grid gap-1.5 text-sm font-medium">
+              Full name
+              <Input
+                value={editName}
+                onChange={(event) => setEditName(event.target.value)}
+                placeholder="Full name"
+              />
+            </label>
+            <label className="grid gap-1.5 text-sm font-medium">
+              Email address
+              <Input
+                type="email"
+                value={editEmail}
+                onChange={(event) => setEditEmail(event.target.value)}
+                placeholder="name@upts.lk"
+              />
+            </label>
+            {updateDetails.error && (
+              <p className="text-sm text-destructive">
+                Could not save the user details. Make sure the email is not
+                already in use.
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditUser(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={
+                !editUser ||
+                !editName.trim() ||
+                !editEmail.trim() ||
+                updateDetails.isPending
+              }
+              onClick={() =>
+                editUser &&
+                updateDetails.mutate({
+                  id: editUser.id,
+                  name: editName.trim(),
+                  email: editEmail.trim(),
+                })
+              }
+            >
+              {updateDetails.isPending ? "Saving..." : "Save changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog
         open={!!resetUser}
         onOpenChange={(open) => !open && setResetUser(null)}

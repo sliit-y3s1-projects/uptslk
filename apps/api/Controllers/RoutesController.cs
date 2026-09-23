@@ -22,7 +22,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
             .Include(route => route.Directions).ThenInclude(direction => direction.StartCentre)
             .Include(route => route.Directions).ThenInclude(direction => direction.EndCentre)
             .Include(route => route.Directions).ThenInclude(direction => direction.Stops)
-            .Include(route => route.Directions).ThenInclude(direction => direction.Schedules)
+            .Include(route => route.Directions).ThenInclude(direction => direction.Schedules).ThenInclude(schedule => schedule.Bay)
             .AsQueryable();
 
         if (centreId.HasValue) query = query.Where(route => route.CentreId == centreId.Value);
@@ -62,9 +62,11 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
             Destination = request.Destination.Trim(),
             ServiceType = request.ServiceType,
             DistanceKm = request.DistanceKm,
-            EstimatedDurationMin = request.EstimatedDurationMin,
-            Stops = request.StartCentreId.HasValue ? [] : ToStops(request.Stops)
+            EstimatedDurationMin = request.EstimatedDurationMin
         };
+
+        if (!request.StartCentreId.HasValue)
+            route.Stops = ToStops(request.Stops, routeId: route.Id);
 
         if (request.StartCentreId.HasValue || request.EndCentreId.HasValue)
         {
@@ -85,7 +87,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
                 DistanceKm = request.DistanceKm,
                 EstimatedDurationMin = request.EstimatedDurationMin
             };
-            direction.Stops = ToStops(request.Stops, direction);
+            direction.Stops = ToStops(request.Stops, direction, route.Id);
             route.Directions.Add(direction);
         }
 
@@ -146,7 +148,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         var endpointCount = await db.Centres.CountAsync(centre => centre.Id == request.StartCentreId || centre.Id == request.EndCentreId);
         if (endpointCount != 2) return BadRequest(new { error = "One or more direction centres do not exist." });
         var direction = new RouteDirectionModel { RouteId = routeId, StartCentreId = request.StartCentreId, EndCentreId = request.EndCentreId, Name = request.Name.Trim(), DistanceKm = request.DistanceKm, EstimatedDurationMin = request.EstimatedDurationMin };
-        direction.Stops = ToStops(request.Stops, direction);
+        direction.Stops = ToStops(request.Stops, direction, routeId);
         db.RouteDirections.Add(direction);
         await db.SaveChangesAsync();
         return CreatedAtAction(nameof(ListDirections), new { routeId }, ToDirection(await LoadDirection(direction.Id, true) ?? direction));
@@ -168,7 +170,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         direction.IsActive = request.IsActive;
         direction.UpdatedAt = DateTime.UtcNow;
         db.RouteStops.RemoveRange(direction.Stops);
-        direction.Stops = ToStops(request.Stops, direction);
+        direction.Stops = ToStops(request.Stops, direction, direction.RouteId);
         await db.SaveChangesAsync();
         return NoContent();
     }
@@ -381,8 +383,9 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
             .Include(direction => direction.Stops).Include(direction => direction.Schedules).ThenInclude(schedule => schedule.Bay)
             .SingleOrDefaultAsync(direction => direction.Id == directionId);
 
-    private static List<RouteStop> ToStops(IEnumerable<RouteStopInput> stops, RouteDirectionModel? direction = null) => stops.Select((stop, index) => new RouteStop
+    private static List<RouteStop> ToStops(IEnumerable<RouteStopInput> stops, RouteDirectionModel? direction = null, Guid? routeId = null) => stops.Select((stop, index) => new RouteStop
     {
+        RouteId = routeId ?? direction?.RouteId ?? Guid.Empty,
         RouteDirection = direction,
         StopName = stop.StopName.Trim(),
         SequenceOrder = index + 1,

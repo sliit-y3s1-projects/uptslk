@@ -578,6 +578,9 @@ function VehicleFormInner({
             <Select
               value={centreId}
               onValueChange={(val) => val && setCentreId(val)}
+              itemToStringLabel={(value) =>
+                centres.find((centre) => centre.id === value)?.name ?? value
+              }
             >
               <SelectTrigger className="w-full bg-muted/60">
                 <SelectValue placeholder="Select centre" />
@@ -597,6 +600,9 @@ function VehicleFormInner({
             <Select
               value={type}
               onValueChange={(val) => val && setType(val as VehicleType)}
+              itemToStringLabel={(value) =>
+                ({ Normal: "Normal", SemiLuxury: "Semi-luxury", AcExpress: "AC express" })[value] ?? value
+              }
             >
               <SelectTrigger className="w-full bg-muted/60">
                 <SelectValue />
@@ -627,6 +633,9 @@ function VehicleFormInner({
             <Select
               value={status}
               onValueChange={(val) => val && setStatus(val as VehicleStatus)}
+              itemToStringLabel={(value) =>
+                ({ Active: "Active", Maintenance: "Maintenance", Inactive: "Inactive" })[value] ?? value
+              }
             >
               <SelectTrigger className="w-full bg-muted/60">
                 <SelectValue />

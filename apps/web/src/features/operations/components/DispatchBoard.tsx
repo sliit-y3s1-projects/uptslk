@@ -65,6 +65,9 @@ export function DispatchBoard({
                     <p className="mt-3 font-medium">
                       Route {item.routeNumber} · {item.routeName}
                     </p>
+                    <p className="mt-1 text-xs font-medium text-primary">
+                      {item.directionName ?? `${item.origin ?? "Origin"} → ${item.destination ?? "Destination"}`}
+                    </p>
                     <div className="mt-2 space-y-1 text-xs text-muted-foreground">
                       <p className="flex items-center gap-1.5">
                         <BusFront className="size-3" /> {item.vehicle}

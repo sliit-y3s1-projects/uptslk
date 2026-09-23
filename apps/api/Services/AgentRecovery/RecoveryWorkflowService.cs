@@ -61,7 +61,15 @@ public sealed class RecoveryWorkflowService(AppDbContext db, IEnumerable<IRecove
         if (fleet?.VehicleId is null || dispatch?.DriverId is null || network?.BayId is null || network.ScheduledTime is null || fleet.Capacity < affectedPassengers)
         {
             workflow.Status = WorkflowStatus.Failed;
-            workflow.FailureReason = fleet?.Capacity < affectedPassengers ? "No proposed replacement vehicle can carry all affected passengers." : "The agents could not produce a safe bus, driver, bay, and time combination.";
+            workflow.FailureReason = fleet?.Capacity < affectedPassengers
+                ? "No proposed replacement vehicle can carry all affected passengers."
+                : dispatch?.DriverId is null
+                    ? "No conflict-free alternate driver is available for the proposed recovery time."
+                    : fleet?.VehicleId is null
+                        ? "No active replacement vehicle is available at this centre."
+                        : network?.BayId is null
+                            ? "No available replacement bay is available at the departure centre."
+                            : "The agents could not produce a safe recovery combination.";
             workflow.UpdatedAt = DateTime.UtcNow;
             workflow.CompletedAt = DateTime.UtcNow;
             await db.SaveChangesAsync(cancellationToken);

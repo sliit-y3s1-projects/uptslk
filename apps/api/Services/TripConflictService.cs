@@ -30,9 +30,10 @@ public class TripConflictService(AppDbContext db)
             var requestedBayEnd = scheduledTime.AddMinutes(BayOccupancyMinutes);
             var baysOverlap = trip.ScheduledTime < requestedBayEnd && scheduledTime < existingBayEnd;
 
-            if (journeysOverlap && trip.VehicleId == vehicleId) conflicts.Add($"Vehicle is already assigned to trip {trip.Id} at this time.");
-            if (journeysOverlap && trip.DriverId == driverId) conflicts.Add($"Driver is already assigned to trip {trip.Id} at this time.");
-            if (baysOverlap && trip.BayId == bayId) conflicts.Add($"Bay is already assigned to trip {trip.Id} at this time.");
+            var tripLabel = string.IsNullOrWhiteSpace(trip.Route.RouteNumber) ? "another trip" : $"route {trip.Route.RouteNumber}";
+            if (journeysOverlap && trip.VehicleId == vehicleId) conflicts.Add($"Vehicle is already assigned to {tripLabel} at this time.");
+            if (journeysOverlap && trip.DriverId == driverId) conflicts.Add($"Driver is already assigned to {tripLabel} at this time.");
+            if (baysOverlap && trip.BayId == bayId) conflicts.Add($"Bay is already assigned to {tripLabel} at this time.");
         }
 
         return conflicts.ToList();

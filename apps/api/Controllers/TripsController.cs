@@ -13,6 +13,8 @@ namespace api.Controllers;
 [Route("api/v1/trips")]
 public class TripsController(AppDbContext db, TripConflictService conflictService) : ControllerBase
 {
+    private static readonly TimeZoneInfo SriLankaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Colombo");
+
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] Guid? centreId, [FromQuery] Guid? terminalId, [FromQuery] Guid? routeId, [FromQuery] Guid? directionId, [FromQuery] Guid? vehicleId, [FromQuery] Guid? driverId, [FromQuery] Guid? bayId, [FromQuery] TripStatus? status, [FromQuery] DateOnly? date)
     {
@@ -35,8 +37,8 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         if (status.HasValue) query = query.Where(trip => trip.Status == status.Value);
         if (date.HasValue)
         {
-            var start = date.Value.ToDateTime(TimeOnly.MinValue);
-            var end = start.AddDays(1);
+            var start = ToSriLankaDayStartUtc(date.Value);
+            var end = ToSriLankaDayStartUtc(date.Value.AddDays(1));
             query = query.Where(trip => trip.ScheduledTime >= start && trip.ScheduledTime < end);
         }
 
@@ -59,14 +61,17 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         if (centreId.HasValue) query = query.Where(trip => trip.CentreId == centreId.Value);
         if (date.HasValue)
         {
-            var start = date.Value.ToDateTime(TimeOnly.MinValue);
-            var end = start.AddDays(1);
+            var start = ToSriLankaDayStartUtc(date.Value);
+            var end = ToSriLankaDayStartUtc(date.Value.AddDays(1));
             query = query.Where(trip => trip.ScheduledTime >= start && trip.ScheduledTime < end);
         }
 
         var trips = await query.OrderByDescending(trip => trip.ScheduledTime).ToListAsync();
         return Ok(await ToListItems(trips));
     }
+
+    private static DateTime ToSriLankaDayStartUtc(DateOnly date) =>
+        TimeZoneInfo.ConvertTimeToUtc(date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), SriLankaTimeZone);
 
     [HttpGet("{tripId:guid}")]
     public async Task<IActionResult> Get(Guid tripId)

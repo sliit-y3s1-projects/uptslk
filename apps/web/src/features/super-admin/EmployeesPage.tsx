@@ -8,6 +8,7 @@ import {
   Loader2,
   Plus,
   Search,
+  UserCheck,
   UserRound,
 } from "lucide-react";
 import { useSearchParams } from "react-router";
@@ -40,6 +41,7 @@ type Employee = {
   email: string;
   role: string;
   centreId?: string | null;
+  isActive: boolean;
 };
 const roles = ["CentreManager", "Dispatcher", "FleetOfficer", "Driver"];
 
@@ -64,6 +66,19 @@ export function EmployeesPage() {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] }),
   });
+  const assignCentre = useMutation({
+    mutationFn: ({ userId, centreId }: { userId: string; centreId: string }) =>
+      apiClient<Employee>(`/api/v1/auth/users/${userId}/centre`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ centreId }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      setAssignment(null);
+      setAssignmentCentreId("");
+    },
+  });
   const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState("");
   const [centre, setCentre] = useState(params.get("centre") ?? "all");
@@ -72,6 +87,8 @@ export function EmployeesPage() {
     email: string;
     password: string;
   } | null>(null);
+  const [assignment, setAssignment] = useState<Employee | null>(null);
+  const [assignmentCentreId, setAssignmentCentreId] = useState("");
   const showForm = params.get("create") === "true";
   const filtered = useMemo(
     () =>
@@ -91,6 +108,16 @@ export function EmployeesPage() {
     next.delete("create");
     setParams(next);
     setCredentials(null);
+  }
+  function openAssignment(employee?: Employee) {
+    const defaultCentreId =
+      employee?.centreId ?? (centre === "all" ? centres[0]?.id : centre) ?? "";
+    setAssignment(employee ?? null);
+    setAssignmentCentreId(defaultCentreId);
+  }
+  function employeeLabel(employeeId: string) {
+    const employee = employees.find((item) => item.id === employeeId);
+    return employee ? `${employee.name} · ${employee.role}` : employeeId;
   }
   async function addEmployee(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -112,17 +139,22 @@ export function EmployeesPage() {
         title="UPTSLK employees"
         description="Create and manage centre-assigned platform accounts."
         action={
-          <Button
-            onClick={() =>
-              setParams((current) => {
-                const next = new URLSearchParams(current);
-                next.set("create", "true");
-                return next;
-              })
-            }
-          >
-            <Plus /> Add employee
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => openAssignment()}>
+              <UserCheck /> Assign existing employee
+            </Button>
+            <Button
+              onClick={() =>
+                setParams((current) => {
+                  const next = new URLSearchParams(current);
+                  next.set("create", "true");
+                  return next;
+                })
+              }
+            >
+              <Plus /> Add employee
+            </Button>
+          </div>
         }
       />
       <Sheet open={showForm} onOpenChange={(open) => !open && closeForm()}>
@@ -218,7 +250,14 @@ export function EmployeesPage() {
               </label>
               <label className="grid gap-1.5 text-sm font-medium">
                 Assigned centre
-                <Select name="centreId" defaultValue={centres[0]?.id} required>
+                <Select
+                  name="centreId"
+                  defaultValue={centres[0]?.id}
+                  required
+                  itemToStringLabel={(value) =>
+                    centres.find((item) => item.id === value)?.name ?? value
+                  }
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select centre" />
                   </SelectTrigger>
@@ -249,6 +288,107 @@ export function EmployeesPage() {
           )}
         </SheetContent>
       </Sheet>
+      <Sheet
+        open={assignment !== null || assignmentCentreId !== ""}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAssignment(null);
+            setAssignmentCentreId("");
+          }
+        }}
+      >
+        <SheetContent className="w-full sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle>Assign existing employee</SheetTitle>
+            <SheetDescription>
+              Select an existing staff account and assign it to a centre. This
+              changes the employee’s workspace; it does not create an account.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 grid gap-4">
+            <label className="grid gap-1.5 text-sm font-medium">
+              Employee
+              <Select
+                value={assignment?.id ?? ""}
+                itemToStringLabel={employeeLabel}
+                onValueChange={(value) =>
+                  setAssignment(
+                    employees.find((employee) => employee.id === value) ?? null,
+                  )
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select an existing employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.filter((employee) => employee.isActive).map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.name} · {employee.role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </label>
+            <label className="grid gap-1.5 text-sm font-medium">
+              Centre
+              <Select
+                value={assignmentCentreId}
+                itemToStringLabel={(value) =>
+                  centres.find((item) => item.id === value)?.name ?? value
+                }
+                onValueChange={(value) => setAssignmentCentreId(value ?? "")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select centre" />
+                </SelectTrigger>
+                <SelectContent>
+                  {centres.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </label>
+            {assignment && (
+              <p className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-muted-foreground">
+                {assignment.name} is currently assigned to{" "}
+                {centres.find((item) => item.id === assignment.centreId)?.name ??
+                  "no centre"}.
+              </p>
+            )}
+            {assignCentre.error && (
+              <p className="text-sm text-destructive">
+                Could not assign this employee. Please try again.
+              </p>
+            )}
+          </div>
+          <SheetFooter className="mt-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setAssignment(null);
+                setAssignmentCentreId("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={!assignment || !assignmentCentreId || assignCentre.isPending}
+              onClick={() =>
+                assignment &&
+                assignCentre.mutate({
+                  userId: assignment.id,
+                  centreId: assignmentCentreId,
+                })
+              }
+            >
+              {assignCentre.isPending && <Loader2 className="animate-spin" />} Assign to centre
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
       <section className="rounded-lg border bg-card p-3">
         <div className="grid gap-3 md:grid-cols-[minmax(240px,1fr)_220px_220px]">
           <div className="relative">
@@ -262,6 +402,11 @@ export function EmployeesPage() {
           </div>
           <Select
             value={centre}
+            itemToStringLabel={(value) =>
+              value === "all"
+                ? "All centres"
+                : centres.find((item) => item.id === value)?.name ?? value
+            }
             onValueChange={(value) => setCentre(value ?? "all")}
           >
             <SelectTrigger className="w-full bg-muted/60">
@@ -279,6 +424,9 @@ export function EmployeesPage() {
           </Select>
           <Select
             value={role}
+            itemToStringLabel={(value) =>
+              value === "all" ? "All roles" : value
+            }
             onValueChange={(value) => setRole(value ?? "all")}
           >
             <SelectTrigger className="w-full bg-muted/60">
@@ -309,7 +457,7 @@ export function EmployeesPage() {
             {filtered.map((item) => (
               <div
                 key={item.id}
-                className="grid gap-3 border-b px-4 py-4 md:grid-cols-[minmax(240px,1.2fr)_180px_180px_120px] md:items-center"
+                className="grid gap-3 border-b px-4 py-4 md:grid-cols-[minmax(280px,1fr)_160px_200px_230px] md:items-center"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -327,7 +475,19 @@ export function EmployeesPage() {
                   {centres.find((c) => c.id === item.centreId)?.name ??
                     "Organization-wide"}
                 </p>
-                <StatusBadge label="Active" tone="good" />
+                <div className="flex items-center gap-2">
+                  <StatusBadge
+                    label={item.isActive ? "Active" : "Disabled"}
+                    tone={item.isActive ? "good" : "neutral"}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openAssignment(item)}
+                  >
+                    Assign centre
+                  </Button>
+                </div>
               </div>
             ))}
             {filtered.length === 0 && (
