@@ -1,27 +1,27 @@
 import { useMemo, useState } from "react";
-import {
-  BusFront,
-  CalendarDays,
-  Minus,
-  Plus,
-  Search,
-  SlidersHorizontal,
-  Ticket,
-} from "lucide-react";
+import { CalendarDays, ChevronRight, Minus, Plus, Search } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { apiClient } from "@/lib/api/api-client";
 import { useAuth } from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type Route = {
   id: string;
@@ -55,7 +55,6 @@ export function PublicBookingPage() {
   const [destination, setDestination] = useState("");
   const [date, setDate] = useState("");
   const [passengers, setPassengers] = useState(1);
-  const [busType, setBusType] = useState("all");
   const [selected, setSelected] = useState<JourneyOption | null>(null);
   const { data: routes = [], isLoading } = useQuery({
     queryKey: ["public", "routes"],
@@ -102,8 +101,8 @@ export function PublicBookingPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <div className="w-full space-y-5 px-6 py-7">
-        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="w-full space-y-5 px-8 py-7 sm:px-12 lg:px-16 xl:px-20">
+        <section className="rounded-2xl border border-slate-300 bg-white p-5 shadow-sm">
           <div className="mb-4">
             <span className="inline-flex rounded-full bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground">
               One-way journey
@@ -129,140 +128,115 @@ export function PublicBookingPage() {
             </Button>
           </div>
         </section>
-        <div className="grid gap-5 lg:grid-cols-[220px_1fr]">
-          <aside className="rounded-2xl border border-slate-200 bg-white p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-black">Filters</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-red-500"
-                onClick={() => setBusType("all")}
-              >
-                Reset
-              </Button>
-            </div>
-            <div className="mt-6 border-t pt-5">
-              <p className="text-sm font-medium">Bus type</p>
-              <RadioGroup
-                value={busType}
-                onValueChange={setBusType}
-                className="mt-3 space-y-3 text-sm text-slate-600"
-              >
-                <label className="flex items-center gap-2">
-                  <RadioGroupItem value="all" id="bus-all" />
-                  <Label htmlFor="bus-all">All</Label>
-                </label>
-                <label className="flex items-center gap-2">
-                  <RadioGroupItem value="ac" id="bus-ac" />
-                  <Label htmlFor="bus-ac">AC</Label>
-                </label>
-                <label className="flex items-center gap-2">
-                  <RadioGroupItem value="non-ac" id="bus-non-ac" />
-                  <Label htmlFor="bus-non-ac">Non-AC</Label>
-                </label>
-              </RadioGroup>
-            </div>
-            <div className="mt-6 border-t pt-5">
-              <p className="text-sm font-medium">Operators</p>
-              <p className="mt-3 text-sm text-slate-500">
-                All available operators
-              </p>
-            </div>
-            <Button className="mt-8 w-full rounded-full bg-primary">
-              <SlidersHorizontal /> Apply filters
-            </Button>
-          </aside>
-          <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-black">
-                Bus from {origin || "all origins"} to{" "}
-                {destination || "all destinations"}
-              </h2>
-              <span className="text-sm text-slate-500">
-                {results.length} results found
-              </span>
-            </div>
-            {isLoading && (
-              <p className="rounded-xl bg-white p-8 text-center">
-                Loading routes...
-              </p>
-            )}
-            {!isLoading && results.length === 0 && (
-              <p className="rounded-xl bg-white p-8 text-center text-slate-500">
-                No active routes found.
-              </p>
-            )}
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {results.map((route) => (
-                <article
-                  key={route.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <span className="flex size-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
-                        <BusFront className="size-4" />
-                      </span>{" "}
-                      UPTSLK Transit
-                    </span>
-                    <span className="rounded-full bg-amber-50 px-2 py-1 text-xs text-amber-700">
-                      Public bus
-                    </span>
-                  </div>
-                  <div className="mt-5 flex items-end justify-between">
-                    <div>
-                      <p className="text-lg font-semibold text-indigo-950">
-                        {route.origin}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {route.routeNumber}
-                      </p>
-                    </div>
-                    <span>→</span>
-                    <div className="text-right">
-                      <p className="text-lg font-semibold text-indigo-950">
-                        {route.destination}
-                      </p>
-                      <p className="text-xs text-slate-500">{route.name}</p>
-                    </div>
-                  </div>
-                  <Button
-                    className="mt-4 w-full rounded-full bg-primary"
-                    onClick={() => setSelected(route)}
-                  >
-                    Select departure <Ticket />
-                  </Button>
-                </article>
-              ))}
-            </div>
-          </section>
-        </div>
-        {selected && (
-          <div className="rounded-2xl border border-indigo-200 bg-white p-5">
-            <p className="font-semibold">
-              {selected.origin} → {selected.destination}
-            </p>
-            <p className="mt-1 text-sm text-slate-500">
-              {passengers} passenger{passengers === 1 ? "" : "s"}. Sign in to
-              choose a departure and pay. Seating is first-come, first-served.
-            </p>
-            <Button
-              className="mt-4 rounded-full bg-primary"
-              onClick={() =>
-                user
-                  ? navigate(
-                      `/booking/checkout?routeId=${selected.routeId}&directionId=${selected.id}&passengers=${passengers}&date=${date}`,
-                    )
-                  : navigate(
-                      `/login?returnTo=${encodeURIComponent(`/booking/checkout?routeId=${selected.routeId}&directionId=${selected.id}&passengers=${passengers}&date=${date}`)}`,
-                    )
-              }
-            >
-              {user ? "Continue to booking" : "Sign in to continue"}
-            </Button>
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-black">
+              Bus from {origin || "all origins"} to{" "}
+              {destination || "all destinations"}
+            </h2>
+            <span className="text-sm text-slate-500">
+              {results.length} results found
+            </span>
           </div>
-        )}
+          {isLoading && (
+            <p className="rounded-xl bg-white p-8 text-center">
+              Loading routes...
+            </p>
+          )}
+          {!isLoading && results.length === 0 && (
+            <p className="rounded-xl bg-white p-8 text-center text-slate-500">
+              No active routes found.
+            </p>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {results.map((route) => (
+              <article
+                key={route.id}
+                className="flex min-h-44 flex-col rounded-xl border-2 border-slate-400 bg-white p-4 shadow-md transition-shadow hover:border-primary/50 hover:shadow-lg"
+              >
+                <div className="grid flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
+                  <div>
+                    <p className="text-base font-semibold text-indigo-950">
+                      {route.origin}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {route.routeNumber}
+                    </p>
+                  </div>
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-700">
+                    <ChevronRight className="size-5" strokeWidth={2.5} />
+                  </span>
+                  <div className="text-right">
+                    <p className="text-base font-semibold text-indigo-950">
+                      {route.destination}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">{route.name}</p>
+                  </div>
+                </div>
+                <Button
+                  className="mt-4 h-9 w-full rounded-lg bg-primary"
+                  onClick={() => setSelected(route)}
+                >
+                  Select departure
+                </Button>
+              </article>
+            ))}
+          </div>
+        </section>
+        <Dialog
+          open={Boolean(selected)}
+          onOpenChange={(open) => {
+            if (!open) setSelected(null);
+          }}
+        >
+          {selected && (
+            <DialogContent className="sm:max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Confirm your journey</DialogTitle>
+                <DialogDescription>
+                  Review the route and passenger count before choosing a
+                  departure.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+                <p className="font-semibold text-indigo-950">
+                  {selected.origin} → {selected.destination}
+                </p>
+                <p className="mt-1 text-sm text-indigo-700">
+                  Route {selected.routeNumber} · {selected.name}
+                </p>
+                <div className="mt-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-indigo-700">
+                    Passengers
+                  </p>
+                  <PassengerCounter
+                    className="mt-1 max-w-40 border border-indigo-300 bg-white"
+                    value={passengers}
+                    onChange={setPassengers}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <DialogClose render={<Button variant="outline" />}>
+                  Cancel
+                </DialogClose>
+                <Button
+                  onClick={() => {
+                    const checkoutUrl = `/booking/checkout?routeId=${selected.routeId}&directionId=${selected.id}&passengers=${passengers}&date=${date}`;
+                    setSelected(null);
+                    navigate(
+                      user
+                        ? checkoutUrl
+                        : `/login?returnTo=${encodeURIComponent(checkoutUrl)}`,
+                    );
+                  }}
+                >
+                  {user ? "Continue to booking" : "Sign in to continue"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          )}
+        </Dialog>
       </div>
     </main>
   );
@@ -343,12 +317,19 @@ function DatePicker({
 function PassengerCounter({
   value,
   onChange,
+  className,
 }: {
   value: number;
   onChange: (value: number) => void;
+  className?: string;
 }) {
   return (
-    <div className="flex h-12 items-center justify-between rounded-full bg-[#f5f5f7] px-1 text-sm text-slate-600">
+    <div
+      className={cn(
+        "flex h-12 items-center justify-between rounded-full bg-[#f5f5f7] px-1 text-sm text-slate-600",
+        className,
+      )}
+    >
       <Button
         type="button"
         variant="ghost"
