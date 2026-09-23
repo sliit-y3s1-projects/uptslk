@@ -17,6 +17,10 @@ export interface TripListItem {
   directionName?: string | null;
   origin?: string;
   destination?: string;
+  capacity: number;
+  occupied: number;
+  available: number;
+  isFull: boolean;
   vehicleId: string;
   vehicle: string;
   driverId: string;

@@ -1,14 +1,13 @@
 import { useState } from "react";
-import { BusFront, ChevronDown, MapPinned, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useAuth } from "@/hooks/useAuth";
-import { BusSeatMap } from "@/features/centres/components/BusSeatMap";
 import { useCentre } from "./hooks/useCentres";
 import { useTrips } from "@/features/operations/hooks/useTrips";
 
-type Departure = { id: string; time: string; bay: string; route: string; destination: string; vehicle: string; status: string; occupancy?: number };
+type Departure = { id: string; time: string; bay: string; route: string; destination: string; vehicle: string; status: string; capacity: number; occupied: number; available: number; isFull: boolean };
 
 function departureTone(status: string) {
   if (status === "Delayed") return "danger" as const;
@@ -21,7 +20,7 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
   const effectiveCentreId = centreId ?? user?.centreId;
   const { data: centre, isLoading, error } = useCentre(effectiveCentreId);
   const { data: trips = [], isLoading: tripsLoading, error: tripsError } = useTrips({ terminalId: effectiveCentreId });
-  const departures: Departure[] = trips.filter((trip) => !["Completed", "Cancelled"].includes(trip.status)).map((trip) => ({ id: trip.id, time: new Date(trip.scheduledTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), bay: trip.bay, route: trip.routeNumber, destination: trip.destination ?? trip.routeName, vehicle: trip.vehicle, status: trip.status }));
+  const departures: Departure[] = trips.filter((trip) => !["Completed", "Cancelled"].includes(trip.status)).map((trip) => ({ id: trip.id, time: new Date(trip.scheduledTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), bay: trip.bay, route: trip.routeNumber, destination: trip.destination ?? trip.routeName, vehicle: trip.vehicle, status: trip.status, capacity: trip.capacity, occupied: trip.occupied, available: trip.available, isFull: trip.isFull }));
   const [selected, setSelected] = useState<Departure | undefined>(undefined);
 
   if (isLoading)
@@ -85,7 +84,7 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
           selected={selected}
           onSelect={setSelected}
         />
-        <BusSeatMap departure={selected} />
+        <CapacitySummary departure={selected} />
       </section>
       )}
       <section className="rounded-lg border bg-card">
@@ -123,7 +122,7 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
                 label={departure.status}
                 tone={departureTone(departure.status)}
               />
-              <p className="text-sm font-medium">{departure.occupancy === undefined ? "Occupancy unavailable" : `${departure.occupancy}% full`}</p>
+              <p className={`text-sm font-medium ${departure.isFull ? "text-rose-600" : "text-emerald-700"}`}>{departure.isFull ? "Full" : `${departure.available} spaces left`}</p>
             </button>
           ))}
         </div>
@@ -144,57 +143,34 @@ function TerminalMap({
   onSelect: (departure: Departure) => void;
 }) {
   return (
-    <section className="rounded-lg border bg-card p-5">
-      <div className="flex items-start justify-between">
+    <section className="rounded-lg border bg-card">
+      <div className="flex flex-col gap-2 border-b px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="font-semibold">Bay & parking view</h2>
+          <h2 className="font-semibold">Bay status</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Select a bay to inspect its departure and seating.
+            Current departures and boarding capacity at this terminal.
           </p>
         </div>
-        <MapPinned className="size-5 text-primary" />
+        <p className="text-sm text-muted-foreground">{departures.length} active · {Math.max(0, bays.length - departures.length)} open</p>
       </div>
-      <div className="mt-5 rounded-lg border bg-slate-100 p-4">
-        <div className="mb-4 flex items-center justify-center rounded border border-dashed bg-white py-3 text-xs font-medium text-slate-500">
-          Passenger concourse - ticketing - waiting area
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {bays.map((bay) => {
-            const departure = departures.find((item) => item.bay === bay);
-            const active = departure?.id === selected?.id;
-            return (
-              <button
-                key={bay}
-                type="button"
-                disabled={!departure}
-                onClick={() => departure && onSelect(departure)}
-                className={`min-h-24 rounded-md border p-3 text-left transition ${active ? "border-primary bg-primary/10 ring-2 ring-primary/20" : departure ? "bg-white hover:border-primary/50" : "border-dashed bg-slate-50 text-slate-400"}`}
-              >
-                <p className="text-xs font-semibold">{bay}</p>
-                {departure ? (
-                  <>
-                    <BusFront className="mt-2 size-5 text-primary" />
-                    <p className="mt-2 text-sm font-medium">
-                      {departure.destination}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {departure.time} - {departure.occupancy === undefined ? "Occupancy unavailable" : `${departure.occupancy}% full`}
-                    </p>
-                  </>
-                ) : (
-                  <p className="mt-6 text-xs">Available</p>
-                )}
-              </button>
-            );
-          })}
-        </div>
-        <div className="mt-4 flex items-center justify-between rounded bg-white px-3 py-2 text-xs text-muted-foreground">
-          <span>Bus access lane</span>
-          <span>Entry &gt;</span>
-        </div>
+      <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
+        {bays.length === 0 && <p className="px-5 py-10 text-center text-sm text-muted-foreground">No boarding bays have been configured for this centre.</p>}
+        {bays.map((bay) => {
+          const departure = departures.find((item) => item.bay === bay);
+          const active = departure?.id === selected?.id;
+          if (!departure) return <div key={bay} className="min-h-36 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4"><div className="flex items-center justify-between"><span className="rounded-md border border-emerald-200 bg-white/70 px-2 py-1 text-sm font-bold text-emerald-900">{bay}</span><span className="text-xs font-semibold text-emerald-800">Open</span></div><p className="mt-10 font-medium text-emerald-950">Available</p><p className="mt-1 text-sm text-emerald-800/80">No departure assigned</p></div>;
+          const colour = departure.isFull ? "border-rose-200 bg-rose-50/70" : departure.status === "Boarding" ? "border-amber-300 bg-amber-50/80" : "border-primary/35 bg-primary/[0.05]";
+          return <button key={bay} type="button" onClick={() => onSelect(departure)} className={`min-h-36 rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-sm ${colour} ${active ? "ring-2 ring-primary ring-offset-2" : ""}`}><div className="flex items-start justify-between gap-3"><span className="rounded-md border border-current/15 bg-white/50 px-2 py-1 text-sm font-bold">{bay}</span><StatusBadge label={departure.status} tone={departureTone(departure.status)} /></div><p className="mt-5 text-base font-semibold">{departure.route} · {departure.destination}</p><p className="mt-1 text-sm text-muted-foreground">{departure.vehicle}</p><div className="mt-4 flex items-center justify-between border-t border-current/10 pt-3"><span className="text-sm font-semibold">{departure.time}</span><span className={`text-xs font-semibold ${departure.isFull ? "text-rose-700" : "text-emerald-700"}`}>{departure.isFull ? "Full" : `${departure.available} spaces left`}</span></div></button>;
+        })}
       </div>
     </section>
   );
+}
+
+function CapacitySummary({ departure }: { departure?: Departure }) {
+  if (!departure) return <aside className="rounded-lg border bg-card p-5"><h2 className="font-semibold">Departure capacity</h2><p className="mt-1 text-sm text-muted-foreground">Choose an active bay to view its passenger count.</p></aside>;
+  const fill = departure.capacity ? Math.round((departure.occupied / departure.capacity) * 100) : 0;
+  return <aside className="rounded-lg border bg-card p-5"><div className="flex items-start justify-between gap-3"><div><h2 className="font-semibold">Departure capacity</h2><p className="mt-1 text-sm text-muted-foreground">{departure.vehicle} · {departure.route} to {departure.destination}</p></div><UsersRound className="size-5 text-primary" /></div><div className="mt-6 rounded-lg border border-slate-300 bg-muted/30 p-4"><div className="flex items-end justify-between"><div><p className="text-3xl font-semibold">{departure.occupied}<span className="text-lg text-muted-foreground"> / {departure.capacity}</span></p><p className="mt-1 text-sm text-muted-foreground">Passengers with active boarding passes</p></div><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${departure.isFull ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-800"}`}>{departure.isFull ? "Full" : `${departure.available} spaces left`}</span></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200"><div className={`h-full rounded-full ${departure.isFull ? "bg-rose-500" : "bg-emerald-500"}`} style={{ width: `${fill}%` }} /></div></div><p className="mt-4 text-sm text-muted-foreground">Urban services do not assign individual seats. This count is used to prevent overbooking.</p></aside>;
 }
 
 function Metric({

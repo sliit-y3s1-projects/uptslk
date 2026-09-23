@@ -195,7 +195,7 @@ export function CentreProfilePage() {
           <Summary
             icon={Eye}
             label="Live operations"
-            value="Bays, departures & seating"
+            value="Bays, departures & capacity"
             href={`/admin/centres/${centre.id}/operations`}
           />
           <Summary
