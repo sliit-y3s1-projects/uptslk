@@ -1,0 +1,148 @@
+import * as React from "react";
+import { Link } from "react-router";
+import { Loader2, UsersRound } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/custom/DatePicker";
+import { PageHeading } from "@/components/shared/PageHeading";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { useAuth } from "@/hooks/useAuth";
+import { useTrips } from "./hooks/useTrips";
+
+const today = new Date().toISOString().slice(0, 10);
+
+export function DutyRosterPage() {
+  const { user } = useAuth();
+  const [date, setDate] = React.useState(today);
+  const {
+    data: trips = [],
+    isLoading,
+    error,
+  } = useTrips({ centreId: user?.centreId, date });
+  const duties = Object.values(
+    trips
+      .filter((trip) => !["Cancelled", "Completed"].includes(trip.status))
+      .reduce<Record<string, typeof trips>>((groups, trip) => {
+        (groups[trip.driver] ??= []).push(trip);
+        return groups;
+      }, {}),
+  );
+  return (
+    <main className="flex flex-1 flex-col gap-5 bg-muted/20 p-4">
+      <PageHeading
+        title="Daily duty roster"
+        description="Review the bus and departure duties assigned to each driver. Reassign a trip from Dispatch when the planned duty changes."
+        action={
+          <Button
+            variant="outline"
+            render={<Link to={`/operations/dispatch?date=${date}`} />}
+          >
+            Open dispatch board
+          </Button>
+        }
+      />
+      <section className="flex flex-col gap-3 rounded-xl border bg-card p-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm font-medium">Service date</p>
+          <div className="mt-2 w-full sm:w-72">
+            <DatePicker
+              name="rosterDate"
+              value={date}
+              onValueChange={setDate}
+            />
+          </div>
+        </div>
+        <div className="flex gap-6 text-sm">
+          <div>
+            <p className="text-muted-foreground">Driver duties</p>
+            <p className="mt-1 text-xl font-semibold">{duties.length}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Scheduled departures</p>
+            <p className="mt-1 text-xl font-semibold">{trips.length}</p>
+          </div>
+        </div>
+      </section>
+      {isLoading ? (
+        <div className="flex justify-center py-16">
+          <Loader2 className="animate-spin text-primary" />
+        </div>
+      ) : error ? (
+        <p className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+          Could not load the duty roster.
+        </p>
+      ) : duties.length === 0 ? (
+        <section className="rounded-xl border border-dashed bg-card p-10 text-center">
+          <UsersRound className="mx-auto size-8 text-muted-foreground" />
+          <h2 className="mt-3 font-semibold">No duties scheduled</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Generate timetable trips, then assign their bus and driver in
+            Dispatch.
+          </p>
+        </section>
+      ) : (
+        <section className="grid gap-4 xl:grid-cols-2">
+          {duties.map((duty) => (
+            <article
+              key={duty[0].driverId}
+              className="rounded-xl border border-slate-300 bg-card"
+            >
+              <header className="flex items-start justify-between gap-3 border-b px-5 py-4">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    DRIVER DUTY
+                  </p>
+                  <h2 className="mt-1 font-semibold">{duty[0].driver}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {duty.length} departure{duty.length === 1 ? "" : "s"} ·{" "}
+                    {new Set(duty.map((trip) => trip.vehicle)).size} vehicle
+                    {new Set(duty.map((trip) => trip.vehicle)).size === 1
+                      ? ""
+                      : "s"}
+                  </p>
+                </div>
+                <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                  On duty
+                </span>
+              </header>
+              <div className="divide-y">
+                {duty.map((trip) => (
+                  <Link
+                    key={trip.id}
+                    to={`/operations/dispatch/${trip.id}`}
+                    className="grid gap-2 px-5 py-4 transition hover:bg-muted/30 sm:grid-cols-[80px_minmax(0,1fr)_auto] sm:items-center"
+                  >
+                    <p className="font-semibold">
+                      {new Date(trip.scheduledTime).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                    <div>
+                      <p className="font-medium">
+                        {trip.routeNumber} ·{" "}
+                        {trip.destination ?? trip.routeName}
+                      </p>
+                      <p className="mt-0.5 text-sm text-muted-foreground">
+                        {trip.vehicle} · Bay {trip.bay}
+                      </p>
+                    </div>
+                    <StatusBadge
+                      label={trip.status}
+                      tone={
+                        trip.status === "Delayed"
+                          ? "danger"
+                          : trip.status === "Boarding"
+                            ? "warning"
+                            : "good"
+                      }
+                    />
+                  </Link>
+                ))}
+              </div>
+            </article>
+          ))}
+        </section>
+      )}
+    </main>
+  );
+}

@@ -16,9 +16,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
-        credentials: "include",
+        let res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+          credentials: "include",
         });
+        if (res.status === 401) {
+          const refresh = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+            method: "POST",
+            credentials: "include",
+          });
+          if (refresh.ok) {
+            res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+              credentials: "include",
+            });
+          }
+        }
 
         if (!res.ok) throw new Error();
         const data = await res.json();
@@ -53,7 +64,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ email, password }),
       credentials: "include",
     });
-    if (!res.ok) throw new Error("Invalid credentials");
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+      throw new Error(body?.error ?? "Invalid credentials");
+    }
     const data = await res.json();
     setToken("cookie-session");
     setUser({
@@ -68,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       gender: data.gender,
       profilePhotoUrl: data.profilePhotoUrl,
     });
+    return data.role as string;
   }
 
   async function register(name: string, email: string, password: string) {
@@ -95,9 +112,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
-    void fetch(`${API_BASE_URL}/api/v1/auth/logout`, { method: "POST", credentials: "include" });
+    void fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
     setToken(null);
     setUser(null);
+    window.setTimeout(() => {
+      window.history.pushState({}, "", "/login");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }, 0);
   }
 
   return (

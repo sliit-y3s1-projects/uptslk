@@ -8,6 +8,12 @@ import App from "./App.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <QueryProvider><BrowserRouter><AuthProvider><App /></AuthProvider></BrowserRouter></QueryProvider>
+    <QueryProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryProvider>
   </StrictMode>,
 );

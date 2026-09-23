@@ -10,6 +10,8 @@ public class ApprovalRequest
     public AgentWorkflow Workflow { get; set; } = default!;
 
     public string Reason { get; set; } = default!;
+    public string? DecisionNote { get; set; }
+    public DateTime? AppliedAt { get; set; }
 
     public Guid? ReviewedById { get; set; }
     public User? ReviewedBy { get; set; }

@@ -18,14 +18,6 @@ export const useBooking = (id: string) =>
     enabled: !!id,
     retry: false,
   });
-export const useSeats = (id: string) =>
-  useQuery({
-    queryKey: ["booking-seats", id],
-    queryFn: () => service.seats(id),
-    enabled: !!id,
-    refetchInterval: 15000,
-    retry: false,
-  });
 export const useManifest = (id: string) =>
   useQuery({
     queryKey: ["booking-manifests", id],
@@ -70,10 +62,8 @@ export function useBookingMutations() {
     onSuccess: refresh,
     onError: refresh,
   });
-  const seat = useMutation({
-    mutationFn: ({ id, seatNumber }: { id: string; seatNumber: string }) =>
-      service.seat(id, seatNumber),
-    onSuccess: refresh,
+  const checkout = useMutation({
+    mutationFn: service.startCheckout,
     onError: refresh,
   });
   const complete = useMutation({
@@ -85,5 +75,5 @@ export function useBookingMutations() {
       service.cancel(id, reason),
     onSuccess: refresh,
   });
-  return { create, seat, complete, cancel };
+  return { create, checkout, complete, cancel };
 }

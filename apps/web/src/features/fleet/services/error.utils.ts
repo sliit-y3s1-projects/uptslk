@@ -1,4 +1,7 @@
-export function extractErrorMessage(error: unknown, fallbackMessage = "Request failed"): string {
+export function extractErrorMessage(
+  error: unknown,
+  fallbackMessage = "Request failed",
+): string {
   if (error instanceof Error) {
     try {
       const parsed = JSON.parse(error.message);
@@ -17,4 +20,3 @@ export function extractErrorMessage(error: unknown, fallbackMessage = "Request f
   }
   return fallbackMessage;
 }
-

@@ -65,4 +65,3 @@ export interface VehicleQueryParams {
   status?: VehicleStatus;
   search?: string;
 }
-

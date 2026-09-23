@@ -7,18 +7,13 @@ public sealed class CreateBookingRequest
 {
     public Guid TripId { get; init; }
     public Guid PassengerId { get; init; }
-    [Required, StringLength(8)] public string SeatNumber { get; init; } = default!;
+    [Range(1, 10)] public int PassengerCount { get; init; } = 1;
 }
 
 public sealed class CreateMyBookingRequest
 {
     public Guid TripId { get; init; }
-    [Required, StringLength(8)] public string SeatNumber { get; init; } = default!;
-}
-
-public sealed class ChangeBookingSeatRequest
-{
-    [Required, StringLength(8)] public string SeatNumber { get; init; } = default!;
+    [Range(1, 10)] public int PassengerCount { get; init; } = 1;
 }
 
 public sealed class UpdateBookingStatusRequest

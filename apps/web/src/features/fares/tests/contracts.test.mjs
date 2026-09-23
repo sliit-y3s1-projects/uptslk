@@ -92,11 +92,9 @@ test("fare update does not send the immutable route relation", async () => {
   check("DELETE", `/api/v1/fare-rules/${tripId}`);
 });
 test("booking cancellation carries its reason in DELETE, completion uses PATCH", async () => {
-  const body = { tripId, passengerId, seatNumber: "18" };
+  const body = { tripId, passengerId, passengerCount: 2 };
   await bookings.create(body);
   check("POST", "/api/v1/bookings", body);
-  await bookings.seat(tripId, "20");
-  check("POST", `/api/v1/bookings/${tripId}/seat`, { seatNumber: "20" });
   await bookings.complete(tripId);
   check("PATCH", `/api/v1/bookings/${tripId}/status`, { status: "Completed" });
   await bookings.cancel(tripId, "Passenger request");
@@ -119,15 +117,13 @@ test("filters encode search text and retain false", async () => {
     "GET",
     `/api/v1/fare-rules/quote?tripId=${tripId}&passengerId=${passengerId}`,
   );
-  await bookings.seats(tripId);
-  check("GET", `/api/v1/bookings/trips/${tripId}/seats`);
   await bookings.manifest(tripId);
   check("GET", `/api/v1/bookings/trips/${tripId}/manifest`);
 });
 test("API conflict, validation and network errors are readable", () => {
   assert.equal(
-    errorMessage(new Error('{"error":"This seat is already booked."}')),
-    "This seat is already booked.",
+    errorMessage(new Error('{"error":"This departure is full."}')),
+    "This departure is full.",
   );
   assert.equal(
     errorMessage(

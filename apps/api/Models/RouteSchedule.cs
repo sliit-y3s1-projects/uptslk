@@ -5,6 +5,8 @@ public class RouteSchedule
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid RouteId { get; set; }
     public Route Route { get; set; } = default!;
+    public Guid? RouteDirectionId { get; set; }
+    public RouteDirection? RouteDirection { get; set; }
     public Guid BayId { get; set; }
     public Bay Bay { get; set; } = default!;
     public TimeOnly FirstDeparture { get; set; }

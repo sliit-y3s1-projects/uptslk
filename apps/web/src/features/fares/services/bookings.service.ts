@@ -1,6 +1,5 @@
 import type {
   CreatedBooking,
-  ChangeSeatRequest,
   CompleteBookingRequest,
   CancelBookingRequest,
 } from "../types/fares";
@@ -11,12 +10,13 @@ import type {
   BookingDetail,
   BookingFilters,
   CreateBookingRequest,
-  Seat,
   Manifest,
   TripOption,
   TripDetail,
   RouteOption,
   CentreOption,
+  CheckoutSession,
+  PaymentOrderStatus,
 } from "../types/fares";
 const path = "/api/v1/bookings";
 export const bookingsService = {
@@ -25,10 +25,14 @@ export const bookingsService = {
   detail: (id: string) => apiClient<BookingDetail>(`${path}/${id}`),
   create: (body: CreateBookingRequest) =>
     apiClient<CreatedBooking>(path, jsonBody("POST", body)),
-  seat: (id: string, seatNumber: string) =>
-    apiClient<void>(
-      `${path}/${id}/seat`,
-      jsonBody("POST", { seatNumber } satisfies ChangeSeatRequest),
+  startCheckout: (body: CreateBookingRequest) =>
+    apiClient<CheckoutSession>(
+      "/api/v1/payments/checkout",
+      jsonBody("POST", body),
+    ),
+  paymentOrder: (orderId: string) =>
+    apiClient<PaymentOrderStatus>(
+      `/api/v1/payments/orders/${encodeURIComponent(orderId)}`,
     ),
   complete: (id: string) =>
     apiClient<void>(
@@ -42,7 +46,6 @@ export const bookingsService = {
       `${path}/${id}`,
       jsonBody("DELETE", { reason } satisfies CancelBookingRequest),
     ),
-  seats: (tripId: string) => apiClient<Seat[]>(`${path}/trips/${tripId}/seats`),
   manifest: (tripId: string) =>
     apiClient<Manifest>(`${path}/trips/${tripId}/manifest`),
 };

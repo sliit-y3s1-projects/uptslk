@@ -160,10 +160,18 @@ namespace api.Migrations
 
                     b.Property<string>("AgentName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DurationMs")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<string>("InputJson")
                         .IsRequired()
@@ -172,6 +180,11 @@ namespace api.Migrations
                     b.Property<string>("OutputJson")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<Guid>("WorkflowId")
                         .HasColumnType("uuid");
@@ -192,15 +205,35 @@ namespace api.Migrations
                     b.Property<Guid?>("BookingId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("CentreId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("IncidentId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Objective")
                         .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("ProposalJson")
                         .HasColumnType("text");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<Guid>("TripId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -209,6 +242,12 @@ namespace api.Migrations
 
                     b.HasIndex("BookingId")
                         .IsUnique();
+
+                    b.HasIndex("IncidentId");
+
+                    b.HasIndex("TripId");
+
+                    b.HasIndex("CentreId", "Status");
 
                     b.ToTable("AgentWorkflows");
                 });
@@ -219,6 +258,9 @@ namespace api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("AppliedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -228,9 +270,14 @@ namespace api.Migrations
                     b.Property<int>("Decision")
                         .HasColumnType("integer");
 
+                    b.Property<string>("DecisionNote")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
                     b.Property<string>("Reason")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<Guid?>("ReviewedById")
                         .HasColumnType("uuid");
@@ -301,6 +348,9 @@ namespace api.Migrations
                         .HasColumnType("numeric(12,2)");
 
                     b.Property<int>("PassengerCategory")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PassengerCount")
                         .HasColumnType("integer");
 
                     b.Property<Guid>("PassengerId")
@@ -608,6 +658,132 @@ namespace api.Migrations
                     b.ToTable("Passengers");
                 });
 
+            modelBuilder.Entity("api.Models.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Provider")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ProviderCheckoutId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ProviderOrderId")
+                        .IsRequired()
+                        .HasMaxLength(96)
+                        .HasColumnType("character varying(96)");
+
+                    b.Property<string>("ProviderPaymentId")
+                        .HasMaxLength(96)
+                        .HasColumnType("character varying(96)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingId");
+
+                    b.HasIndex("Provider", "ProviderOrderId")
+                        .IsUnique();
+
+                    b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("api.Models.PaymentRefund", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FailureReason")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProviderRefundId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentId");
+
+                    b.ToTable("PaymentRefunds");
+                });
+
+            modelBuilder.Entity("api.Models.PaymentWebhookEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("Provider")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ProviderEventId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTime>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Provider", "ProviderEventId")
+                        .IsUnique();
+
+                    b.ToTable("PaymentWebhookEvents");
+                });
+
             modelBuilder.Entity("api.Models.Route", b =>
                 {
                     b.Property<Guid>("Id")
@@ -660,6 +836,52 @@ namespace api.Migrations
                     b.ToTable("Routes");
                 });
 
+            modelBuilder.Entity("api.Models.RouteDirection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("DistanceKm")
+                        .HasColumnType("numeric");
+
+                    b.Property<Guid>("EndCentreId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("EstimatedDurationMin")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("RouteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("StartCentreId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EndCentreId");
+
+                    b.HasIndex("StartCentreId");
+
+                    b.HasIndex("RouteId", "StartCentreId", "EndCentreId")
+                        .IsUnique();
+
+                    b.ToTable("RouteDirections");
+                });
+
             modelBuilder.Entity("api.Models.RouteSchedule", b =>
                 {
                     b.Property<Guid>("Id")
@@ -688,6 +910,9 @@ namespace api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("RouteDirectionId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("RouteId")
                         .HasColumnType("uuid");
 
@@ -697,6 +922,8 @@ namespace api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BayId");
+
+                    b.HasIndex("RouteDirectionId");
 
                     b.HasIndex("RouteId");
 
@@ -715,6 +942,9 @@ namespace api.Migrations
                     b.Property<decimal>("Longitude")
                         .HasColumnType("numeric");
 
+                    b.Property<Guid?>("RouteDirectionId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("RouteId")
                         .HasColumnType("uuid");
 
@@ -727,10 +957,73 @@ namespace api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RouteId", "SequenceOrder")
+                    b.HasIndex("RouteId");
+
+                    b.HasIndex("RouteDirectionId", "SequenceOrder")
                         .IsUnique();
 
                     b.ToTable("RouteStops");
+                });
+
+            modelBuilder.Entity("api.Models.SupportRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AssignedTo")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("CentreId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid?>("PassengerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Resolution")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("TripId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CentreId");
+
+                    b.HasIndex("PassengerId");
+
+                    b.HasIndex("TripId");
+
+                    b.ToTable("SupportRequests");
                 });
 
             modelBuilder.Entity("api.Models.Transaction", b =>
@@ -794,6 +1087,9 @@ namespace api.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("RouteDirectionId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("RouteId")
                         .HasColumnType("uuid");
 
@@ -816,6 +1112,8 @@ namespace api.Migrations
                     b.HasIndex("CentreId");
 
                     b.HasIndex("DriverId");
+
+                    b.HasIndex("RouteDirectionId");
 
                     b.HasIndex("RouteId");
 
@@ -1068,7 +1366,31 @@ namespace api.Migrations
                         .HasForeignKey("api.Models.AgentWorkflow", "BookingId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("api.Models.Centre", "Centre")
+                        .WithMany()
+                        .HasForeignKey("CentreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("api.Models.Incident", "Incident")
+                        .WithMany()
+                        .HasForeignKey("IncidentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("api.Models.Trip", "Trip")
+                        .WithMany()
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Booking");
+
+                    b.Navigation("Centre");
+
+                    b.Navigation("Incident");
+
+                    b.Navigation("Trip");
                 });
 
             modelBuilder.Entity("api.Models.ApprovalRequest", b =>
@@ -1194,6 +1516,28 @@ namespace api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("api.Models.Payment", b =>
+                {
+                    b.HasOne("api.Models.Booking", "Booking")
+                        .WithMany("Payments")
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Booking");
+                });
+
+            modelBuilder.Entity("api.Models.PaymentRefund", b =>
+                {
+                    b.HasOne("api.Models.Payment", "Payment")
+                        .WithMany("Refunds")
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Payment");
+                });
+
             modelBuilder.Entity("api.Models.Route", b =>
                 {
                     b.HasOne("api.Models.Centre", "Centre")
@@ -1205,6 +1549,33 @@ namespace api.Migrations
                     b.Navigation("Centre");
                 });
 
+            modelBuilder.Entity("api.Models.RouteDirection", b =>
+                {
+                    b.HasOne("api.Models.Centre", "EndCentre")
+                        .WithMany()
+                        .HasForeignKey("EndCentreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("api.Models.Route", "Route")
+                        .WithMany("Directions")
+                        .HasForeignKey("RouteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("api.Models.Centre", "StartCentre")
+                        .WithMany()
+                        .HasForeignKey("StartCentreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("EndCentre");
+
+                    b.Navigation("Route");
+
+                    b.Navigation("StartCentre");
+                });
+
             modelBuilder.Entity("api.Models.RouteSchedule", b =>
                 {
                     b.HasOne("api.Models.Bay", "Bay")
@@ -1212,6 +1583,11 @@ namespace api.Migrations
                         .HasForeignKey("BayId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("api.Models.RouteDirection", "RouteDirection")
+                        .WithMany("Schedules")
+                        .HasForeignKey("RouteDirectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("api.Models.Route", "Route")
                         .WithMany("Schedules")
@@ -1222,10 +1598,17 @@ namespace api.Migrations
                     b.Navigation("Bay");
 
                     b.Navigation("Route");
+
+                    b.Navigation("RouteDirection");
                 });
 
             modelBuilder.Entity("api.Models.RouteStop", b =>
                 {
+                    b.HasOne("api.Models.RouteDirection", "RouteDirection")
+                        .WithMany("Stops")
+                        .HasForeignKey("RouteDirectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("api.Models.Route", "Route")
                         .WithMany("Stops")
                         .HasForeignKey("RouteId")
@@ -1233,6 +1616,32 @@ namespace api.Migrations
                         .IsRequired();
 
                     b.Navigation("Route");
+
+                    b.Navigation("RouteDirection");
+                });
+
+            modelBuilder.Entity("api.Models.SupportRequest", b =>
+                {
+                    b.HasOne("api.Models.Centre", "Centre")
+                        .WithMany()
+                        .HasForeignKey("CentreId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("api.Models.Passenger", "Passenger")
+                        .WithMany()
+                        .HasForeignKey("PassengerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("api.Models.Trip", "Trip")
+                        .WithMany()
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Centre");
+
+                    b.Navigation("Passenger");
+
+                    b.Navigation("Trip");
                 });
 
             modelBuilder.Entity("api.Models.Transaction", b =>
@@ -1273,6 +1682,11 @@ namespace api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("api.Models.RouteDirection", "RouteDirection")
+                        .WithMany("Trips")
+                        .HasForeignKey("RouteDirectionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("api.Models.Route", "Route")
                         .WithMany("Trips")
                         .HasForeignKey("RouteId")
@@ -1292,6 +1706,8 @@ namespace api.Migrations
                     b.Navigation("Driver");
 
                     b.Navigation("Route");
+
+                    b.Navigation("RouteDirection");
 
                     b.Navigation("Vehicle");
                 });
@@ -1346,6 +1762,8 @@ namespace api.Migrations
                 {
                     b.Navigation("AgentWorkflow");
 
+                    b.Navigation("Payments");
+
                     b.Navigation("Transactions");
                 });
 
@@ -1376,10 +1794,26 @@ namespace api.Migrations
                     b.Navigation("Wallet");
                 });
 
+            modelBuilder.Entity("api.Models.Payment", b =>
+                {
+                    b.Navigation("Refunds");
+                });
+
             modelBuilder.Entity("api.Models.Route", b =>
                 {
+                    b.Navigation("Directions");
+
                     b.Navigation("FareRules");
 
+                    b.Navigation("Schedules");
+
+                    b.Navigation("Stops");
+
+                    b.Navigation("Trips");
+                });
+
+            modelBuilder.Entity("api.Models.RouteDirection", b =>
+                {
                     b.Navigation("Schedules");
 
                     b.Navigation("Stops");

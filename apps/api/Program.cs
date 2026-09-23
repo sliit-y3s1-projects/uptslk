@@ -4,6 +4,9 @@ using api.Data;
 using api.Enums;
 using api.Models;
 using api.Services;
+using api.Services.Payments;
+using api.Services.AgentRecovery;
+using api.Services.AgentRecovery.Agents;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +37,13 @@ builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
 
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<TripConflictService>();
+builder.Services.AddSingleton<IPaymentGateway, StripePaymentGateway>();
+builder.Services.AddScoped<BookingPaymentService>();
+builder.Services.AddScoped<IRecoveryAgent, NetworkContinuityAgent>();
+builder.Services.AddScoped<IRecoveryAgent, FleetReadinessAgent>();
+builder.Services.AddScoped<IRecoveryAgent, DispatchRecoveryAgent>();
+builder.Services.AddScoped<IRecoveryAgent, PassengerFareImpactAgent>();
+builder.Services.AddScoped<RecoveryWorkflowService>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -69,7 +79,17 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowWebApp", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "https://uptslk.vercel.app")
+        var webOrigins = new[]
+            {
+                "http://localhost:5173",
+                "https://uptslk.vercel.app",
+                builder.Configuration["Payments:Stripe:WebAppBaseUrl"]
+            }
+            .OfType<string>()
+            .Where(origin => !string.IsNullOrWhiteSpace(origin))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        policy.WithOrigins(webOrigins)
               .AllowAnyHeader().AllowCredentials()
               .AllowAnyMethod();
     });
@@ -85,12 +105,18 @@ using (var scope = app.Services.CreateScope())
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
     var adminEmail = builder.Configuration["BootstrapAdmin:Email"] ?? "admin@upts.lk";
     var adminPassword = builder.Configuration["BootstrapAdmin:Password"] ?? "admin123";
-    if (await userManager.FindByEmailAsync(adminEmail) is null)
+    var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
+    if (existingAdmin is null)
     {
         var admin = new User { UserName = adminEmail, Email = adminEmail, Name = "UPTSLK Super Admin", Role = UserRole.Admin };
         var result = await userManager.CreateAsync(admin, adminPassword);
         if (!result.Succeeded)
             throw new InvalidOperationException($"Could not create the bootstrap admin: {string.Join(", ", result.Errors.Select(error => error.Description))}");
+    }
+    else if (!existingAdmin.IsActive)
+    {
+        existingAdmin.IsActive = true;
+        await userManager.UpdateAsync(existingAdmin);
     }
 }
 

@@ -21,6 +21,23 @@ public sealed class CreateRouteRequest
     [Range(0.1, 5000)] public decimal DistanceKm { get; init; }
     [Range(1, 1440)] public int EstimatedDurationMin { get; init; }
     [MinLength(2)] public List<RouteStopInput> Stops { get; init; } = [];
+    public Guid? StartCentreId { get; init; }
+    public Guid? EndCentreId { get; init; }
+}
+
+public class CreateRouteDirectionRequest
+{
+    public Guid StartCentreId { get; init; }
+    public Guid EndCentreId { get; init; }
+    [Required, StringLength(160)] public string Name { get; init; } = default!;
+    [Range(0.1, 5000)] public decimal DistanceKm { get; init; }
+    [Range(1, 1440)] public int EstimatedDurationMin { get; init; }
+    [MinLength(2)] public List<RouteStopInput> Stops { get; init; } = [];
+}
+
+public sealed class UpdateRouteDirectionRequest : CreateRouteDirectionRequest
+{
+    public bool IsActive { get; init; } = true;
 }
 
 public sealed class UpdateRouteRequest
@@ -37,6 +54,9 @@ public sealed class UpdateRouteRequest
 
 public sealed class CreateRouteScheduleRequest
 {
+    // A timetable belongs to one direction. Kept optional only while legacy
+    // route-level timetable records are being migrated.
+    public Guid? RouteDirectionId { get; init; }
     public Guid BayId { get; init; }
     public TimeOnly FirstDeparture { get; init; }
     public TimeOnly LastDeparture { get; init; }

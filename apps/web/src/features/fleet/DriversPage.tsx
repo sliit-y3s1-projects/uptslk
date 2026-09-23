@@ -3,7 +3,13 @@ import { Link, useNavigate, useParams } from "react-router";
 import { Plus, Search, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PageHeading } from "@/components/shared/PageHeading";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,9 +28,11 @@ import { extractErrorMessage } from "./services/error.utils";
 export function DriversPage() {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
-  const { effectiveCentreId, centres, isLoading: centresLoading } = useEffectiveCentreGuid(
-    user?.centreId,
-  );
+  const {
+    effectiveCentreId,
+    centres,
+    isLoading: centresLoading,
+  } = useEffectiveCentreGuid(user?.centreId);
 
   const {
     data: drivers = [],
@@ -54,7 +62,8 @@ export function DriversPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
           {drivers.length} driver{drivers.length === 1 ? "" : "s"} assigned to{" "}
-          {centre?.name ?? (effectiveCentreId ? "selected centre" : "all centres")}
+          {centre?.name ??
+            (effectiveCentreId ? "selected centre" : "all centres")}
         </p>
         <div className="relative w-full sm:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -94,7 +103,8 @@ export function DriversPage() {
               <div>
                 <p className="font-medium">{driver.fullName}</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {driver.licenseNumber} · {driver.phoneNumber || "No phone recorded"}
+                  {driver.licenseNumber} ·{" "}
+                  {driver.phoneNumber || "No phone recorded"}
                 </p>
               </div>
               <p className="text-sm text-muted-foreground">{driver.centre}</p>
@@ -120,14 +130,21 @@ export function DriversPage() {
 export function DriverDetailPage() {
   const { driverId } = useParams();
   const navigate = useNavigate();
-  const { data: driver, isLoading, isError, error, refetch } = useDriver(driverId);
+  const {
+    data: driver,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useDriver(driverId);
   const deactivateMutation = useDeactivateDriver();
   const [actionError, setActionError] = useState<string | null>(null);
 
   if (isLoading) {
     return (
       <main className="flex flex-1 items-center justify-center p-12 text-sm text-muted-foreground">
-        <Loader2 className="mr-2 size-5 animate-spin" /> Loading driver profile...
+        <Loader2 className="mr-2 size-5 animate-spin" /> Loading driver
+        profile...
       </main>
     );
   }
@@ -153,7 +170,11 @@ export function DriverDetailPage() {
 
   async function handleDeactivate() {
     if (!driverId) return;
-    if (!confirm(`Are you sure you want to deactivate driver ${driver?.fullName}?`)) {
+    if (
+      !confirm(
+        `Are you sure you want to deactivate driver ${driver?.fullName}?`,
+      )
+    ) {
       return;
     }
     setActionError(null);
@@ -172,7 +193,10 @@ export function DriverDetailPage() {
         description="Driver profile and API-ready operational identity."
         action={
           <div className="flex gap-2">
-            <Button variant="outline" render={<Link to={`/fleet/drivers/${driver.id}/edit`} />}>
+            <Button
+              variant="outline"
+              render={<Link to={`/fleet/drivers/${driver.id}/edit`} />}
+            >
               Edit driver
             </Button>
             {driver.status !== "Inactive" && (
@@ -181,7 +205,9 @@ export function DriverDetailPage() {
                 disabled={deactivateMutation.isPending}
                 onClick={handleDeactivate}
               >
-                {deactivateMutation.isPending ? "Deactivating..." : "Deactivate"}
+                {deactivateMutation.isPending
+                  ? "Deactivating..."
+                  : "Deactivate"}
               </Button>
             )}
           </div>
@@ -208,14 +234,17 @@ export function DriverDetailPage() {
 
         <div className="mt-6 grid gap-5 border-t pt-5 sm:grid-cols-2">
           <Fact label="Full name" value={driver.fullName} />
-          <Fact label="Phone number" value={driver.phoneNumber || "Not provided"} />
+          <Fact
+            label="Phone number"
+            value={driver.phoneNumber || "Not provided"}
+          />
           <Fact label="Licence number" value={driver.licenseNumber} />
           <Fact label="Assigned centre" value={driver.centre?.name ?? "—"} />
         </div>
 
         <p className="mt-6 rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
-          Driver record is synced with the backend PostgreSQL database. Trip duty and assignment
-          are managed in Dispatch.
+          Driver record is synced with the backend PostgreSQL database. Trip
+          duty and assignment are managed in Dispatch.
         </p>
       </section>
     </main>
@@ -229,17 +258,21 @@ export function DriverFormPage() {
 
   const { data: existing, isLoading: existingLoading } = useDriver(driverId);
   const { data: centres = [], isLoading: centresLoading } = useCentres();
-  const { effectiveCentreId: userCentreGuid } = useEffectiveCentreGuid(user?.centreId);
+  const { effectiveCentreId: userCentreGuid } = useEffectiveCentreGuid(
+    user?.centreId,
+  );
 
   if ((editing && existingLoading) || centresLoading) {
     return (
       <main className="flex flex-1 items-center justify-center p-12 text-sm text-muted-foreground">
-        <Loader2 className="mr-2 size-5 animate-spin" /> Loading driver details...
+        <Loader2 className="mr-2 size-5 animate-spin" /> Loading driver
+        details...
       </main>
     );
   }
 
-  const defaultCentreId = existing?.centreId ?? userCentreGuid ?? centres[0]?.id ?? "";
+  const defaultCentreId =
+    existing?.centreId ?? userCentreGuid ?? centres[0]?.id ?? "";
 
   return (
     <DriverFormInner
@@ -270,9 +303,15 @@ function DriverFormInner({
 
   const [fullName, setFullName] = useState(existing?.fullName ?? "");
   const [phoneNumber, setPhoneNumber] = useState(existing?.phoneNumber ?? "");
-  const [centreId, setCentreId] = useState(existing?.centreId ?? defaultCentreId);
-  const [licenseNumber, setLicenseNumber] = useState(existing?.licenseNumber ?? "");
-  const [status, setStatus] = useState<DriverStatus>(existing?.status ?? "Active");
+  const [centreId, setCentreId] = useState(
+    existing?.centreId ?? defaultCentreId,
+  );
+  const [licenseNumber, setLicenseNumber] = useState(
+    existing?.licenseNumber ?? "",
+  );
+  const [status, setStatus] = useState<DriverStatus>(
+    existing?.status ?? "Active",
+  );
   const [formError, setFormError] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent) {
@@ -325,7 +364,9 @@ function DriverFormInner({
   return (
     <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
       <PageHeading
-        title={editing ? `Edit ${existing?.fullName ?? "Driver"}` : "Add driver"}
+        title={
+          editing ? `Edit ${existing?.fullName ?? "Driver"}` : "Add driver"
+        }
         description={
           editing
             ? "Update fields map directly to UpdateDriverRequest (licence is immutable)."
@@ -333,7 +374,10 @@ function DriverFormInner({
         }
       />
 
-      <form className="max-w-3xl rounded-lg border bg-card p-5" onSubmit={handleSubmit}>
+      <form
+        className="max-w-3xl rounded-lg border bg-card p-5"
+        onSubmit={handleSubmit}
+      >
         {formError && (
           <div className="mb-4 flex items-center gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
             <AlertCircle className="size-4 shrink-0" />
@@ -363,7 +407,13 @@ function DriverFormInner({
 
           <label className="grid gap-1.5 text-sm font-medium">
             Assigned centre
-            <Select value={centreId} onValueChange={(val) => val && setCentreId(val)}>
+            <Select
+              value={centreId}
+              onValueChange={(val) => val && setCentreId(val)}
+              itemToStringLabel={(value) =>
+                centres.find((centre) => centre.id === value)?.name ?? value
+              }
+            >
               <SelectTrigger className="w-full bg-muted/60">
                 <SelectValue placeholder="Select centre" />
               </SelectTrigger>
@@ -388,12 +438,21 @@ function DriverFormInner({
               />
             </label>
           ) : (
-            <Fact label="Licence number (immutable)" value={existing?.licenseNumber ?? "—"} />
+            <Fact
+              label="Licence number (immutable)"
+              value={existing?.licenseNumber ?? "—"}
+            />
           )}
 
           <label className="grid gap-1.5 text-sm font-medium">
             Duty eligibility
-            <Select value={status} onValueChange={(val) => val && setStatus(val as DriverStatus)}>
+            <Select
+              value={status}
+              onValueChange={(val) => val && setStatus(val as DriverStatus)}
+              itemToStringLabel={(value) =>
+                ({ Active: "Active", Inactive: "Inactive" })[value] ?? value
+              }
+            >
               <SelectTrigger className="w-full bg-muted/60">
                 <SelectValue />
               </SelectTrigger>
@@ -407,13 +466,19 @@ function DriverFormInner({
 
         {editing && (
           <p className="mt-4 text-xs text-muted-foreground">
-            Licence number is immutable in the UpdateDriverRequest backend contract. Create a
-            corrected driver record if it was entered incorrectly.
+            Licence number is immutable in the UpdateDriverRequest backend
+            contract. Create a corrected driver record if it was entered
+            incorrectly.
           </p>
         )}
 
         <div className="mt-5 flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={isSubmitting}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate(-1)}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>

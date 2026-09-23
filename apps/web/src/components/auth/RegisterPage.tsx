@@ -29,8 +29,12 @@ export function RegisterPage() {
       let message = "Could not create account, please try again";
       if (cause instanceof Error) {
         try {
-          const body = JSON.parse(cause.message) as { error?: string[] | string };
-          message = Array.isArray(body.error) ? body.error.join(" ") : body.error ?? message;
+          const body = JSON.parse(cause.message) as {
+            error?: string[] | string;
+          };
+          message = Array.isArray(body.error)
+            ? body.error.join(" ")
+            : (body.error ?? message);
         } catch {
           message = cause.message || message;
         }
@@ -45,9 +49,15 @@ export function RegisterPage() {
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
       <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-7 sm:p-9">
         <div className="mb-8 space-y-3">
-          <div className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground"><UserRound className="size-5" /></div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-950">Create your account</h1>
-          <p className="text-sm leading-6 text-slate-500">Join UPTSLK to book seats and manage your journeys.</p>
+          <div className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <UserRound className="size-5" />
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
+            Create your account
+          </h1>
+          <p className="text-sm leading-6 text-slate-500">
+            Join UPTSLK to book seats and manage your journeys.
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="w-full space-y-4 text-left">
@@ -87,16 +97,36 @@ export function RegisterPage() {
               minLength={8}
               className="pr-11"
             />
-            <button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-muted-foreground">{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button>
+            <button
+              type="button"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((visible) => !visible)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-muted-foreground"
+            >
+              {showPassword ? (
+                <EyeOff className="size-4" />
+              ) : (
+                <Eye className="size-4" />
+              )}
+            </button>
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <Button type="submit" className="h-11 w-full rounded-lg" disabled={submitting}>
+          <Button
+            type="submit"
+            className="h-11 w-full rounded-lg"
+            disabled={submitting}
+          >
             {submitting ? "Creating account..." : "Sign Up"}
           </Button>
         </form>
-        <p className="mt-6 text-center text-sm text-slate-500">Already have an account? <Link to="/login" className="font-medium text-primary">Sign in</Link></p>
+        <p className="mt-6 text-center text-sm text-slate-500">
+          Already have an account?{" "}
+          <Link to="/login" className="font-medium text-primary">
+            Sign in
+          </Link>
+        </p>
       </section>
     </main>
   );

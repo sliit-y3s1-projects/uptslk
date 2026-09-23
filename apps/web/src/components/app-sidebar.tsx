@@ -38,9 +38,11 @@ const data = {
       items: [
         { title: "Overview", url: "/operations", isActive: true },
         { title: "Dispatch", url: "/operations/dispatch" },
+        { title: "Duty roster", url: "/operations/duty-roster" },
         { title: "Trip history", url: "/operations/history" },
         { title: "Bay management", url: "/operations/bays" },
         { title: "Incidents", url: "/operations/incidents" },
+        { title: "Recovery agents", url: "/operations/agent-recovery" },
         { title: "Approvals", url: "/operations/approvals" },
       ],
     },
@@ -77,10 +79,11 @@ const data = {
     },
     {
       title: "Fares & finance",
-      url: "/fares/tickets",
+      url: "/fares/bookings",
       icon: Ticket01Icon,
       items: [
-        { title: "Tickets", url: "/fares/tickets" },
+        { title: "Bookings", url: "/fares/bookings" },
+        { title: "Fare rules", url: "/fares/fare-rules" },
         { title: "Payments", url: "/fares/payments" },
         { title: "Reconciliation", url: "/fares/reconciliation" },
       ],
@@ -114,7 +117,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { logout } = useAuth();
   const { pathname } = useLocation();
   const [openItems, setOpenItems] = React.useState<string[]>(defaultOpenItems);
-  const matchesPath = (url: string) => url === "/operations" ? pathname === url : pathname.startsWith(url);
+  const matchesPath = (url: string) =>
+    url === "/operations" ? pathname === url : pathname.startsWith(url);
 
   function toggleItem(title: string) {
     setOpenItems((current) =>
@@ -131,7 +135,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              render={<a href="/operations" aria-label="UPTSLK Console"><span className="text-2xl font-bold tracking-tight">UPTSLK Console</span></a>}
+              render={
+                <a href="/operations" aria-label="UPTSLK Console">
+                  <span className="text-2xl font-bold tracking-tight">
+                    UPTS Center OPS
+                  </span>
+                </a>
+              }
             />
           </SidebarMenuItem>
         </SidebarMenu>
@@ -141,7 +151,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenu>
             {data.navMain.map((item) => {
               const isOpen = openItems.includes(item.title);
-              const isActive = item.items.some((subItem) => matchesPath(subItem.url));
+              const isActive = item.items.some((subItem) =>
+                matchesPath(subItem.url),
+              );
 
               return (
                 <SidebarMenuItem key={item.title}>

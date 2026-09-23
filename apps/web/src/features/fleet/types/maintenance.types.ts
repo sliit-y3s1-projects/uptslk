@@ -1,4 +1,5 @@
-export type MaintenanceStatus = "Scheduled" | "InProgress" | "Completed" | "Cancelled";
+export type MaintenanceStatus =
+  "Scheduled" | "InProgress" | "Completed" | "Cancelled";
 
 export interface MaintenanceListItem {
   id: string;
@@ -49,4 +50,3 @@ export interface MaintenanceQueryParams {
   centreId?: string;
   status?: MaintenanceStatus;
 }
-

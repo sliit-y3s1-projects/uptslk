@@ -62,29 +62,29 @@ export function DashboardPage() {
 
   return (
     <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-xl font-semibold tracking-tight">
-              Operations command
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Live service health, fleet readiness, and issue response.
-            </p>
-          </div>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-xl font-semibold tracking-tight">
+          Operations command
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Live service health, fleet readiness, and issue response.
+        </p>
+      </div>
 
-          <section className="grid overflow-hidden rounded-lg border bg-card sm:grid-cols-2 xl:grid-cols-4">
-            {metrics.map((metric) => (
-              <MetricCard
-                key={metric.label}
-                label={metric.label}
-                value={metric.value}
-              />
-            ))}
-          </section>
+      <section className="grid overflow-hidden rounded-lg border bg-card sm:grid-cols-2 xl:grid-cols-4">
+        {metrics.map((metric) => (
+          <MetricCard
+            key={metric.label}
+            label={metric.label}
+            value={metric.value}
+          />
+        ))}
+      </section>
 
-          <section className="grid flex-1 gap-4 lg:grid-cols-[1fr_340px]">
-            <NetworkStatusPanel items={networkStatus} />
-            <PriorityAlertsPanel items={priorityAlerts} />
-          </section>
+      <section className="grid flex-1 gap-4 lg:grid-cols-[1fr_340px]">
+        <NetworkStatusPanel items={networkStatus} />
+        <PriorityAlertsPanel items={priorityAlerts} />
+      </section>
     </main>
   );
 }

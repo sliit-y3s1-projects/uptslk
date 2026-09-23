@@ -1,5 +1,17 @@
 import { apiClient } from "@/lib/api/api-client";
-import type { Route, RouteSummary, CreateRouteRequest, UpdateRouteRequest, RouteSchedule, CreateRouteScheduleRequest, UpdateRouteScheduleRequest } from "../types";
+import type {
+  Route,
+  RouteSummary,
+  CreateRouteRequest,
+  UpdateRouteRequest,
+  RouteSchedule,
+  CreateRouteScheduleRequest,
+  UpdateRouteScheduleRequest,
+  GenerateScheduleTripsRequest,
+  GenerateScheduleTripsResult,
+  RouteDirection,
+  CreateRouteDirectionRequest,
+} from "../types";
 
 export const routesApi = {
   getRoutes: (centreId?: string, search?: string) => {
@@ -10,12 +22,66 @@ export const routesApi = {
     return apiClient<RouteSummary[]>("/api/v1/routes" + (qs ? "?" + qs : ""));
   },
   getRoute: (routeId: string) => apiClient<Route>("/api/v1/routes/" + routeId),
-  createRoute: (data: CreateRouteRequest) => apiClient<RouteSummary>("/api/v1/routes", { method: "POST", body: JSON.stringify(data), headers: { "Content-Type": "application/json" } }),
-  updateRoute: (routeId: string, data: UpdateRouteRequest) => apiClient<void>("/api/v1/routes/" + routeId, { method: "PUT", body: JSON.stringify(data), headers: { "Content-Type": "application/json" } }),
-  archiveRoute: (routeId: string) => apiClient<void>("/api/v1/routes/" + routeId, { method: "DELETE" }),
+  createRoute: (data: CreateRouteRequest) =>
+    apiClient<RouteSummary>("/api/v1/routes", {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: { "Content-Type": "application/json" },
+    }),
+  updateRoute: (routeId: string, data: UpdateRouteRequest) =>
+    apiClient<void>("/api/v1/routes/" + routeId, {
+      method: "PUT",
+      body: JSON.stringify(data),
+      headers: { "Content-Type": "application/json" },
+    }),
+  archiveRoute: (routeId: string) =>
+    apiClient<void>("/api/v1/routes/" + routeId, { method: "DELETE" }),
 
-  getSchedules: (routeId: string) => apiClient<RouteSchedule[]>("/api/v1/routes/" + routeId + "/schedules"),
-  createSchedule: (routeId: string, data: CreateRouteScheduleRequest) => apiClient<RouteSchedule>("/api/v1/routes/" + routeId + "/schedules", { method: "POST", body: JSON.stringify(data), headers: { "Content-Type": "application/json" } }),
-  updateSchedule: (scheduleId: string, data: UpdateRouteScheduleRequest) => apiClient<void>("/api/v1/routes/schedules/" + scheduleId, { method: "PUT", body: JSON.stringify(data), headers: { "Content-Type": "application/json" } }),
-  deactivateSchedule: (scheduleId: string) => apiClient<void>("/api/v1/routes/schedules/" + scheduleId, { method: "DELETE" }),
+  getSchedules: (routeId: string) =>
+    apiClient<RouteSchedule[]>("/api/v1/routes/" + routeId + "/schedules"),
+  createSchedule: (routeId: string, data: CreateRouteScheduleRequest) =>
+    apiClient<RouteSchedule>("/api/v1/routes/" + routeId + "/schedules", {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: { "Content-Type": "application/json" },
+    }),
+  updateSchedule: (scheduleId: string, data: UpdateRouteScheduleRequest) =>
+    apiClient<void>("/api/v1/routes/schedules/" + scheduleId, {
+      method: "PUT",
+      body: JSON.stringify(data),
+      headers: { "Content-Type": "application/json" },
+    }),
+  deactivateSchedule: (scheduleId: string) =>
+    apiClient<void>("/api/v1/routes/schedules/" + scheduleId, {
+      method: "DELETE",
+    }),
+  generateScheduleTrips: (
+    scheduleId: string,
+    data: GenerateScheduleTripsRequest,
+  ) =>
+    apiClient<GenerateScheduleTripsResult>(
+      `/api/v1/routes/schedules/${scheduleId}/generate-trips`,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      },
+    ),
+  getDirections: (routeId: string) =>
+    apiClient<RouteDirection[]>(`/api/v1/routes/${routeId}/directions`),
+  createDirection: (routeId: string, data: CreateRouteDirectionRequest) =>
+    apiClient<RouteDirection>(`/api/v1/routes/${routeId}/directions`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: { "Content-Type": "application/json" },
+    }),
+  updateDirection: (
+    directionId: string,
+    data: CreateRouteDirectionRequest & { isActive: boolean },
+  ) =>
+    apiClient<void>(`/api/v1/routes/directions/${directionId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+      headers: { "Content-Type": "application/json" },
+    }),
 };

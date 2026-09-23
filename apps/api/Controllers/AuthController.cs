@@ -69,8 +69,10 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login(LoginRequest req)
     {
         var user = await _userManager.FindByEmailAsync(req.Email);
-        if (user is null || !user.IsActive)
+        if (user is null)
             return Unauthorized(new { error = "Invalid credentials" });
+        if (!user.IsActive)
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Your account is temporarily disabled. Contact an administrator." });
 
         var valid = await _userManager.CheckPasswordAsync(user, req.Password);
         if (!valid)
@@ -207,14 +209,74 @@ public class AuthController : ControllerBase
 
     [HttpGet("users")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Users()
+    public async Task<IActionResult> Users([FromQuery] bool staffOnly = false)
     {
-        var users = await _userManager.Users
-            .AsNoTracking()
+        var query = _userManager.Users.AsNoTracking();
+        if (staffOnly)
+            query = query.Where(user => user.Role != UserRole.Commuter && user.Role != UserRole.Admin);
+
+        var users = await query
             .OrderBy(user => user.Name)
             .Select(user => new { user.Id, user.Name, user.Email, Role = user.Role.ToString(), user.CentreId, user.IsActive })
             .ToListAsync();
         return Ok(users);
+    }
+
+    [HttpPatch("users/{id:guid}/centre")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> AssignCentre(Guid id, AssignUserCentreRequest request)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user is null) return NotFound();
+        if (user.Role is UserRole.Admin or UserRole.Commuter)
+            return BadRequest(new { error = "Only staff accounts can be assigned to a centre." });
+
+        if (request.CentreId.HasValue && !await _db.Centres.AnyAsync(centre => centre.Id == request.CentreId.Value))
+            return BadRequest(new { error = "The selected centre does not exist." });
+
+        user.CentreId = request.CentreId;
+        user.UpdatedAt = DateTime.UtcNow;
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            return BadRequest(new { error = result.Errors.Select(error => error.Description) });
+
+        return Ok(new { user.Id, user.Name, user.Email, Role = user.Role.ToString(), user.CentreId });
+    }
+
+    [HttpPatch("users/{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateUserDetails(Guid id, UpdateUserDetailsRequest request)
+    {
+        var name = request.Name?.Trim();
+        var email = request.Email?.Trim();
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email))
+            return BadRequest(new { error = "Name and email are required." });
+
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user is null) return NotFound();
+        var accountWithEmail = await _userManager.FindByEmailAsync(email);
+        if (accountWithEmail is not null && accountWithEmail.Id != user.Id)
+            return Conflict(new { error = "Another account already uses this email address." });
+
+        user.Name = name;
+        user.Email = email;
+        user.UserName = email;
+        user.NormalizedEmail = _userManager.NormalizeEmail(email);
+        user.NormalizedUserName = _userManager.NormalizeName(email);
+        user.UpdatedAt = DateTime.UtcNow;
+
+        var passenger = await _db.Passengers.SingleOrDefaultAsync(item => item.UserId == user.Id);
+        if (passenger is not null)
+        {
+            passenger.FullName = name;
+            passenger.Email = email;
+        }
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            return BadRequest(new { error = result.Errors.Select(error => error.Description) });
+
+        return Ok(new { user.Id, user.Name, user.Email, Role = user.Role.ToString(), user.CentreId, user.IsActive });
     }
 
     [HttpPatch("users/{id:guid}/status")]

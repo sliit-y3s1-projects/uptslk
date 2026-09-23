@@ -27,10 +27,15 @@ export function usePassengerMutations() {
     onSuccess,
   });
   const deactivate = useMutation({ mutationFn: service.deactivate, onSuccess });
+  const restore = useMutation({ mutationFn: service.restore, onSuccess });
+  const resetPassword = useMutation({
+    mutationFn: ({ id, password }: { id: string; password: string }) =>
+      service.resetPassword(id, password),
+  });
   const topUp = useMutation({
     mutationFn: ({ id, amount }: { id: string; amount: number }) =>
       service.topUp(id, amount),
     onSuccess,
   });
-  return { create, update, deactivate, topUp };
+  return { create, update, deactivate, restore, resetPassword, topUp };
 }
