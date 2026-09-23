@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, ChevronDown, Clock3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -39,10 +39,6 @@ export function TimePicker({ name, defaultValue, value, onValueChange, required,
   const [internalValue, setInternalValue] = useState(defaultValue ?? "");
   const selectedValue = value ?? internalValue;
   const selection = useMemo(() => parseTime(selectedValue), [selectedValue]);
-
-  useEffect(() => {
-    if (value === undefined) setInternalValue(defaultValue ?? "");
-  }, [defaultValue, value]);
 
   const update = (next: Partial<typeof selection>) => {
     const nextSelection = { ...selection, ...next };

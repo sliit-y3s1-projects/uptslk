@@ -299,11 +299,11 @@ export function PassengerProfile({ id }: { id: string }) {
             )}
           </Panel>
           <Panel title="Booking history">
-            <DataTable headings={["Route", "Seat", "Fare", "Status", "Ticket"]}>
+            <DataTable headings={["Route", "Passengers", "Fare", "Status", "Ticket"]}>
               {passenger.bookings.map((b) => (
                 <tr key={b.id}>
                   <td>{b.route}</td>
-                  <td>{b.seatNumber}</td>
+                  <td>{b.passengerCount}</td>
                   <td>{money(b.fare)}</td>
                   <td>{b.status}</td>
                   <td>

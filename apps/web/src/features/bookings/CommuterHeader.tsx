@@ -22,7 +22,7 @@ export function CommuterHeader() {
       <div className="flex min-h-20 w-full items-center justify-between gap-3 px-4 py-3 sm:px-10 lg:px-12 xl:px-24">
         <Link to="/" className="min-w-0 text-xl font-bold tracking-tight text-indigo-950 sm:text-2xl">
           UPTSLK{" "}
-          <span className="hidden font-normal text-slate-500 sm:inline">Seat Reservation</span>
+          <span className="hidden font-normal text-slate-500 sm:inline">Bus booking</span>
         </Link>
         <nav className="flex items-center gap-1 sm:gap-2">
           {user ? (

@@ -61,7 +61,7 @@ public class PassengersController(AppDbContext db, UserManager<User> userManager
                 passenger.Wallet.Balance,
                 Transactions = passenger.Wallet.Transactions.OrderByDescending(transaction => transaction.CreatedAt).Select(transaction => new { transaction.Id, transaction.BookingId, transaction.Type, transaction.Amount, transaction.CreatedAt })
             },
-            Bookings = passenger.Bookings.OrderByDescending(booking => booking.CreatedAt).Select(booking => new { booking.Id, booking.TripId, Route = booking.Trip.Route.RouteNumber, booking.SeatNumber, booking.Fare, booking.Status, booking.CreatedAt })
+            Bookings = passenger.Bookings.OrderByDescending(booking => booking.CreatedAt).Select(booking => new { booking.Id, booking.TripId, Route = booking.Trip.Route.RouteNumber, booking.PassengerCount, booking.Fare, booking.Status, booking.CreatedAt })
         });
     }
 

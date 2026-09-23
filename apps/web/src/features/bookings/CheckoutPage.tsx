@@ -44,7 +44,7 @@ export function CheckoutPage() {
       const session = await apiClient<CheckoutSession>("/api/v1/payments/checkout/me", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tripId }),
+        body: JSON.stringify({ tripId, passengerCount: passengers }),
       });
       window.location.assign(session.url);
     } catch (cause) {
@@ -84,8 +84,8 @@ export function CheckoutPage() {
                   onClick={() => {
                     setTripId(trip.id);
                   }}
-                  disabled={trip.isFull}
-                  className={`w-full rounded-xl border p-4 text-left ${trip.isFull ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400" : tripId === trip.id ? "border-primary bg-primary/5" : "border-slate-200"}`}
+                  disabled={trip.available < passengers}
+                  className={`w-full rounded-xl border p-4 text-left ${trip.available < passengers ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400" : tripId === trip.id ? "border-primary bg-primary/5" : "border-slate-200"}`}
                 >
                   <span className="font-medium">
                     {new Date(trip.scheduledTime).toLocaleString()}
@@ -93,11 +93,11 @@ export function CheckoutPage() {
                   <span className="ml-3 text-sm text-slate-500">
                     {trip.status}
                   </span>
-                  <span className={`mt-2 block text-sm font-medium ${trip.isFull ? "text-rose-600" : "text-emerald-700"}`}>{trip.isFull ? "Full" : `${trip.available} of ${trip.capacity} seats available`}</span>
+                  <span className={`mt-2 block text-sm font-medium ${trip.available < passengers ? "text-rose-600" : "text-emerald-700"}`}>{trip.isFull ? "Full" : trip.available < passengers ? `Only ${trip.available} spaces available` : `${trip.available} of ${trip.capacity} spaces available`}</span>
                 </button>
               ))}
             </div>
-            {tripId && <div className="mt-7 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"><p className="font-semibold">Boarding capacity confirmed</p><p className="mt-1">This journey has {trips.data?.find((trip) => trip.id === tripId)?.available ?? 0} seated spaces remaining. Your payment gives you a boarding pass; seats are not assigned.</p></div>}
+            {tripId && <div className="mt-7 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"><p className="font-semibold">Boarding capacity confirmed</p><p className="mt-1">This journey has {trips.data?.find((trip) => trip.id === tripId)?.available ?? 0} spaces remaining. Your payment covers {passengers} passenger{passengers === 1 ? "" : "s"}; seats are not assigned.</p></div>}
             {error && <p className="mt-5 text-sm text-red-600">{error}</p>}
             <Button
               className="mt-7 w-full rounded-full bg-primary"

@@ -14,6 +14,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router";
 import { PublicBookingPage } from "@/features/bookings/PublicBookingPage";
 import { AdminShell } from "@/components/layout/AdminShell";
 import { DispatchPage } from "@/features/operations/DispatchPage";
+import { DutyRosterPage } from "@/features/operations/DutyRosterPage";
 import { BayManagementPage } from "@/features/operations/BayManagementPage";
 import { IncidentsPage } from "@/features/operations/IncidentsPage";
 import { ApprovalsPage } from "@/features/operations/ApprovalsPage";
@@ -182,6 +183,7 @@ function App() {
         <Routes>
           <Route path="/operations" element={<CentreConsolePage />} />
           <Route path="/operations/dispatch" element={<DispatchPage />} />
+          <Route path="/operations/duty-roster" element={<DutyRosterPage />} />
           <Route path="/operations/dispatch/new" element={<TripFormPage />} />
           <Route
             path="/operations/dispatch/:tripId"

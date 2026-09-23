@@ -36,7 +36,7 @@ export interface BookingFilters {
 export interface CreateBookingRequest {
   tripId: string;
   passengerId: string;
-  seatNumber: string;
+  passengerCount?: number;
 }
 export interface CheckoutSession {
   url: string;
@@ -56,7 +56,7 @@ export interface Booking {
   tripTime: string;
   passengerId: string;
   passenger: string;
-  seatNumber: string;
+  passengerCount: number;
   fare: number;
   status: BookingStatus;
   createdAt: string;
@@ -67,6 +67,7 @@ export interface TripSummary {
   route: string;
   name: string;
   vehicle: string;
+  capacity: number;
 }
 export interface BookingDetail {
   id: string;
@@ -78,7 +79,7 @@ export interface BookingDetail {
     category: PassengerCategory;
     balance: number | null;
   };
-  seatNumber: string;
+  passengerCount: number;
   fare: number;
   passengerCategory: PassengerCategory;
   qrCode: string;
@@ -90,15 +91,11 @@ export interface BookingDetail {
   createdAt: string;
   updatedAt: string;
 }
-export interface Seat {
-  seatNumber: string;
-  isAvailable: boolean;
-}
 export interface Manifest {
   trip: TripSummary;
   bookings: {
     id: string;
-    seatNumber: string;
+    passengerCount: number;
     passenger: string;
     phoneNumber: string;
     category: PassengerCategory;
@@ -120,6 +117,10 @@ export interface TripOption {
   routeNumber: string;
   routeName: string;
   vehicle: string;
+  capacity: number;
+  occupied: number;
+  available: number;
+  isFull: boolean;
   bay: string;
   scheduledTime: string;
   status: string;
@@ -152,9 +153,6 @@ export interface CreatedBooking extends CreateBookingRequest {
   fare: number;
   status: BookingStatus;
   qrCode: string;
-}
-export interface ChangeSeatRequest {
-  seatNumber: string;
 }
 export interface CompleteBookingRequest {
   status: "Completed";

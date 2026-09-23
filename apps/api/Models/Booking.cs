@@ -13,6 +13,7 @@ public class Booking
     public Passenger Passenger { get; set; } = default!;
 
     public string SeatNumber { get; set; } = default!;
+    public int PassengerCount { get; set; } = 1;
     public decimal Fare { get; set; }
     public PassengerCategory PassengerCategory { get; set; }
     public string QrCode { get; set; } = default!;

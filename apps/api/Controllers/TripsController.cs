@@ -241,7 +241,7 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         var occupied = await db.Bookings.AsNoTracking()
             .Where(booking => tripIds.Contains(booking.TripId) && (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed))
             .GroupBy(booking => booking.TripId)
-            .Select(group => new { TripId = group.Key, Count = group.Count() })
+            .Select(group => new { TripId = group.Key, Count = group.Sum(booking => booking.PassengerCount) })
             .ToDictionaryAsync(item => item.TripId, item => item.Count);
         return trips.Select(trip => ToListItem(trip, occupied.GetValueOrDefault(trip.Id)));
     }

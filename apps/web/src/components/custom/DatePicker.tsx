@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -21,10 +21,6 @@ export function DatePicker({ name, defaultValue, value, onValueChange, required,
   const [internalValue, setInternalValue] = useState(defaultValue ?? "");
   const selectedValue = value ?? internalValue;
   const selected = selectedValue ? new Date(`${selectedValue}T00:00:00`) : undefined;
-
-  useEffect(() => {
-    if (value === undefined) setInternalValue(defaultValue ?? "");
-  }, [defaultValue, value]);
 
   return (
     <Popover>

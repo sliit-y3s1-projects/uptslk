@@ -32,7 +32,7 @@ export interface PassengerDetail extends UpdatePassengerRequest {
     id: string;
     tripId: string;
     route: string;
-    seatNumber: string;
+    passengerCount: number;
     fare: number;
     status: string;
     createdAt: string;

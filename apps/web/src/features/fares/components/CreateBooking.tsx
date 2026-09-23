@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePassengers } from "@/features/riders/hooks/usePassengers";
@@ -9,9 +10,8 @@ import {
   QueryState,
 } from "@/features/riders/components/FeatureUi";
 import { money, dateTime } from "@/features/riders/components/format";
-import { useTrips, useSeats, useBookingMutations } from "../hooks/useBookings";
+import { useTrips, useBookingMutations } from "../hooks/useBookings";
 import { useFareQuote } from "../hooks/useFareRules";
-import { SeatPicker } from "./SeatPicker";
 export function CreateBooking() {
   const { user } = useAuth();
   const centreId = user?.centreId ?? "";
@@ -19,9 +19,8 @@ export function CreateBooking() {
   const passengers = usePassengers({ active: "true" });
   const [tripId, setTrip] = useState("");
   const [passengerId, setPassenger] = useState("");
-  const [seatNumber, setSeat] = useState("");
+  const [passengerCount, setPassengerCount] = useState(1);
   const quote = useFareQuote(tripId, passengerId);
-  const seats = useSeats(tripId);
   const { checkout } = useBookingMutations();
   const trip = trips.data?.find((t) => t.id === tripId);
   const eligible =
@@ -32,17 +31,10 @@ export function CreateBooking() {
         className="space-y-4"
         onSubmit={(e) => {
           e.preventDefault();
-          if (
-            !eligible ||
-            !quote.data ||
-            seats.error ||
-            !seats.data?.some(
-              (s) => s.seatNumber === seatNumber && s.isAvailable,
-            )
-          )
+          if (!eligible || !quote.data || trip?.isFull)
             return;
           checkout.mutate(
-            { tripId, passengerId, seatNumber },
+            { tripId, passengerId, passengerCount },
             {
               onSuccess: (session) => {
                 window.location.assign(session.url);
@@ -68,7 +60,6 @@ export function CreateBooking() {
               <label className="font-medium">Scheduled trip</label>
               <Select value={tripId || undefined} onValueChange={(value) => {
                 setTrip(String(value ?? ""));
-                setSeat("");
                 checkout.reset();
               }}>
                 <SelectTrigger className="h-11 w-full"><SelectValue placeholder="Select a trip" /></SelectTrigger>
@@ -89,11 +80,23 @@ export function CreateBooking() {
                 <SelectContent>{passengers.data?.map((passenger) => <SelectItem key={passenger.id} value={passenger.id}>{passenger.fullName} · {passenger.phoneNumber} · {passenger.category}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            <label className="flex min-w-0 flex-col gap-1.5 text-sm sm:col-span-2">
+              <span className="font-medium">Passengers</span>
+              <Input
+                className="h-11 max-w-48"
+                type="number"
+                min="1"
+                max="10"
+                value={passengerCount}
+                onChange={(event) => setPassengerCount(Math.max(1, Math.min(10, Number(event.target.value) || 1)))}
+              />
+              <span className="text-xs text-muted-foreground">Include the selected passenger and any companions travelling together.</span>
+            </label>
           </div>
           <QueryState query={passengers} empty={!passengers.data?.length} />
           {trip && (
             <p className="text-sm text-muted-foreground">
-              Vehicle {trip.vehicle} · Bay {trip.bay}
+              Vehicle {trip.vehicle} · Bay {trip.bay} · {trip.available < passengerCount ? `Only ${trip.available} spaces available` : `${trip.available} of ${trip.capacity} spaces available`}
             </p>
           )}
           {tripId && passengerId && (
@@ -101,7 +104,7 @@ export function CreateBooking() {
               <QueryState query={quote} />
               {quote.data && !quote.error && (
                 <p className="text-sm">
-                  Fare: <strong>{money(quote.data.fare)}</strong> ? Wallet:{" "}
+                  Fare: <strong>{money(quote.data.fare * passengerCount)}</strong> for {passengerCount} passenger{passengerCount === 1 ? "" : "s"} · Wallet:{" "}
                   {money(
                     passengers.data?.find((p) => p.id === passengerId)
                       ?.balance ?? 0,
@@ -109,14 +112,6 @@ export function CreateBooking() {
                 </p>
               )}
             </>
-          )}
-          {tripId && (
-            <SeatPicker
-              tripId={tripId}
-              value={seatNumber}
-              onChange={setSeat}
-              disabled={checkout.isPending}
-            />
           )}
           <Feedback error={checkout.error} />
           <Button
@@ -127,17 +122,17 @@ export function CreateBooking() {
               !quote.data ||
               !!quote.error ||
               quote.isFetching ||
-              !!seats.error ||
-              !seats.data?.some(
-                (s) => s.seatNumber === seatNumber && s.isAvailable,
-              )
+              !!trip?.isFull ||
+              (trip?.available ?? 0) < passengerCount
             }
           >
             {checkout.isPending
               ? "Opening secure checkout..."
-              : seatNumber
-                ? `Continue to payment for seat ${seatNumber}`
-                : "Select a seat to continue"}
+              : trip?.isFull
+                ? "This departure is full"
+                : (trip?.available ?? 0) < passengerCount
+                  ? "Not enough spaces for this group"
+                : "Continue to payment"}
           </Button>
         </fieldset>
       </form>

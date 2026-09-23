@@ -42,6 +42,7 @@ public class PaymentsController(
         {
             TripId = request.TripId,
             PassengerId = passengerId.Value,
+            PassengerCount = request.PassengerCount,
             Provider = PaymentProvider.Stripe
         }, cancellationToken);
         if (session is null) return StatusCode(statusCode, new { error });

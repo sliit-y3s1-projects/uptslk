@@ -13,25 +13,17 @@ import {
   useBooking,
   useBookingMutations,
   useTrip,
-  useSeats,
 } from "../hooks/useBookings";
-import { SeatPicker } from "./SeatPicker";
 import { TicketQr } from "./TicketQr";
 export function BookingTicket({ id }: { id: string }) {
   const query = useBooking(id);
   const booking = query.data;
   const trip = useTrip(booking?.trip.id ?? "");
-  const seats = useSeats(booking?.trip.id ?? "");
-  const { seat, cancel, complete } = useBookingMutations();
-  const [seatNumber, setSeat] = useState("");
+  const { cancel, complete } = useBookingMutations();
   const [reason, setReason] = useState("");
-  const [action, setAction] = useState<"seat" | "cancel" | "complete" | "">("");
+  const [action, setAction] = useState<"cancel" | "complete" | "">("");
   const [notice, setNotice] = useState("");
-  const pending = seat.isPending || cancel.isPending || complete.isPending;
-  const canChange =
-    booking?.status === "Confirmed" &&
-    !!trip.data &&
-    ["Scheduled", "Ready"].includes(trip.data.status);
+  const pending = cancel.isPending || complete.isPending;
   const canComplete =
     booking?.status === "Confirmed" &&
     !!trip.data &&
@@ -41,7 +33,6 @@ export function BookingTicket({ id }: { id: string }) {
   const done = (message: string) => {
     setAction("");
     setNotice(message);
-    setSeat("");
     setReason("");
   };
   return (
@@ -63,7 +54,7 @@ export function BookingTicket({ id }: { id: string }) {
                   ["Departure", dateTime(booking.trip.scheduledTime)],
                   ["Vehicle", booking.trip.vehicle],
                   ["Bay", trip.data?.bay.code ?? "Unavailable"],
-                  ["Seat", booking.seatNumber],
+                  ["Passengers", String(booking.passengerCount)],
                   ["Fare", money(booking.fare)],
                   ["Category", booking.passengerCategory],
                   ["Status", booking.status],
@@ -88,7 +79,7 @@ export function BookingTicket({ id }: { id: string }) {
           </div>
           <QueryState query={trip} />
           <Feedback
-            error={seat.error || cancel.error || complete.error}
+            error={cancel.error || complete.error}
             success={notice}
           />
           {booking.status === "Cancelled" && (
@@ -106,18 +97,6 @@ export function BookingTicket({ id }: { id: string }) {
             </div>
           )}
           <div className="flex flex-wrap gap-2">
-            {canChange && (
-              <Button
-                variant="outline"
-                disabled={pending}
-                onClick={() => {
-                  setAction("seat");
-                  seat.reset();
-                }}
-              >
-                Change seat
-              </Button>
-            )}
             {canCancel && (
               <Button
                 variant="outline"
@@ -149,40 +128,6 @@ export function BookingTicket({ id }: { id: string }) {
               Passenger manifest
             </Link>
           </div>
-          {action === "seat" && canChange && (
-            <form
-              className="space-y-3"
-              onSubmit={(e) => {
-                e.preventDefault();
-                seat.mutate(
-                  { id, seatNumber },
-                  {
-                    onSuccess: () =>
-                      done("Seat changed. Ticket and manifest refreshed."),
-                  },
-                );
-              }}
-            >
-              <SeatPicker
-                tripId={booking.trip.id}
-                value={seatNumber}
-                onChange={setSeat}
-                disabled={pending}
-              />
-              <Button
-                type="submit"
-                disabled={
-                  pending ||
-                  !!seats.error ||
-                  !seats.data?.some(
-                    (s) => s.seatNumber === seatNumber && s.isAvailable,
-                  )
-                }
-              >
-                Confirm seat change
-              </Button>
-            </form>
-          )}
           {action === "cancel" && canCancel && (
             <form
               className="space-y-3"

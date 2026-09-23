@@ -64,4 +64,6 @@ export const routesApi = {
   getDirections: (routeId: string) => apiClient<RouteDirection[]>(`/api/v1/routes/${routeId}/directions`),
   createDirection: (routeId: string, data: CreateRouteDirectionRequest) =>
     apiClient<RouteDirection>(`/api/v1/routes/${routeId}/directions`, { method: "POST", body: JSON.stringify(data), headers: { "Content-Type": "application/json" } }),
+  updateDirection: (directionId: string, data: CreateRouteDirectionRequest & { isActive: boolean }) =>
+    apiClient<void>(`/api/v1/routes/directions/${directionId}`, { method: "PUT", body: JSON.stringify(data), headers: { "Content-Type": "application/json" } }),
 };

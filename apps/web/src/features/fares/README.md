@@ -6,7 +6,7 @@
 - `/riders/support` and `/passengers/assistance`: passenger contact, booking and wallet context. The supplied APIs do not store support or assistance cases.
 - `/fares/tickets`: bookings and digital QR tickets. The **Fare rules** tab contains fare list/filter/create/edit/deactivate/reactivate actions.
 - `/fares/payments`: passenger wallet balances, top-ups, fare charges and refunds.
-- `/passengers/flow`: API seat counts and read-only manifests.
+- `/passengers/flow`: capacity totals and read-only manifests.
 - `/fares/reconciliation`: passenger financial transaction review. No settlement totals or day-closing actions are fabricated; there is no reconciliation endpoint.
 
 Profiles and tickets use query parameters on existing routes and persist their selected IDs in the URL:
@@ -21,7 +21,7 @@ The Dispatch owner can link a trip to the last URL using its API GUID. No Dispat
 
 All requests go through `src/lib/api/api-client.ts`. Services use relative endpoint paths; the shared client reads `VITE_API_BASE_URL`. No new client, remote QR service or feature-level API origin was added. Request/response types live in `types/`; services and TanStack Query hooks live in their prepared folders.
 
-Passenger detail is the source of wallet balance/history. Cancellation calls DELETE with a reason and displays the API refund; it does not remove ledger rows. Mutations invalidate passenger, booking, fare, quote, seat and manifest data. Seat conflicts also refresh availability. Seats and manifests refresh every 15 seconds. Booking actions follow the current trip and booking status returned by the API.
+Passenger detail is the source of wallet balance/history. Cancellation calls DELETE with a reason and displays the API refund; it does not remove ledger rows. Mutations invalidate passenger, booking, fare, quote, capacity and manifest data. Capacity and manifests refresh every 15 seconds. Booking actions follow the current trip and booking status returned by the API.
 
 The centre picker loads real centres for read-only trip/route lookups. A matching authenticated centre GUID is selected automatically. Demo centre labels are not sent as foreign keys; choose an API centre explicitly when using a demo login. Passenger and unfiltered booking/fare lists remain global, as exposed by their API contracts.
 

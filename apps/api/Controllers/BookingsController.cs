@@ -29,7 +29,7 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
             {
                 booking.Id,
                 booking.Status,
-                booking.SeatNumber,
+                booking.PassengerCount,
                 booking.Fare,
                 booking.QrCode,
                 booking.CreatedAt,
@@ -73,11 +73,13 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         if (trip is null) return BadRequest(new { error = "The selected trip does not exist." });
         if (trip.Vehicle is null || trip.Vehicle.Capacity < 1) return BadRequest(new { error = "This trip has no valid vehicle capacity configured." });
         if (trip.Status is not (TripStatus.Scheduled or TripStatus.Ready or TripStatus.Boarding)) return BadRequest(new { error = "Bookings are not available for this trip." });
+        if (request.PassengerCount is < 1 or > 10) return BadRequest(new { error = "Passenger count must be between 1 and 10." });
 
         var fare = await db.FareRules.SingleOrDefaultAsync(rule => rule.RouteId == trip.RouteId && rule.PassengerCategory == passenger.Category && rule.IsActive);
         if (fare is null) return BadRequest(new { error = "No active fare rule exists for this passenger category and route." });
-        if (passenger.Wallet is null || passenger.Wallet.Balance < fare.Amount) return BadRequest(new { error = "Insufficient wallet balance." });
-        if (await ActiveBookingCount(trip.Id) >= trip.Vehicle.Capacity) return Conflict(new { error = "This departure is full. Please choose another departure." });
+        var totalFare = fare.Amount * request.PassengerCount;
+        if (passenger.Wallet is null || passenger.Wallet.Balance < totalFare) return BadRequest(new { error = "Insufficient wallet balance." });
+        if (await OccupiedCapacity(trip.Id) + request.PassengerCount > trip.Vehicle.Capacity) return Conflict(new { error = "This departure does not have enough remaining spaces for every passenger." });
 
         await using var transaction = await db.Database.BeginTransactionAsync();
         var booking = new Booking
@@ -85,15 +87,16 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
             TripId = trip.Id,
             PassengerId = passenger.Id,
             SeatNumber = BoardingReference(),
-            Fare = fare.Amount,
+            PassengerCount = request.PassengerCount,
+            Fare = totalFare,
             PassengerCategory = passenger.Category,
             QrCode = $"BKG-{Guid.NewGuid():N}".ToUpperInvariant(),
             Status = BookingStatus.Confirmed
         };
-        passenger.Wallet.Balance -= fare.Amount;
+        passenger.Wallet.Balance -= totalFare;
         passenger.Wallet.UpdatedAt = DateTime.UtcNow;
         db.Bookings.Add(booking);
-        db.Transactions.Add(new Transaction { WalletId = passenger.Wallet.Id, Booking = booking, Type = TransactionType.Fare, Amount = fare.Amount });
+        db.Transactions.Add(new Transaction { WalletId = passenger.Wallet.Id, Booking = booking, Type = TransactionType.Fare, Amount = totalFare });
 
         try
         {
@@ -106,7 +109,7 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
             return Conflict(new { error = "This departure was just filled. Please choose another departure." });
         }
 
-        return CreatedAtAction(nameof(Get), new { bookingId = booking.Id }, new { booking.Id, booking.TripId, booking.PassengerId, booking.SeatNumber, booking.Fare, booking.Status, booking.QrCode });
+        return CreatedAtAction(nameof(Get), new { bookingId = booking.Id }, new { booking.Id, booking.TripId, booking.PassengerId, booking.PassengerCount, booking.Fare, booking.Status, booking.QrCode });
     }
 
     [HttpPost("me")]
@@ -122,14 +125,9 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         return await Create(new CreateBookingRequest
         {
             TripId = request.TripId,
-            PassengerId = passenger.Id
+            PassengerId = passenger.Id,
+            PassengerCount = request.PassengerCount
         });
-    }
-
-    [HttpPost("{bookingId:guid}/seat")]
-    public IActionResult ChangeSeat(Guid bookingId, ChangeBookingSeatRequest request)
-    {
-        return BadRequest(new { error = "Seat selection is not available for urban journeys. Your ticket provides boarding approval, not an assigned seat." });
     }
 
     [HttpPatch("{bookingId:guid}/status")]
@@ -186,7 +184,7 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
     {
         var trip = await db.Trips.AsNoTracking().Include(item => item.Vehicle).SingleOrDefaultAsync(item => item.Id == tripId);
         if (trip is null) return NotFound();
-        var occupied = await ActiveBookingCount(tripId);
+        var occupied = await OccupiedCapacity(tripId);
         return Ok(new { capacity = trip.Vehicle.Capacity, occupied, available = Math.Max(0, trip.Vehicle.Capacity - occupied), isFull = occupied >= trip.Vehicle.Capacity });
     }
 
@@ -197,14 +195,14 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         if (trip is null) return NotFound();
         var bookings = await db.Bookings.AsNoTracking().Include(item => item.Passenger)
             .Where(item => item.TripId == tripId && item.Status != BookingStatus.Cancelled)
-            .OrderBy(item => item.SeatNumber)
-            .Select(item => new { item.Id, item.SeatNumber, Passenger = item.Passenger.FullName, item.Passenger.PhoneNumber, item.Passenger.Category, item.Status, item.QrCode })
+            .OrderBy(item => item.CreatedAt)
+            .Select(item => new { item.Id, item.PassengerCount, Passenger = item.Passenger.FullName, item.Passenger.PhoneNumber, item.Passenger.Category, item.Status, item.QrCode })
             .ToListAsync();
-        return Ok(new { Trip = new { trip.Id, trip.ScheduledTime, Route = trip.Route.RouteNumber, trip.Route.Name, Vehicle = trip.Vehicle.PlateNumber }, Bookings = bookings, PassengerCount = bookings.Count });
+        return Ok(new { Trip = new { trip.Id, trip.ScheduledTime, Route = trip.Route.RouteNumber, trip.Route.Name, Vehicle = trip.Vehicle.PlateNumber, Capacity = trip.Vehicle.Capacity }, Bookings = bookings, PassengerCount = bookings.Sum(item => item.PassengerCount) });
     }
 
-    private Task<int> ActiveBookingCount(Guid tripId) =>
-        db.Bookings.CountAsync(booking => booking.TripId == tripId && (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed));
+    private async Task<int> OccupiedCapacity(Guid tripId) =>
+        await db.Bookings.Where(booking => booking.TripId == tripId && (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed)).SumAsync(booking => (int?)booking.PassengerCount) ?? 0;
 
     private Task<Booking?> LoadBooking(Guid bookingId, bool noTracking) =>
         (noTracking ? db.Bookings.AsNoTracking() : db.Bookings)
@@ -224,7 +222,7 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         TripTime = booking.Trip.ScheduledTime,
         booking.PassengerId,
         Passenger = booking.Passenger.FullName,
-        booking.SeatNumber,
+        booking.PassengerCount,
         booking.Fare,
         booking.Status,
         booking.CreatedAt
@@ -235,7 +233,7 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         booking.Id,
         Trip = new { booking.Trip.Id, booking.Trip.ScheduledTime, Route = booking.Trip.Route.RouteNumber, booking.Trip.Route.Name, Vehicle = booking.Trip.Vehicle.PlateNumber },
         Passenger = new { booking.Passenger.Id, booking.Passenger.FullName, booking.Passenger.PhoneNumber, booking.Passenger.Category, Balance = booking.Passenger.Wallet?.Balance },
-        booking.SeatNumber,
+        booking.PassengerCount,
         booking.Fare,
         booking.PassengerCategory,
         booking.QrCode,

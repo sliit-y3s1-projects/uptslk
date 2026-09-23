@@ -54,13 +54,10 @@ export function PublicBookingPage() {
     <main className="min-h-screen bg-white">
       <div className="w-full space-y-5 px-6 py-7">
         <section className="rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="mb-4 flex gap-2">
-            <Button size="sm" className="rounded-full bg-primary">
-              One-way
-            </Button>
-            <Button size="sm" variant="outline" className="rounded-full">
-              Round trip
-            </Button>
+          <div className="mb-4">
+            <span className="inline-flex rounded-full bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground">
+              One-way journey
+            </span>
           </div>
           <div className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_150px_auto] md:items-end">
             <Field
@@ -318,7 +315,7 @@ function PassengerCounter({
         variant="ghost"
         size="icon-sm"
         aria-label="Increase passengers"
-        disabled={value >= 8}
+        disabled={value >= 10}
         onClick={() => onChange(value + 1)}
       >
         <Plus />

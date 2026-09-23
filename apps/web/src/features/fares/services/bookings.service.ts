@@ -1,6 +1,5 @@
 import type {
   CreatedBooking,
-  ChangeSeatRequest,
   CompleteBookingRequest,
   CancelBookingRequest,
 } from "../types/fares";
@@ -11,7 +10,6 @@ import type {
   BookingDetail,
   BookingFilters,
   CreateBookingRequest,
-  Seat,
   Manifest,
   TripOption,
   TripDetail,
@@ -31,11 +29,6 @@ export const bookingsService = {
     apiClient<CheckoutSession>("/api/v1/payments/checkout", jsonBody("POST", body)),
   paymentOrder: (orderId: string) =>
     apiClient<PaymentOrderStatus>(`/api/v1/payments/orders/${encodeURIComponent(orderId)}`),
-  seat: (id: string, seatNumber: string) =>
-    apiClient<void>(
-      `${path}/${id}/seat`,
-      jsonBody("POST", { seatNumber } satisfies ChangeSeatRequest),
-    ),
   complete: (id: string) =>
     apiClient<void>(
       `${path}/${id}/status`,
@@ -48,7 +41,6 @@ export const bookingsService = {
       `${path}/${id}`,
       jsonBody("DELETE", { reason } satisfies CancelBookingRequest),
     ),
-  seats: (tripId: string) => apiClient<Seat[]>(`${path}/trips/${tripId}/seats`),
   manifest: (tripId: string) =>
     apiClient<Manifest>(`${path}/trips/${tripId}/manifest`),
 };

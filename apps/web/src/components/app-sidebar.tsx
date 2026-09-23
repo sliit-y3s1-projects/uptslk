@@ -38,6 +38,7 @@ const data = {
       items: [
         { title: "Overview", url: "/operations", isActive: true },
         { title: "Dispatch", url: "/operations/dispatch" },
+        { title: "Duty roster", url: "/operations/duty-roster" },
         { title: "Trip history", url: "/operations/history" },
         { title: "Bay management", url: "/operations/bays" },
         { title: "Incidents", url: "/operations/incidents" },

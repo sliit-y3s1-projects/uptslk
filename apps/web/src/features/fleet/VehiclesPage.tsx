@@ -303,7 +303,7 @@ export function VehicleProfilePage({
             <Info label="Registration" value={vehicle.plateNumber} />
             <Info label="Model" value={vehicle.model} />
             <Info label="Vehicle type" value={vehicle.type} />
-            <Info label="Seat capacity" value={`${vehicle.capacity} seats`} />
+            <Info label="Passenger capacity" value={`${vehicle.capacity} passengers`} />
             <Info
               label="Accessibility"
               value={
@@ -501,7 +501,7 @@ function VehicleFormInner({
 
     const numericCapacity = parseInt(capacity, 10);
     if (isNaN(numericCapacity) || numericCapacity <= 0) {
-      setFormError("Seat capacity must be a positive number.");
+      setFormError("Passenger capacity must be a positive number.");
       return;
     }
 
@@ -610,7 +610,7 @@ function VehicleFormInner({
           </label>
 
           <label className="grid gap-1.5 text-sm font-medium">
-            Seat capacity
+            Seated passenger capacity
             <Input
               type="number"
               min="1"

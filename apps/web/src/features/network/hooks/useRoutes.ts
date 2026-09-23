@@ -122,3 +122,12 @@ export function useCreateDirection(routeId: string) {
     queryClient.invalidateQueries({ queryKey: ["routes"] });
   }});
 }
+
+export function useUpdateDirection(routeId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: ({ directionId, data }: { directionId: string; data: CreateRouteDirectionRequest & { isActive: boolean } }) => routesApi.updateDirection(directionId, data), onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["routes", routeId] });
+    queryClient.invalidateQueries({ queryKey: ["routes", routeId, "directions"] });
+    queryClient.invalidateQueries({ queryKey: ["routes"] });
+  }});
+}

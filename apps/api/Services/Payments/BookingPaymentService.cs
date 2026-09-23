@@ -16,8 +16,9 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
         if (passenger is null || !passenger.IsActive) return (null, "The selected passenger is not active.", StatusCodes.Status400BadRequest);
         if (trip?.Vehicle is null || trip.Vehicle.Capacity < 1) return (null, "This trip has no valid vehicle capacity configured.", StatusCodes.Status400BadRequest);
         if (trip.Status is not (TripStatus.Scheduled or TripStatus.Ready or TripStatus.Boarding)) return (null, "Bookings are not available for this trip.", StatusCodes.Status400BadRequest);
+        if (request.PassengerCount is < 1 or > 10) return (null, "Passenger count must be between 1 and 10.", StatusCodes.Status400BadRequest);
 
-        if (await ActiveBookingCount(trip.Id, cancellationToken) >= trip.Vehicle.Capacity) return (null, "This departure is full. Please choose another departure.", StatusCodes.Status409Conflict);
+        if (await OccupiedCapacity(trip.Id, cancellationToken) + request.PassengerCount > trip.Vehicle.Capacity) return (null, "This departure does not have enough remaining spaces for every passenger.", StatusCodes.Status409Conflict);
         var fare = await db.FareRules.SingleOrDefaultAsync(rule => rule.RouteId == trip.RouteId && rule.PassengerCategory == passenger.Category && rule.IsActive, cancellationToken);
         if (fare is null) return (null, "No active fare rule exists for this passenger category and route.", StatusCodes.Status400BadRequest);
         var gateway = gateways.SingleOrDefault(item => item.Provider == request.Provider);
@@ -25,13 +26,13 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
 
         var booking = new Booking
         {
-            TripId = trip.Id, PassengerId = passenger.Id, SeatNumber = BoardingReference(), Fare = fare.Amount,
+            TripId = trip.Id, PassengerId = passenger.Id, SeatNumber = BoardingReference(), PassengerCount = request.PassengerCount, Fare = fare.Amount * request.PassengerCount,
             PassengerCategory = passenger.Category, QrCode = $"BKG-{Guid.NewGuid():N}".ToUpperInvariant(), Status = BookingStatus.Pending
         };
         var payment = new Payment
         {
             Booking = booking, Provider = request.Provider, ProviderOrderId = $"UPTS-{Guid.NewGuid():N}".ToUpperInvariant(),
-            Amount = fare.Amount, Currency = "LKR", Status = PaymentStatus.Initiated
+            Amount = booking.Fare, Currency = "LKR", Status = PaymentStatus.Initiated
         };
 
         try
@@ -183,8 +184,8 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
         return (null, StatusCodes.Status204NoContent);
     }
 
-    private Task<int> ActiveBookingCount(Guid tripId, CancellationToken cancellationToken) =>
-        db.Bookings.CountAsync(booking => booking.TripId == tripId && (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed), cancellationToken);
+    private async Task<int> OccupiedCapacity(Guid tripId, CancellationToken cancellationToken) =>
+        await db.Bookings.Where(booking => booking.TripId == tripId && (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed)).SumAsync(booking => (int?)booking.PassengerCount, cancellationToken) ?? 0;
 
     private Task<bool> IsWebhookAlreadyProcessedAsync(string eventId, CancellationToken cancellationToken) =>
         db.PaymentWebhookEvents.AnyAsync(item => item.Provider == PaymentProvider.Stripe && item.ProviderEventId == eventId, cancellationToken);
