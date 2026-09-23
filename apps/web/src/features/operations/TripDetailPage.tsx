@@ -146,6 +146,12 @@ export function TripDetailPage() {
               >
                 <ShieldAlert /> Report incident
               </Button>
+              <Button
+                variant="outline"
+                render={<Link to="/operations/agent-recovery" />}
+              >
+                Recovery agents
+              </Button>
             </div>
           </article>
           {!["Completed", "Cancelled"].includes(trip.status) && (

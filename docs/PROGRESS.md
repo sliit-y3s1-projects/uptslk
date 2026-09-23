@@ -54,7 +54,8 @@ Owner: Nadeesha D. Shalom
 ## Shared Future Work
 
 - ⏳ NOT STARTED — Flutter commuter and driver applications, including driver assignment, lifecycle update, and incident reporting.
-- ⏳ NOT STARTED — Persisted Agentic AI recovery workflow: workflow tables, allow-listed tools, deterministic validation, manager approval, audit trail, and execution states.
+- ✅ IMPLEMENTED — Supervised deterministic agent-recovery workflow with four named member-owned agents, persisted workflows/steps/approval records, validation, manager approval, and audited trip-recovery execution.
+- ⏳ REMAINING — Optional LLM-assisted interpretation of driver free-text reports. It remains intentionally outside the execution path.
 - ⏳ REMAINING — Final reports/dashboard metrics, pagination where operational lists grow large, security review, screenshots, ADRs, and member demonstration evidence.
 
 ## Current Verification

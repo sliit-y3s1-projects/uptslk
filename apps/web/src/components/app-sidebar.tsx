@@ -42,6 +42,7 @@ const data = {
         { title: "Trip history", url: "/operations/history" },
         { title: "Bay management", url: "/operations/bays" },
         { title: "Incidents", url: "/operations/incidents" },
+        { title: "Recovery agents", url: "/operations/agent-recovery" },
         { title: "Approvals", url: "/operations/approvals" },
       ],
     },

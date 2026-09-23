@@ -5,6 +5,8 @@ using api.Enums;
 using api.Models;
 using api.Services;
 using api.Services.Payments;
+using api.Services.AgentRecovery;
+using api.Services.AgentRecovery.Agents;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +39,11 @@ builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<TripConflictService>();
 builder.Services.AddSingleton<IPaymentGateway, StripePaymentGateway>();
 builder.Services.AddScoped<BookingPaymentService>();
+builder.Services.AddScoped<IRecoveryAgent, NetworkContinuityAgent>();
+builder.Services.AddScoped<IRecoveryAgent, FleetReadinessAgent>();
+builder.Services.AddScoped<IRecoveryAgent, DispatchRecoveryAgent>();
+builder.Services.AddScoped<IRecoveryAgent, PassengerFareImpactAgent>();
+builder.Services.AddScoped<RecoveryWorkflowService>();
 
 builder.Services.AddAuthentication(options =>
     {

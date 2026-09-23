@@ -79,6 +79,13 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<PaymentWebhookEvent>().Property(webhook => webhook.EventType).HasMaxLength(128);
         modelBuilder.Entity<PaymentRefund>().Property(refund => refund.Amount).HasPrecision(12, 2);
         modelBuilder.Entity<PaymentRefund>().Property(refund => refund.Reason).HasMaxLength(1000);
+        modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.Objective).HasMaxLength(1000);
+        modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.FailureReason).HasMaxLength(2000);
+        modelBuilder.Entity<AgentStep>().Property(step => step.AgentName).HasMaxLength(120);
+        modelBuilder.Entity<AgentStep>().Property(step => step.Status).HasMaxLength(32);
+        modelBuilder.Entity<AgentStep>().Property(step => step.Error).HasMaxLength(2000);
+        modelBuilder.Entity<ApprovalRequest>().Property(request => request.Reason).HasMaxLength(2000);
+        modelBuilder.Entity<ApprovalRequest>().Property(request => request.DecisionNote).HasMaxLength(2000);
         modelBuilder.Entity<SupportRequest>().Property(request => request.Subject).HasMaxLength(200);
         modelBuilder.Entity<SupportRequest>().Property(request => request.Description).HasMaxLength(2000);
         modelBuilder.Entity<SupportRequest>().Property(request => request.Resolution).HasMaxLength(2000);
@@ -302,6 +309,24 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .WithOne(b => b.AgentWorkflow)
             .HasForeignKey<AgentWorkflow>(aw => aw.BookingId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<AgentWorkflow>()
+            .HasOne(workflow => workflow.Centre)
+            .WithMany()
+            .HasForeignKey(workflow => workflow.CentreId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<AgentWorkflow>()
+            .HasOne(workflow => workflow.Incident)
+            .WithMany()
+            .HasForeignKey(workflow => workflow.IncidentId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<AgentWorkflow>()
+            .HasOne(workflow => workflow.Trip)
+            .WithMany()
+            .HasForeignKey(workflow => workflow.TripId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<AgentWorkflow>().HasIndex(workflow => new { workflow.CentreId, workflow.Status });
+        modelBuilder.Entity<AgentWorkflow>().HasIndex(workflow => workflow.IncidentId);
 
         // AgentWorkflow <-> AgentStep (1:N)
         modelBuilder.Entity<AgentStep>()
