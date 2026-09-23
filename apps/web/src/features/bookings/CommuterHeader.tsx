@@ -73,7 +73,13 @@ export function CommuterHeader() {
                 Sign out
               </Button>
             </>
-          ) : null}
+          ) : (
+            <Link to="/login">
+              <Button className="rounded-full bg-indigo-950 px-5 text-white hover:bg-indigo-900 sm:h-12 sm:px-6">
+                Sign in
+              </Button>
+            </Link>
+          )}
         </nav>
       </div>
     </header>

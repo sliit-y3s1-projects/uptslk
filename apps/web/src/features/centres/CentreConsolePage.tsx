@@ -79,11 +79,11 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
 
   return (
     <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
-      <section className="flex flex-col justify-between gap-3 rounded-xl bg-slate-900 p-6 text-white md:flex-row md:items-end">
+      <section className="flex flex-col justify-between gap-3 rounded-xl border border-emerald-600 bg-emerald-700 p-6 text-white md:flex-row md:items-end">
         <div>
-          <p className="text-sm text-slate-300">Centre operations overview</p>
+          <p className="text-sm text-emerald-100">Centre operations overview</p>
           <h1 className="mt-1 text-2xl font-semibold">{centre.name}</h1>
-          <p className="mt-2 text-sm text-slate-300">
+          <p className="mt-2 text-sm text-emerald-100">
             {centre.description || "Active operations"}
           </p>
         </div>
@@ -300,8 +300,8 @@ function CapacitySummary({ departure }: { departure?: Departure }) {
         <UsersRound className="size-5 text-primary" />
       </div>
       <div className="mt-6 rounded-lg border border-slate-300 bg-muted/30 p-4">
-        <div className="flex items-end justify-between">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
             <p className="text-3xl font-semibold">
               {departure.occupied}
               <span className="text-lg text-muted-foreground">
@@ -314,7 +314,7 @@ function CapacitySummary({ departure }: { departure?: Departure }) {
             </p>
           </div>
           <span
-            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${departure.isFull ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-800"}`}
+            className={`self-start whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold sm:self-end ${departure.isFull ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-800"}`}
           >
             {departure.isFull ? "Full" : `${departure.available} spaces left`}
           </span>
@@ -348,7 +348,7 @@ function Metric({
       to={href}
       className="rounded-md px-3 py-2 transition hover:bg-white/10"
     >
-      <p className="text-xs text-slate-300">{label}</p>
+      <p className="text-xs text-white/75">{label}</p>
       <p className="mt-1 text-lg font-semibold">{value}</p>
     </Link>
   );

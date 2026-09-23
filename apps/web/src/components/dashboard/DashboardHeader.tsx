@@ -8,6 +8,16 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useOperationalScope } from "@/context/OperationalScopeContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "react-router";
 
 const labels: Record<string, string> = {
@@ -47,6 +57,8 @@ const labels: Record<string, string> = {
 
 export function DashboardHeader() {
   const { pathname } = useLocation();
+  const { logout } = useAuth();
+  const { dateRange, setDateRange } = useOperationalScope();
   const segments = pathname.split("/").filter(Boolean);
   const section = labels[segments[0]] ?? "Operations";
   const last = segments.at(-1) ?? "operations";
@@ -76,6 +88,32 @@ export function DashboardHeader() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <Select
+          value={dateRange}
+          onValueChange={(value) => value && setDateRange(value)}
+        >
+          <SelectTrigger
+            size="default"
+            aria-label="Date range"
+            className="h-10 w-36 rounded-full bg-muted/40 px-4 text-sm"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Today">Today</SelectItem>
+            <SelectItem value="Week">This week</SelectItem>
+            <SelectItem value="Month">This month</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          className="h-10 rounded-full bg-red-500 px-5 text-sm text-white hover:bg-red-600"
+          onClick={logout}
+        >
+          Log out
+        </Button>
       </div>
     </header>
   );

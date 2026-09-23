@@ -1,8 +1,8 @@
-import { Bell } from "lucide-react";
 import { useLocation } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useAuth } from "@/hooks/useAuth";
 
 const labels: Record<string, string> = {
   admin: "Overview",
@@ -20,6 +20,7 @@ const labels: Record<string, string> = {
 };
 
 export function SuperAdminHeader() {
+  const { logout } = useAuth();
   const segments = useLocation().pathname.split("/").filter(Boolean);
   const last = segments.at(-1) ?? "admin";
 
@@ -41,8 +42,12 @@ export function SuperAdminHeader() {
           <p className="text-xs text-muted-foreground">{page}</p>
         </div>
       </div>
-      <Button size="icon" variant="ghost" aria-label="Notifications">
-        <Bell />
+      <Button
+        type="button"
+        className="h-10 rounded-full bg-red-500 px-5 text-sm text-white hover:bg-red-600"
+        onClick={logout}
+      >
+        Log out
       </Button>
     </header>
   );

@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { OperationalScopeBar } from "@/components/layout/OperationalScopeBar";
 import { OperationalScopeProvider } from "@/context/OperationalScopeContext";
 import { MockDataProvider } from "@/context/MockDataContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,7 +21,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <AppSidebar />
             <SidebarInset>
               <DashboardHeader />
-              <OperationalScopeBar />
               {children}
             </SidebarInset>
           </SidebarProvider>

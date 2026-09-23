@@ -6,7 +6,7 @@ import { SuperAdminHeader } from "@/components/super-admin/SuperAdminHeader";
 export function SuperAdminShell({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider
-      style={{ "--sidebar-width": "16rem" } as React.CSSProperties}
+      style={{ "--sidebar-width": "14.5rem" } as React.CSSProperties}
     >
       <SuperAdminSidebar />
       <SidebarInset>

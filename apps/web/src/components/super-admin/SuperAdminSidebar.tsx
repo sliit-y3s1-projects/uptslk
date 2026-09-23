@@ -1,22 +1,8 @@
-import {
-  Activity,
-  Building2,
-  FileClock,
-  Gauge,
-  KeyRound,
-  LogOut,
-  Route,
-  Settings,
-  ShieldCheck,
-  UserPlus,
-  UsersRound,
-} from "lucide-react";
+import { Building2, Settings, ShieldCheck, UsersRound } from "lucide-react";
 import { NavLink, useLocation } from "react-router";
-import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
@@ -25,60 +11,74 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { useAuth } from "@/hooks/useAuth";
 
 const groups = [
   {
     label: "Organization",
+    icon: Building2,
     items: [
-      { title: "Overview", url: "/admin", icon: Gauge },
-      { title: "Multimodal centres", url: "/admin/centres", icon: Building2 },
-      { title: "Routes", url: "/network/routes", icon: Route },
+      { title: "Overview", url: "/admin" },
+      { title: "Multimodal centres", url: "/admin/centres" },
+      { title: "Routes", url: "/network/routes" },
     ],
   },
   {
     label: "People & access",
+    icon: UsersRound,
     items: [
-      { title: "Employees", url: "/admin/employees", icon: UsersRound },
-      { title: "Users", url: "/admin/users", icon: UserPlus },
-      { title: "Roles & permissions", url: "/admin/roles", icon: KeyRound },
-      { title: "Access requests", url: "/admin/access", icon: UserPlus },
+      { title: "Employees", url: "/admin/employees" },
+      { title: "Users", url: "/admin/users" },
+      { title: "Roles & permissions", url: "/admin/roles" },
+      { title: "Access requests", url: "/admin/access" },
     ],
   },
   {
     label: "Governance",
+    icon: ShieldCheck,
     items: [
-      { title: "Audit log", url: "/admin/audit", icon: FileClock },
-      { title: "Platform health", url: "/admin/health", icon: Activity },
+      { title: "Audit log", url: "/admin/audit" },
+      { title: "Platform health", url: "/admin/health" },
     ],
   },
   {
     label: "System",
-    items: [{ title: "Settings", url: "/admin/settings", icon: Settings }],
+    icon: Settings,
+    items: [{ title: "Settings", url: "/admin/settings" }],
   },
 ];
 
 export function SuperAdminSidebar() {
-  const { logout } = useAuth();
   const { pathname } = useLocation();
   return (
-    <Sidebar>
-      <SidebarHeader>
+    <Sidebar className="border-r-2 border-slate-300">
+      <SidebarHeader className="border-b border-sidebar-border px-2 py-3">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<NavLink to="/admin" />}>
-              <span className="text-2xl font-bold tracking-tight">
-                UPTS Admin Ops
+              <span
+                className="text-xl font-bold tracking-[0.06em] text-sidebar-foreground"
+                style={{ fontFamily: "'Geist Variable', sans-serif" }}
+              >
+                ADMIN <span className="text-primary">OPS</span>
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="gap-0 px-0 py-2">
         {groups.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
-            <SidebarMenu>
+          <SidebarGroup
+            key={group.label}
+            className="border-t-2 border-sidebar-border px-0 py-2 first:border-t-0"
+          >
+            <SidebarGroupLabel
+              className="h-8 gap-2.5 px-5 text-[15px] font-semibold tracking-[0.02em] text-primary"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+            >
+              <group.icon className="size-4" />
+              <span>{group.label}</span>
+            </SidebarGroupLabel>
+            <SidebarMenu className="mt-1 gap-0">
               {group.items.map((item) => {
                 const isActive =
                   item.url === "/admin"
@@ -89,10 +89,9 @@ export function SuperAdminSidebar() {
                     <SidebarMenuButton
                       isActive={isActive}
                       tooltip={item.title}
-                      className="data-active:bg-sidebar-primary data-active:font-medium data-active:text-sidebar-primary-foreground data-active:hover:bg-sidebar-primary/90 data-active:hover:text-sidebar-primary-foreground"
+                      className="h-8 rounded-none bg-transparent px-5 text-[13px] font-medium text-sidebar-foreground hover:bg-transparent hover:text-primary data-active:bg-primary data-active:font-semibold data-active:text-primary-foreground data-active:hover:bg-primary data-active:hover:text-primary-foreground"
                       render={<NavLink to={item.url} />}
                     >
-                      <item.icon className="size-4" />
                       <span>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -102,26 +101,6 @@ export function SuperAdminSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter>
-        <div className="mb-2 flex items-center gap-2 rounded-md border bg-muted/40 p-2">
-          <div className="flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <ShieldCheck className="size-4" />
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-xs font-medium">Super Admin</p>
-            <p className="truncate text-xs text-muted-foreground">
-              Organization-wide
-            </p>
-          </div>
-        </div>
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-muted-foreground"
-          onClick={logout}
-        >
-          <LogOut /> Log out
-        </Button>
-      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
