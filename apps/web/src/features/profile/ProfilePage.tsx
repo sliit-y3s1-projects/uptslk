@@ -16,6 +16,18 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { apiClient } from "@/lib/api/api-client";
 
+function genderFromNic(value: string) {
+  const normalized = value.trim().toUpperCase();
+  const digits =
+    normalized.length === 10
+      ? normalized.slice(4, 7)
+      : normalized.length >= 9
+        ? normalized.slice(2, 5)
+        : "";
+  const day = Number(digits);
+  return day >= 1 && day <= 866 ? (day > 500 ? "Female" : "Male") : "";
+}
+
 export function ProfilePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -23,8 +35,8 @@ export function ProfilePage() {
   const [name, setName] = useState(user?.name ?? "");
   const [location, setLocation] = useState(user?.homeLocation ?? "");
   const [nic, setNic] = useState(user?.nicNumber ?? "");
-  const [gender, _setGender] = useState(user?.gender ?? "");
   const [photo, setPhoto] = useState<string | null>(null);
+  const gender = genderFromNic(nic) || user?.gender || "";
   useEffect(() => {
     if (editing || name === user?.name || !user) return;
     void apiClient(`/api/v1/auth/me`, {
@@ -38,17 +50,6 @@ export function ProfilePage() {
       }),
     });
   }, [editing, name, location, nic, gender, user]);
-  useEffect(() => {
-    const value = nic.trim().toUpperCase();
-    const digits =
-      value.length === 10
-        ? value.slice(4, 7)
-        : value.length >= 9
-          ? value.slice(2, 5)
-          : "";
-    const day = Number(digits);
-    if (day >= 1 && day <= 866) _setGender(day > 500 ? "Female" : "Male");
-  }, [nic]);
   useEffect(() => {
     const value = nic.trim().toUpperCase();
     if (!editing || !/^(\d{9}[VX]|\d{12})$/.test(value)) return;
@@ -182,6 +183,7 @@ export function ProfilePage() {
                   <Input
                     id="profile-gender"
                     placeholder="Select after NIC verification"
+                    value={gender}
                     disabled
                   />
                 </div>

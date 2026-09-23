@@ -51,7 +51,7 @@ export async function apiClient<T>(
         cause.message !== "Unexpected end of JSON input"
       )
         throw cause;
-      throw new Error(raw || "Request failed");
+      throw new Error(raw || "Request failed", { cause });
     }
   }
   return response.json() as Promise<T>;
