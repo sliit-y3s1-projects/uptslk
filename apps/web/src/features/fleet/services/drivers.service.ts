@@ -25,9 +25,7 @@ export async function getDriver(driverId: string): Promise<DriverDetail> {
   return apiClient<DriverDetail>(`/api/v1/drivers/${driverId}`);
 }
 
-export async function createDriver(
-  data: CreateDriverRequest,
-): Promise<{
+export async function createDriver(data: CreateDriverRequest): Promise<{
   id: string;
   centreId: string;
   fullName: string;

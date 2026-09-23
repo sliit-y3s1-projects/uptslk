@@ -25,9 +25,7 @@ export async function getVehicle(vehicleId: string): Promise<VehicleDetail> {
   return apiClient<VehicleDetail>(`/api/v1/vehicles/${vehicleId}`);
 }
 
-export async function createVehicle(
-  data: CreateVehicleRequest,
-): Promise<{
+export async function createVehicle(data: CreateVehicleRequest): Promise<{
   id: string;
   centreId: string;
   plateNumber: string;

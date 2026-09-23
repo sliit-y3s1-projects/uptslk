@@ -16,14 +16,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        let res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, { credentials: "include" });
+        let res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+          credentials: "include",
+        });
         if (res.status === 401) {
           const refresh = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
             method: "POST",
             credentials: "include",
           });
           if (refresh.ok) {
-            res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, { credentials: "include" });
+            res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+              credentials: "include",
+            });
           }
         }
 
@@ -61,7 +65,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       credentials: "include",
     });
     if (!res.ok) {
-      const body = await res.json().catch(() => null) as { error?: string } | null;
+      const body = (await res.json().catch(() => null)) as {
+        error?: string;
+      } | null;
       throw new Error(body?.error ?? "Invalid credentials");
     }
     const data = await res.json();

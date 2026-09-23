@@ -101,33 +101,61 @@ export function useDeactivateSchedule(routeId: string) {
 export function useGenerateScheduleTrips(routeId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ scheduleId, data }: { scheduleId: string; data: GenerateScheduleTripsRequest }) =>
-      routesApi.generateScheduleTrips(scheduleId, data),
+    mutationFn: ({
+      scheduleId,
+      data,
+    }: {
+      scheduleId: string;
+      data: GenerateScheduleTripsRequest;
+    }) => routesApi.generateScheduleTrips(scheduleId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["trips"] });
-      queryClient.invalidateQueries({ queryKey: ["routes", routeId, "schedules"] });
+      queryClient.invalidateQueries({
+        queryKey: ["routes", routeId, "schedules"],
+      });
     },
   });
 }
 
 export function useDirections(routeId?: string) {
-  return useQuery({ queryKey: ["routes", routeId, "directions"], queryFn: () => routesApi.getDirections(routeId!), enabled: !!routeId });
+  return useQuery({
+    queryKey: ["routes", routeId, "directions"],
+    queryFn: () => routesApi.getDirections(routeId!),
+    enabled: !!routeId,
+  });
 }
 
 export function useCreateDirection(routeId: string) {
   const queryClient = useQueryClient();
-  return useMutation({ mutationFn: (data: CreateRouteDirectionRequest) => routesApi.createDirection(routeId, data), onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["routes", routeId] });
-    queryClient.invalidateQueries({ queryKey: ["routes", routeId, "directions"] });
-    queryClient.invalidateQueries({ queryKey: ["routes"] });
-  }});
+  return useMutation({
+    mutationFn: (data: CreateRouteDirectionRequest) =>
+      routesApi.createDirection(routeId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["routes", routeId] });
+      queryClient.invalidateQueries({
+        queryKey: ["routes", routeId, "directions"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["routes"] });
+    },
+  });
 }
 
 export function useUpdateDirection(routeId: string) {
   const queryClient = useQueryClient();
-  return useMutation({ mutationFn: ({ directionId, data }: { directionId: string; data: CreateRouteDirectionRequest & { isActive: boolean } }) => routesApi.updateDirection(directionId, data), onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["routes", routeId] });
-    queryClient.invalidateQueries({ queryKey: ["routes", routeId, "directions"] });
-    queryClient.invalidateQueries({ queryKey: ["routes"] });
-  }});
+  return useMutation({
+    mutationFn: ({
+      directionId,
+      data,
+    }: {
+      directionId: string;
+      data: CreateRouteDirectionRequest & { isActive: boolean };
+    }) => routesApi.updateDirection(directionId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["routes", routeId] });
+      queryClient.invalidateQueries({
+        queryKey: ["routes", routeId, "directions"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["routes"] });
+    },
+  });
 }

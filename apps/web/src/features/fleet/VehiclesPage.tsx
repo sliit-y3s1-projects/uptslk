@@ -303,7 +303,10 @@ export function VehicleProfilePage({
             <Info label="Registration" value={vehicle.plateNumber} />
             <Info label="Model" value={vehicle.model} />
             <Info label="Vehicle type" value={vehicle.type} />
-            <Info label="Passenger capacity" value={`${vehicle.capacity} passengers`} />
+            <Info
+              label="Passenger capacity"
+              value={`${vehicle.capacity} passengers`}
+            />
             <Info
               label="Accessibility"
               value={
@@ -601,7 +604,11 @@ function VehicleFormInner({
               value={type}
               onValueChange={(val) => val && setType(val as VehicleType)}
               itemToStringLabel={(value) =>
-                ({ Normal: "Normal", SemiLuxury: "Semi-luxury", AcExpress: "AC express" })[value] ?? value
+                ({
+                  Normal: "Normal",
+                  SemiLuxury: "Semi-luxury",
+                  AcExpress: "AC express",
+                })[value] ?? value
               }
             >
               <SelectTrigger className="w-full bg-muted/60">
@@ -634,7 +641,11 @@ function VehicleFormInner({
               value={status}
               onValueChange={(val) => val && setStatus(val as VehicleStatus)}
               itemToStringLabel={(value) =>
-                ({ Active: "Active", Maintenance: "Maintenance", Inactive: "Inactive" })[value] ?? value
+                ({
+                  Active: "Active",
+                  Maintenance: "Maintenance",
+                  Inactive: "Inactive",
+                })[value] ?? value
               }
             >
               <SelectTrigger className="w-full bg-muted/60">

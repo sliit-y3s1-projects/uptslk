@@ -97,7 +97,9 @@ export function AgentRecoveryPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
               Supervised recovery
             </p>
-            <p className="mt-1 text-lg font-semibold">Start a recovery assessment</p>
+            <p className="mt-1 text-lg font-semibold">
+              Start a recovery assessment
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">
               Choose an open trip incident. The system checks service
               continuity, fleet readiness, dispatch conflicts, and passenger
@@ -109,9 +111,18 @@ export function AgentRecoveryPage() {
           </span>
         </div>
         <div className="mt-5 grid gap-2 border-y border-primary/15 py-3 text-xs text-muted-foreground sm:grid-cols-3">
-          <div><span className="font-semibold text-foreground">1.</span> Select an incident</div>
-          <div><span className="font-semibold text-foreground">2.</span> Run the assessment</div>
-          <div><span className="font-semibold text-foreground">3.</span> Review and approve</div>
+          <div>
+            <span className="font-semibold text-foreground">1.</span> Select an
+            incident
+          </div>
+          <div>
+            <span className="font-semibold text-foreground">2.</span> Run the
+            assessment
+          </div>
+          <div>
+            <span className="font-semibold text-foreground">3.</span> Review and
+            approve
+          </div>
         </div>
         <form
           className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end"
@@ -182,10 +193,22 @@ export function AgentRecoveryPage() {
         {!incidents.isLoading && !eligibleIncidents.length && (
           <div className="mt-4 flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-medium text-amber-950">No open trip incidents are ready for assessment.</p>
-              <p className="mt-1 text-sm text-amber-800">Report an incident from a Dispatch trip first, then return here to run recovery.</p>
+              <p className="text-sm font-medium text-amber-950">
+                No open trip incidents are ready for assessment.
+              </p>
+              <p className="mt-1 text-sm text-amber-800">
+                Report an incident from a Dispatch trip first, then return here
+                to run recovery.
+              </p>
             </div>
-            <Button type="button" variant="outline" className="shrink-0 border-amber-300 bg-white" render={<Link to="/operations/incidents/new" />}>Report incident</Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="shrink-0 border-amber-300 bg-white"
+              render={<Link to="/operations/incidents/new" />}
+            >
+              Report incident
+            </Button>
           </div>
         )}
       </section>

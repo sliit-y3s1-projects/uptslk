@@ -116,75 +116,77 @@ export function BayManagementPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create bay</DialogTitle>
-            <DialogDescription>Add a boarding bay to {centre?.name ?? "this centre"}.</DialogDescription>
+            <DialogDescription>
+              Add a boarding bay to {centre?.name ?? "this centre"}.
+            </DialogDescription>
           </DialogHeader>
-        <form
-          className="rounded-lg border bg-card p-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            setCreateError("");
-            const form = new FormData(event.currentTarget);
-            createBay.mutate(
-              {
-                code: String(form.get("code")),
-                name: String(form.get("name") || "") || undefined,
-                status: String(form.get("status") || "Available") as
-                  "Available" | "Occupied" | "OutOfService",
-              },
-              {
-                onSuccess: (bay) => {
-                  setSelectedCode(bay.code);
-                  setShowCreate(false);
+          <form
+            className="rounded-lg border bg-card p-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              setCreateError("");
+              const form = new FormData(event.currentTarget);
+              createBay.mutate(
+                {
+                  code: String(form.get("code")),
+                  name: String(form.get("name") || "") || undefined,
+                  status: String(form.get("status") || "Available") as
+                    "Available" | "Occupied" | "OutOfService",
                 },
-                onError: (reason) =>
-                  setCreateError(
-                    reason instanceof Error
-                      ? reason.message
-                      : "Unable to create bay.",
-                  ),
-              },
-            );
-          }}
-        >
-          <div className="grid gap-3 md:grid-cols-3">
-            <label className="grid gap-1.5 text-sm font-medium">
-              Bay code
-              <Input name="code" placeholder="B14" required />
-            </label>
-            <label className="grid gap-1.5 text-sm font-medium">
-              Bay name
-              <Input name="name" placeholder="Express boarding bay" />
-            </label>
-            <label className="grid gap-1.5 text-sm font-medium">
-              Status
-              <Select name="status" defaultValue="Available">
-                <SelectTrigger className="w-full bg-muted/60">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Available">Available</SelectItem>
-                  <SelectItem value="Occupied">Occupied</SelectItem>
-                  <SelectItem value="OutOfService">Out of service</SelectItem>
-                </SelectContent>
-              </Select>
-            </label>
-          </div>
-          {createError && (
-            <p className="mt-3 text-sm text-red-600">{createError}</p>
-          )}
-          <div className="mt-3 flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowCreate(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={createBay.isPending}>
-              {createBay.isPending ? "Creating..." : "Create bay"}
-            </Button>
-          </div>
-        </form>
+                {
+                  onSuccess: (bay) => {
+                    setSelectedCode(bay.code);
+                    setShowCreate(false);
+                  },
+                  onError: (reason) =>
+                    setCreateError(
+                      reason instanceof Error
+                        ? reason.message
+                        : "Unable to create bay.",
+                    ),
+                },
+              );
+            }}
+          >
+            <div className="grid gap-3 md:grid-cols-3">
+              <label className="grid gap-1.5 text-sm font-medium">
+                Bay code
+                <Input name="code" placeholder="B14" required />
+              </label>
+              <label className="grid gap-1.5 text-sm font-medium">
+                Bay name
+                <Input name="name" placeholder="Express boarding bay" />
+              </label>
+              <label className="grid gap-1.5 text-sm font-medium">
+                Status
+                <Select name="status" defaultValue="Available">
+                  <SelectTrigger className="w-full bg-muted/60">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Available">Available</SelectItem>
+                    <SelectItem value="Occupied">Occupied</SelectItem>
+                    <SelectItem value="OutOfService">Out of service</SelectItem>
+                  </SelectContent>
+                </Select>
+              </label>
+            </div>
+            {createError && (
+              <p className="mt-3 text-sm text-red-600">{createError}</p>
+            )}
+            <div className="mt-3 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCreate(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createBay.isPending}>
+                {createBay.isPending ? "Creating..." : "Create bay"}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
       <section className="grid gap-3 sm:grid-cols-3">

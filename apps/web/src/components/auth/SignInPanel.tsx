@@ -30,14 +30,16 @@ export function SignInPanel() {
         role === "Commuter" && safeReturnTo
           ? safeReturnTo
           : role === "Admin" || role === "SuperAdmin"
-          ? "/admin"
-          : role === "Commuter"
-            ? "/"
-            : "/operations",
+            ? "/admin"
+            : role === "Commuter"
+              ? "/"
+              : "/operations",
         { replace: true },
       );
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Invalid email or password.");
+      setError(
+        cause instanceof Error ? cause.message : "Invalid email or password.",
+      );
     } finally {
       setSubmitting(false);
     }

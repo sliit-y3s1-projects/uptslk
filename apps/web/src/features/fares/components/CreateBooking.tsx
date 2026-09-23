@@ -2,7 +2,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { usePassengers } from "@/features/riders/hooks/usePassengers";
 import {
   Panel,
@@ -31,8 +37,7 @@ export function CreateBooking() {
         className="space-y-4"
         onSubmit={(e) => {
           e.preventDefault();
-          if (!eligible || !quote.data || trip?.isFull)
-            return;
+          if (!eligible || !quote.data || trip?.isFull) return;
           checkout.mutate(
             { tripId, passengerId, passengerCount },
             {
@@ -44,7 +49,12 @@ export function CreateBooking() {
         }}
       >
         <fieldset disabled={checkout.isPending} className="space-y-4">
-          {!centreId && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">Your account is not assigned to a centre, so a booking cannot be created.</p>}
+          {!centreId && (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              Your account is not assigned to a centre, so a booking cannot be
+              created.
+            </p>
+          )}
           {centreId && (
             <QueryState
               query={trips}
@@ -58,26 +68,53 @@ export function CreateBooking() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex min-w-0 flex-col gap-1.5 text-sm">
               <label className="font-medium">Scheduled trip</label>
-              <Select value={tripId || undefined} onValueChange={(value) => {
-                setTrip(String(value ?? ""));
-                checkout.reset();
-              }}>
-                <SelectTrigger className="h-11 w-full"><SelectValue placeholder="Select a trip" /></SelectTrigger>
-                <SelectContent>{trips.data?.filter((tripOption) => ["Scheduled", "Ready", "Boarding"].includes(tripOption.status)).map((tripOption) => (
-                  <SelectItem key={tripOption.id} value={tripOption.id}>
-                    {tripOption.routeNumber} · {tripOption.routeName} · {dateTime(tripOption.scheduledTime)} · {tripOption.status}
-                  </SelectItem>
-                ))}</SelectContent>
+              <Select
+                value={tripId || undefined}
+                onValueChange={(value) => {
+                  setTrip(String(value ?? ""));
+                  checkout.reset();
+                }}
+              >
+                <SelectTrigger className="h-11 w-full">
+                  <SelectValue placeholder="Select a trip" />
+                </SelectTrigger>
+                <SelectContent>
+                  {trips.data
+                    ?.filter((tripOption) =>
+                      ["Scheduled", "Ready", "Boarding"].includes(
+                        tripOption.status,
+                      ),
+                    )
+                    .map((tripOption) => (
+                      <SelectItem key={tripOption.id} value={tripOption.id}>
+                        {tripOption.routeNumber} · {tripOption.routeName} ·{" "}
+                        {dateTime(tripOption.scheduledTime)} ·{" "}
+                        {tripOption.status}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
               </Select>
             </div>
             <div className="flex min-w-0 flex-col gap-1.5 text-sm">
               <label className="font-medium">Passenger</label>
-              <Select value={passengerId || undefined} onValueChange={(value) => {
-                setPassenger(String(value ?? ""));
-                checkout.reset();
-              }}>
-                <SelectTrigger className="h-11 w-full"><SelectValue placeholder="Select a passenger" /></SelectTrigger>
-                <SelectContent>{passengers.data?.map((passenger) => <SelectItem key={passenger.id} value={passenger.id}>{passenger.fullName} · {passenger.phoneNumber} · {passenger.category}</SelectItem>)}</SelectContent>
+              <Select
+                value={passengerId || undefined}
+                onValueChange={(value) => {
+                  setPassenger(String(value ?? ""));
+                  checkout.reset();
+                }}
+              >
+                <SelectTrigger className="h-11 w-full">
+                  <SelectValue placeholder="Select a passenger" />
+                </SelectTrigger>
+                <SelectContent>
+                  {passengers.data?.map((passenger) => (
+                    <SelectItem key={passenger.id} value={passenger.id}>
+                      {passenger.fullName} · {passenger.phoneNumber} ·{" "}
+                      {passenger.category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
             <label className="flex min-w-0 flex-col gap-1.5 text-sm sm:col-span-2">
@@ -88,15 +125,25 @@ export function CreateBooking() {
                 min="1"
                 max="10"
                 value={passengerCount}
-                onChange={(event) => setPassengerCount(Math.max(1, Math.min(10, Number(event.target.value) || 1)))}
+                onChange={(event) =>
+                  setPassengerCount(
+                    Math.max(1, Math.min(10, Number(event.target.value) || 1)),
+                  )
+                }
               />
-              <span className="text-xs text-muted-foreground">Include the selected passenger and any companions travelling together.</span>
+              <span className="text-xs text-muted-foreground">
+                Include the selected passenger and any companions travelling
+                together.
+              </span>
             </label>
           </div>
           <QueryState query={passengers} empty={!passengers.data?.length} />
           {trip && (
             <p className="text-sm text-muted-foreground">
-              Vehicle {trip.vehicle} · Bay {trip.bay} · {trip.available < passengerCount ? `Only ${trip.available} spaces available` : `${trip.available} of ${trip.capacity} spaces available`}
+              Vehicle {trip.vehicle} · Bay {trip.bay} ·{" "}
+              {trip.available < passengerCount
+                ? `Only ${trip.available} spaces available`
+                : `${trip.available} of ${trip.capacity} spaces available`}
             </p>
           )}
           {tripId && passengerId && (
@@ -104,7 +151,10 @@ export function CreateBooking() {
               <QueryState query={quote} />
               {quote.data && !quote.error && (
                 <p className="text-sm">
-                  Fare: <strong>{money(quote.data.fare * passengerCount)}</strong> for {passengerCount} passenger{passengerCount === 1 ? "" : "s"} · Wallet:{" "}
+                  Fare:{" "}
+                  <strong>{money(quote.data.fare * passengerCount)}</strong> for{" "}
+                  {passengerCount} passenger{passengerCount === 1 ? "" : "s"} ·
+                  Wallet:{" "}
                   {money(
                     passengers.data?.find((p) => p.id === passengerId)
                       ?.balance ?? 0,
@@ -132,7 +182,7 @@ export function CreateBooking() {
                 ? "This departure is full"
                 : (trip?.available ?? 0) < passengerCount
                   ? "Not enough spaces for this group"
-                : "Continue to payment"}
+                  : "Continue to payment"}
           </Button>
         </fieldset>
       </form>

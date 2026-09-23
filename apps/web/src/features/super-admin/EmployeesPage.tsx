@@ -321,11 +321,13 @@ export function EmployeesPage() {
                   <SelectValue placeholder="Select an existing employee" />
                 </SelectTrigger>
                 <SelectContent>
-                  {employees.filter((employee) => employee.isActive).map((employee) => (
-                    <SelectItem key={employee.id} value={employee.id}>
-                      {employee.name} · {employee.role}
-                    </SelectItem>
-                  ))}
+                  {employees
+                    .filter((employee) => employee.isActive)
+                    .map((employee) => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {employee.name} · {employee.role}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </label>
@@ -353,8 +355,9 @@ export function EmployeesPage() {
             {assignment && (
               <p className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-muted-foreground">
                 {assignment.name} is currently assigned to{" "}
-                {centres.find((item) => item.id === assignment.centreId)?.name ??
-                  "no centre"}.
+                {centres.find((item) => item.id === assignment.centreId)
+                  ?.name ?? "no centre"}
+                .
               </p>
             )}
             {assignCentre.error && (
@@ -375,7 +378,9 @@ export function EmployeesPage() {
               Cancel
             </Button>
             <Button
-              disabled={!assignment || !assignmentCentreId || assignCentre.isPending}
+              disabled={
+                !assignment || !assignmentCentreId || assignCentre.isPending
+              }
               onClick={() =>
                 assignment &&
                 assignCentre.mutate({
@@ -384,7 +389,8 @@ export function EmployeesPage() {
                 })
               }
             >
-              {assignCentre.isPending && <Loader2 className="animate-spin" />} Assign to centre
+              {assignCentre.isPending && <Loader2 className="animate-spin" />}{" "}
+              Assign to centre
             </Button>
           </SheetFooter>
         </SheetContent>
@@ -405,7 +411,7 @@ export function EmployeesPage() {
             itemToStringLabel={(value) =>
               value === "all"
                 ? "All centres"
-                : centres.find((item) => item.id === value)?.name ?? value
+                : (centres.find((item) => item.id === value)?.name ?? value)
             }
             onValueChange={(value) => setCentre(value ?? "all")}
           >

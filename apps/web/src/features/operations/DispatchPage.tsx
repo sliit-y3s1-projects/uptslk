@@ -36,7 +36,9 @@ export function DispatchPage() {
   const [selectedId, setSelectedId] = useState(scoped[0]?.id);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All");
-  const [serviceDate, setServiceDate] = useState(searchParams.get("date") ?? "All");
+  const [serviceDate, setServiceDate] = useState(
+    searchParams.get("date") ?? "All",
+  );
   const selected = scoped.find((trip) => trip.id === selectedId);
   const dates = [
     ...new Set(

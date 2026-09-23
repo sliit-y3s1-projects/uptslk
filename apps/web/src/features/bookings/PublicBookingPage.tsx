@@ -30,10 +30,23 @@ type Route = {
   origin: string;
   destination: string;
   isActive: boolean;
-  directions?: { id: string; startCentre: { name: string }; endCentre: { name: string }; name: string; isActive: boolean }[];
+  directions?: {
+    id: string;
+    startCentre: { name: string };
+    endCentre: { name: string };
+    name: string;
+    isActive: boolean;
+  }[];
 };
 
-type JourneyOption = { id: string; routeId: string; routeNumber: string; name: string; origin: string; destination: string };
+type JourneyOption = {
+  id: string;
+  routeId: string;
+  routeNumber: string;
+  name: string;
+  origin: string;
+  destination: string;
+};
 
 export function PublicBookingPage() {
   const navigate = useNavigate();
@@ -48,7 +61,44 @@ export function PublicBookingPage() {
     queryKey: ["public", "routes"],
     queryFn: () => apiClient<Route[]>("/api/v1/routes"),
   });
-  const results = useMemo(() => routes.filter((route) => route.isActive).flatMap((route) => (route.directions?.length ? route.directions.filter((direction) => direction.isActive).map((direction) => ({ id: direction.id, routeId: route.id, routeNumber: route.routeNumber, name: route.name, origin: direction.startCentre.name, destination: direction.endCentre.name })) : [{ id: "", routeId: route.id, routeNumber: route.routeNumber, name: route.name, origin: route.origin, destination: route.destination }])).filter((journey) => (!origin || journey.origin.toLowerCase().includes(origin.toLowerCase())) && (!destination || journey.destination.toLowerCase().includes(destination.toLowerCase()))), [destination, origin, routes]);
+  const results = useMemo(
+    () =>
+      routes
+        .filter((route) => route.isActive)
+        .flatMap((route) =>
+          route.directions?.length
+            ? route.directions
+                .filter((direction) => direction.isActive)
+                .map((direction) => ({
+                  id: direction.id,
+                  routeId: route.id,
+                  routeNumber: route.routeNumber,
+                  name: route.name,
+                  origin: direction.startCentre.name,
+                  destination: direction.endCentre.name,
+                }))
+            : [
+                {
+                  id: "",
+                  routeId: route.id,
+                  routeNumber: route.routeNumber,
+                  name: route.name,
+                  origin: route.origin,
+                  destination: route.destination,
+                },
+              ],
+        )
+        .filter(
+          (journey) =>
+            (!origin ||
+              journey.origin.toLowerCase().includes(origin.toLowerCase())) &&
+            (!destination ||
+              journey.destination
+                .toLowerCase()
+                .includes(destination.toLowerCase())),
+        ),
+    [destination, origin, routes],
+  );
 
   return (
     <main className="min-h-screen bg-white">

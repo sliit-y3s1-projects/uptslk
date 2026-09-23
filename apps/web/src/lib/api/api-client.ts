@@ -34,11 +34,23 @@ export async function apiClient<T>(
   if (!response.ok) {
     const raw = await response.text();
     try {
-      const payload = JSON.parse(raw) as { error?: string | string[]; title?: string; detail?: string };
+      const payload = JSON.parse(raw) as {
+        error?: string | string[];
+        title?: string;
+        detail?: string;
+      };
       const error = payload.error;
-      throw new Error(Array.isArray(error) ? error.join(" ") : error ?? payload.detail ?? payload.title ?? "Request failed");
+      throw new Error(
+        Array.isArray(error)
+          ? error.join(" ")
+          : (error ?? payload.detail ?? payload.title ?? "Request failed"),
+      );
     } catch (cause) {
-      if (cause instanceof Error && cause.message !== "Unexpected end of JSON input") throw cause;
+      if (
+        cause instanceof Error &&
+        cause.message !== "Unexpected end of JSON input"
+      )
+        throw cause;
       throw new Error(raw || "Request failed");
     }
   }

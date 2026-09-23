@@ -65,7 +65,15 @@ export function UsersPage() {
     },
   });
   const updateDetails = useMutation({
-    mutationFn: ({ id, name, email }: { id: string; name: string; email: string }) =>
+    mutationFn: ({
+      id,
+      name,
+      email,
+    }: {
+      id: string;
+      name: string;
+      email: string;
+    }) =>
       apiClient<Account>(`/api/v1/auth/users/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

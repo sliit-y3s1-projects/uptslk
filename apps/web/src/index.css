@@ -133,10 +133,9 @@
 
 @media (min-width: 500px) {
   main.min-h-screen:has(header nav) > div > section.rounded-2xl > div.grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(
-        170px,
-        190px
-      ) 150px auto;
+    grid-template-columns:
+      minmax(0, 1fr) minmax(0, 1fr) minmax(170px, 190px)
+      150px auto;
     align-items: end;
   }
 }

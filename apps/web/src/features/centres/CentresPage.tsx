@@ -41,7 +41,8 @@ type CentreEmployee = {
 function useCentreEmployees() {
   return useQuery({
     queryKey: ["admin", "users"],
-    queryFn: () => apiClient<CentreEmployee[]>("/api/v1/auth/users?staffOnly=true"),
+    queryFn: () =>
+      apiClient<CentreEmployee[]>("/api/v1/auth/users?staffOnly=true"),
   });
 }
 
@@ -90,34 +91,32 @@ export function CentresPage() {
               (employee) => employee.role === "CentreManager",
             );
             return (
-            <Link
-              key={centre.id}
-              to={`/admin/centres/${centre.id}`}
-              className="grid gap-3 border-b px-4 py-4 hover:bg-muted/40 md:grid-cols-[minmax(0,1.2fr)_140px_180px_100px_24px] md:items-center"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary">
-                  <Building2 className="size-4" />
+              <Link
+                key={centre.id}
+                to={`/admin/centres/${centre.id}`}
+                className="grid gap-3 border-b px-4 py-4 hover:bg-muted/40 md:grid-cols-[minmax(0,1.2fr)_140px_180px_100px_24px] md:items-center"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary">
+                    <Building2 className="size-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{centre.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {centre.city} - {centre.bayCount} bays
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium">{centre.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {centre.city} - {centre.bayCount} bays
-                  </p>
-                </div>
-              </div>
-              <StatusBadge
-                label={centre.status}
-                tone={centre.status === "Operating" ? "good" : "neutral"}
-              />
-              <p className="text-sm text-muted-foreground">
-                {manager?.name ?? "Unassigned"}
-              </p>
-              <p className="text-sm font-medium">
-                {centreEmployees.length}
-              </p>
-              <ChevronRight className="size-4 text-muted-foreground" />
-            </Link>
+                <StatusBadge
+                  label={centre.status}
+                  tone={centre.status === "Operating" ? "good" : "neutral"}
+                />
+                <p className="text-sm text-muted-foreground">
+                  {manager?.name ?? "Unassigned"}
+                </p>
+                <p className="text-sm font-medium">{centreEmployees.length}</p>
+                <ChevronRight className="size-4 text-muted-foreground" />
+              </Link>
             );
           })
         )}

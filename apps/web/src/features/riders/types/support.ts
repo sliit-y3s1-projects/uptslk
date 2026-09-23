@@ -1,5 +1,6 @@
 export type SupportRequestType = "Assistance" | "Support";
-export type SupportRequestStatus = "Open" | "InProgress" | "WaitingForPassenger" | "Resolved" | "Closed";
+export type SupportRequestStatus =
+  "Open" | "InProgress" | "WaitingForPassenger" | "Resolved" | "Closed";
 export type SupportRequestPriority = "Low" | "Medium" | "High" | "Urgent";
 
 export interface SupportRequest {

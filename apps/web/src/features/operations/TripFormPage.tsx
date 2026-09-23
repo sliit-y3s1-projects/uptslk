@@ -4,7 +4,11 @@ import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { TimePicker } from "@/components/custom/TimePicker";
 import {
   Select,
@@ -30,12 +34,22 @@ export function TripFormPage() {
   const { data: routes = [] } = useRoutes(centreId);
   const [selectedRouteId, setSelectedRouteId] = useState("");
   const [selectedDirectionId, setSelectedDirectionId] = useState("");
-  const selectedRoute = routes.find((route) => route.id === (selectedRouteId || existing?.routeId));
-  const activeDirectionId = selectedDirectionId || existing?.routeDirectionId || selectedRoute?.directions?.[0]?.id || "";
-  const selectedDirection = selectedRoute?.directions?.find((direction) => direction.id === activeDirectionId);
+  const selectedRoute = routes.find(
+    (route) => route.id === (selectedRouteId || existing?.routeId),
+  );
+  const activeDirectionId =
+    selectedDirectionId ||
+    existing?.routeDirectionId ||
+    selectedRoute?.directions?.[0]?.id ||
+    "";
+  const selectedDirection = selectedRoute?.directions?.find(
+    (direction) => direction.id === activeDirectionId,
+  );
   const { data: vehicles = [] } = useVehicles({ centreId, status: "Active" });
   const { data: drivers = [] } = useDrivers({ centreId, status: "Active" });
-  const { data: bays = [] } = useBays(selectedDirection?.startCentreId ?? centreId);
+  const { data: bays = [] } = useBays(
+    selectedDirection?.startCentreId ?? centreId,
+  );
   const createMutation = useCreateTrip();
   const updateMutation = useUpdateTrip(tripId ?? "");
   const [error, setError] = useState("");
@@ -100,7 +114,10 @@ export function TripFormPage() {
             label="Route"
             name="routeId"
             value={selectedRoute?.id ?? existing?.routeId}
-            onValueChange={(value) => { setSelectedRouteId(value); setSelectedDirectionId(""); }}
+            onValueChange={(value) => {
+              setSelectedRouteId(value);
+              setSelectedDirectionId("");
+            }}
             options={routes.map((route) => ({
               value: route.id,
               label: `${route.routeNumber} · ${route.name}`,
@@ -111,7 +128,12 @@ export function TripFormPage() {
             name="routeDirectionId"
             value={activeDirectionId}
             onValueChange={setSelectedDirectionId}
-            options={(selectedRoute?.directions ?? []).filter((direction) => direction.isActive).map((direction) => ({ value: direction.id, label: `${direction.startCentre.name} → ${direction.endCentre.name}` }))}
+            options={(selectedRoute?.directions ?? [])
+              .filter((direction) => direction.isActive)
+              .map((direction) => ({
+                value: direction.id,
+                label: `${direction.startCentre.name} → ${direction.endCentre.name}`,
+              }))}
           />
           <SelectField
             label="Bay"
@@ -148,7 +170,9 @@ export function TripFormPage() {
           </Field>
         </div>
         <div className="mt-5 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
-          The bus and driver belong to your operating centre. The departure bay belongs to the selected direction’s start centre; the API validates availability and conflicts before saving.
+          The bus and driver belong to your operating centre. The departure bay
+          belongs to the selected direction’s start centre; the API validates
+          availability and conflicts before saving.
         </div>
         <div className="mt-5 flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={() => navigate(-1)}>
@@ -184,10 +208,46 @@ function Field({
   );
 }
 
-function ServiceDatePicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+function ServiceDatePicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
   const [open, setOpen] = useState(false);
   const selected = value ? new Date(`${value}T00:00:00`) : undefined;
-  return <Field label="Service date"><input type="hidden" name="date" value={value} required /><Popover open={open} onOpenChange={setOpen}><PopoverTrigger render={<Button type="button" variant="outline" className="h-10 w-full justify-start font-normal" />}><CalendarDays className="mr-2 size-4" />{selected ? selected.toLocaleDateString() : "Select service date"}</PopoverTrigger><PopoverContent align="start" className="w-auto p-0"><Calendar mode="single" selected={selected} onSelect={(day) => { if (day) { onChange(day.toISOString().slice(0, 10)); setOpen(false); } }} /></PopoverContent></Popover></Field>;
+  return (
+    <Field label="Service date">
+      <input type="hidden" name="date" value={value} required />
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger
+          render={
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 w-full justify-start font-normal"
+            />
+          }
+        >
+          <CalendarDays className="mr-2 size-4" />
+          {selected ? selected.toLocaleDateString() : "Select service date"}
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-auto p-0">
+          <Calendar
+            mode="single"
+            selected={selected}
+            onSelect={(day) => {
+              if (day) {
+                onChange(day.toISOString().slice(0, 10));
+                setOpen(false);
+              }
+            }}
+          />
+        </PopoverContent>
+      </Popover>
+    </Field>
+  );
 }
 function SelectField({
   label,

@@ -9,11 +9,7 @@ import {
   DataTable,
 } from "@/features/riders/components/FeatureUi";
 import { money, dateTime } from "@/features/riders/components/format";
-import {
-  useBooking,
-  useBookingMutations,
-  useTrip,
-} from "../hooks/useBookings";
+import { useBooking, useBookingMutations, useTrip } from "../hooks/useBookings";
 import { TicketQr } from "./TicketQr";
 export function BookingTicket({ id }: { id: string }) {
   const query = useBooking(id);
@@ -78,10 +74,7 @@ export function BookingTicket({ id }: { id: string }) {
             </div>
           </div>
           <QueryState query={trip} />
-          <Feedback
-            error={cancel.error || complete.error}
-            success={notice}
-          />
+          <Feedback error={cancel.error || complete.error} success={notice} />
           {booking.status === "Cancelled" && (
             <div className="space-y-1 rounded-md border p-4 text-sm">
               <p className="font-medium">

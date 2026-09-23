@@ -129,5 +129,11 @@ export function RidersPage() {
   );
 }
 export function SupportPage() {
-  return <RequestQueue type="Support" title="Passenger support" description="Triage passenger questions and keep each request visible through resolution." />;
+  return (
+    <RequestQueue
+      type="Support"
+      title="Passenger support"
+      description="Triage passenger questions and keep each request visible through resolution."
+    />
+  );
 }

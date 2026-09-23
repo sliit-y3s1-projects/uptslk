@@ -26,9 +26,14 @@ export const bookingsService = {
   create: (body: CreateBookingRequest) =>
     apiClient<CreatedBooking>(path, jsonBody("POST", body)),
   startCheckout: (body: CreateBookingRequest) =>
-    apiClient<CheckoutSession>("/api/v1/payments/checkout", jsonBody("POST", body)),
+    apiClient<CheckoutSession>(
+      "/api/v1/payments/checkout",
+      jsonBody("POST", body),
+    ),
   paymentOrder: (orderId: string) =>
-    apiClient<PaymentOrderStatus>(`/api/v1/payments/orders/${encodeURIComponent(orderId)}`),
+    apiClient<PaymentOrderStatus>(
+      `/api/v1/payments/orders/${encodeURIComponent(orderId)}`,
+    ),
   complete: (id: string) =>
     apiClient<void>(
       `${path}/${id}/status`,

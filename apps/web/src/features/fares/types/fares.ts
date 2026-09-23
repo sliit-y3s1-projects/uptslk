@@ -43,7 +43,15 @@ export interface CheckoutSession {
 }
 export interface PaymentOrderStatus {
   bookingId: string;
-  status: "Initiated" | "Pending" | "Succeeded" | "Failed" | "Cancelled" | "Chargebacked" | "RefundPending" | "Refunded";
+  status:
+    | "Initiated"
+    | "Pending"
+    | "Succeeded"
+    | "Failed"
+    | "Cancelled"
+    | "Chargebacked"
+    | "RefundPending"
+    | "Refunded";
   amount: number;
   currency: string;
   provider: "Mock";
