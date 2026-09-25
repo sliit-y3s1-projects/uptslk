@@ -131,6 +131,128 @@
   }
 }
 
+@keyframes recovery-workspace-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes recovery-step-focus {
+  0% {
+    opacity: 0.55;
+    transform: translateY(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes recovery-step-confirm {
+  0% {
+    transform: scale(0.78);
+    opacity: 0;
+  }
+  65% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes recovery-active-ring {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 10%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 7px color-mix(in oklab, var(--primary) 3%, transparent);
+  }
+}
+
+@keyframes recovery-thinking-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes recovery-progress-shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+.recovery-workspace-enter {
+  animation: recovery-workspace-enter 360ms ease-out both;
+}
+
+.recovery-step-active {
+  animation: recovery-step-focus 360ms ease-out both;
+}
+
+.recovery-step-active .recovery-step-icon {
+  animation: recovery-active-ring 1.8s ease-in-out infinite;
+}
+
+.recovery-step-detail,
+.recovery-context-enter {
+  animation: recovery-step-focus 320ms ease-out both;
+}
+
+.recovery-step-complete .recovery-step-icon {
+  animation: recovery-step-confirm 380ms ease-out both;
+}
+
+.recovery-step-rail {
+  transition: background-color 420ms ease;
+}
+
+.recovery-thinking-dot {
+  animation: recovery-thinking-dot 1.15s ease-in-out infinite;
+}
+
+.recovery-progress [data-slot="progress-indicator"] {
+  background-image: linear-gradient(
+    90deg,
+    var(--primary) 0%,
+    color-mix(in oklab, var(--primary) 74%, white) 48%,
+    var(--primary) 100%
+  );
+  background-size: 200% 100%;
+  animation: recovery-progress-shimmer 1.8s linear infinite;
+  transition: width 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recovery-workspace-enter,
+  .recovery-step-active,
+  .recovery-step-detail,
+  .recovery-context-enter,
+  .recovery-step-complete .recovery-step-icon,
+  .recovery-step-active .recovery-step-icon,
+  .recovery-thinking-dot,
+  .recovery-progress [data-slot="progress-indicator"] {
+    animation: none;
+  }
+}
+
 @media (min-width: 500px) {
   main.min-h-screen:has(header nav) > div > section.rounded-2xl > div.grid {
     grid-template-columns:

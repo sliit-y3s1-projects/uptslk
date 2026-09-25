@@ -115,7 +115,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           >
             <SidebarGroupLabel
               className="h-8 gap-2.5 px-5 text-[15px] font-semibold tracking-[0.02em] text-primary"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
             >
               <HugeiconsIcon
                 icon={item.icon}

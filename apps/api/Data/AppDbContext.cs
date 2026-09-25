@@ -81,9 +81,12 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<PaymentRefund>().Property(refund => refund.Reason).HasMaxLength(1000);
         modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.Objective).HasMaxLength(1000);
         modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.FailureReason).HasMaxLength(2000);
+        modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.PlanJson).HasColumnType("jsonb");
+        modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.ValidationJson).HasColumnType("jsonb");
         modelBuilder.Entity<AgentStep>().Property(step => step.AgentName).HasMaxLength(120);
         modelBuilder.Entity<AgentStep>().Property(step => step.Status).HasMaxLength(32);
         modelBuilder.Entity<AgentStep>().Property(step => step.Error).HasMaxLength(2000);
+        modelBuilder.Entity<AgentStep>().Property(step => step.ToolCallsJson).HasColumnType("jsonb");
         modelBuilder.Entity<ApprovalRequest>().Property(request => request.Reason).HasMaxLength(2000);
         modelBuilder.Entity<ApprovalRequest>().Property(request => request.DecisionNote).HasMaxLength(2000);
         modelBuilder.Entity<SupportRequest>().Property(request => request.Subject).HasMaxLength(200);

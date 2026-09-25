@@ -30,6 +30,21 @@ export type RecoveryWorkflowDetail = {
     driver: string;
     bay: string;
   };
+  plan: {
+    order: number;
+    title: string;
+    owner: string;
+    purpose: string;
+    status: string;
+    completedAt?: string | null;
+  }[];
+  validationResults: {
+    phase: string;
+    check: string;
+    passed: boolean;
+    detail: string;
+    checkedAt: string;
+  }[];
   steps: {
     id: string;
     agentName: string;
@@ -46,6 +61,12 @@ export type RecoveryWorkflowDetail = {
       capacity?: number;
     } | null;
     error?: string | null;
+    toolCalls: {
+      tool: string;
+      input: unknown;
+      output: unknown;
+    }[];
+    retryCount: number;
     durationMs: number;
     createdAt: string;
   }[];

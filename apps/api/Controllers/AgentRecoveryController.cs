@@ -42,7 +42,9 @@ public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService re
         {
             Summary = ToListItem(workflow),
             Trip = new { workflow.Trip.Id, workflow.Trip.ScheduledTime, workflow.Trip.Status, Route = workflow.Trip.Route.RouteNumber, workflow.Trip.Route.Name, Vehicle = workflow.Trip.Vehicle.PlateNumber, Driver = workflow.Trip.Driver.FullName, Bay = workflow.Trip.Bay.Code },
-            Steps = workflow.Steps.OrderBy(step => step.CreatedAt).Select(step => new { step.Id, step.AgentName, step.Status, Input = ReadJson(step.InputJson), Output = ReadJson(step.OutputJson), step.Error, step.DurationMs, step.CreatedAt }),
+            Plan = ReadJson(workflow.PlanJson),
+            ValidationResults = ReadJson(workflow.ValidationJson),
+            Steps = workflow.Steps.OrderBy(step => step.CreatedAt).Select(step => new { step.Id, step.AgentName, step.Status, Input = ReadJson(step.InputJson), Output = ReadJson(step.OutputJson), ToolCalls = ReadJson(step.ToolCallsJson), step.Error, step.RetryCount, step.DurationMs, step.CreatedAt }),
             Approvals = workflow.ApprovalRequests.OrderByDescending(approval => approval.CreatedAt).Select(approval => new { approval.Id, approval.Reason, approval.Decision, approval.DecisionNote, ReviewedBy = approval.ReviewedBy == null ? null : approval.ReviewedBy.Name, approval.DecidedAt, approval.AppliedAt, approval.CreatedAt })
         });
     }

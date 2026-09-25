@@ -20,7 +20,9 @@ public class AgentWorkflow
 
     public string Objective { get; set; } = default!;
     public WorkflowStatus Status { get; set; } = WorkflowStatus.Running;
+    public string PlanJson { get; set; } = "[]";
     public string? ProposalJson { get; set; }
+    public string ValidationJson { get; set; } = "[]";
     public string? FailureReason { get; set; }
     public DateTime? CompletedAt { get; set; }
 

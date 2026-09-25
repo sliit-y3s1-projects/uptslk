@@ -1,4 +1,4 @@
-import { Building2, Settings, ShieldCheck, UsersRound } from "lucide-react";
+import { Landmark, Settings, ShieldCheck, UsersRound } from "lucide-react";
 import { NavLink, useLocation } from "react-router";
 import {
   Sidebar,
@@ -15,7 +15,7 @@ import {
 const groups = [
   {
     label: "Organization",
-    icon: Building2,
+    icon: Landmark,
     items: [
       { title: "Overview", url: "/admin" },
       { title: "Multimodal centres", url: "/admin/centres" },
@@ -73,7 +73,6 @@ export function SuperAdminSidebar() {
           >
             <SidebarGroupLabel
               className="h-8 gap-2.5 px-5 text-[15px] font-semibold tracking-[0.02em] text-primary"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
             >
               <group.icon className="size-4" />
               <span>{group.label}</span>
