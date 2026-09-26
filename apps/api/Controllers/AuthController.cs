@@ -10,6 +10,7 @@ using api.Enums;
 using api.Models;
 using api.Services;
 using api.Data;
+using Supabase.Storage.Exceptions;
 
 namespace api.Controllers;
 
@@ -20,12 +21,21 @@ public class AuthController : ControllerBase
     private readonly UserManager<User> _userManager;
     private readonly JwtTokenService _jwtService;
     private readonly AppDbContext _db;
+    private readonly IImageStorageService _imageStorage;
+    private readonly ILogger<AuthController> _logger;
 
-    public AuthController(UserManager<User> userManager, JwtTokenService jwtService, AppDbContext db)
+    public AuthController(
+        UserManager<User> userManager,
+        JwtTokenService jwtService,
+        AppDbContext db,
+        IImageStorageService imageStorage,
+        ILogger<AuthController> logger)
     {
         _userManager = userManager;
         _jwtService = jwtService;
         _db = db;
+        _imageStorage = imageStorage;
+        _logger = logger;
     }
 
     [HttpPost("register")]
@@ -61,7 +71,7 @@ public class AuthController : ControllerBase
         var token = _jwtService.GenerateToken(user);
         SetAuthCookies(user);
 
-        return Ok(new AuthResponse(token, user.Id.ToString(), user.Name, user.Email!, user.Role.ToString(), user.CentreId));
+        return Ok(new AuthResponse(token, user.Id.ToString(), user.Name, user.Email!, user.Role.ToString(), user.CentreId, user.ProfilePhotoUrl));
     }
 
 
@@ -81,7 +91,7 @@ public class AuthController : ControllerBase
         var token = _jwtService.GenerateToken(user);
         SetAuthCookies(user);
 
-        return Ok(new AuthResponse(token, user.Id.ToString(), user.Name, user.Email!, user.Role.ToString(), user.CentreId));
+        return Ok(new AuthResponse(token, user.Id.ToString(), user.Name, user.Email!, user.Role.ToString(), user.CentreId, user.ProfilePhotoUrl));
     }
 
     [HttpGet("me")]
@@ -154,7 +164,6 @@ public class AuthController : ControllerBase
         user.HomeLocation = req.HomeLocation?.Trim();
         user.NicNumber = req.NicNumber?.Trim();
         user.Gender = req.Gender?.Trim();
-        user.ProfilePhotoUrl = req.ProfilePhotoUrl?.Trim();
         user.UpdatedAt = DateTime.UtcNow;
         var passenger = await _db.Passengers.SingleOrDefaultAsync(item => item.UserId == user.Id);
         if (passenger is not null)
@@ -165,6 +174,63 @@ public class AuthController : ControllerBase
         var result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded) return BadRequest(new { error = result.Errors.Select(e => e.Description) });
         return Ok(new { user.Id, user.Name, user.Email, Role = user.Role.ToString(), user.CentreId, user.IsActive, user.HomeLocation, user.NicNumber, user.Gender, user.ProfilePhotoUrl });
+    }
+
+    [HttpPost("me/profile-photo")]
+    [Authorize]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(6 * 1024 * 1024)]
+    public async Task<IActionResult> UploadProfilePhoto(
+        IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        if (file.Length == 0)
+            return BadRequest(new { error = "Select an image to upload." });
+        if (file.Length > 5 * 1024 * 1024)
+            return BadRequest(new { error = "Profile images cannot exceed 5 MB." });
+
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var user = await _userManager.FindByIdAsync(userId!);
+        if (user is null) return Unauthorized();
+
+        try
+        {
+            await using var stream = new MemoryStream();
+            await file.CopyToAsync(stream, cancellationToken);
+            var profilePhotoUrl = await _imageStorage.UploadProfileAsync(
+                user.Id,
+                stream.ToArray(),
+                file.ContentType,
+                cancellationToken);
+
+            user.ProfilePhotoUrl = profilePhotoUrl;
+            user.UpdatedAt = DateTime.UtcNow;
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+                return BadRequest(new { error = result.Errors.Select(error => error.Description) });
+
+            return Ok(new { user.ProfilePhotoUrl });
+        }
+        catch (InvalidDataException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+        catch (InvalidOperationException exception)
+        {
+            _logger.LogError(exception, "Supabase profile-image storage is not configured");
+            return Problem(
+                title: "Profile image storage is unavailable",
+                detail: "Configure Supabase storage before uploading profile images.",
+                statusCode: StatusCodes.Status503ServiceUnavailable);
+        }
+        catch (SupabaseStorageException exception)
+        {
+            _logger.LogError(exception, "Supabase rejected the profile image for user {UserId}", user.Id);
+            return Problem(
+                title: "Profile image upload failed",
+                detail: "The image could not be stored. Please try again.",
+                statusCode: StatusCodes.Status502BadGateway);
+        }
     }
 
     [HttpPost("me/verify-nic")]

@@ -61,6 +61,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<Bay>().Property(b => b.Code).HasMaxLength(24);
         modelBuilder.Entity<RouteModel>().Property(r => r.RouteNumber).HasMaxLength(32);
         modelBuilder.Entity<Vehicle>().Property(v => v.Model).HasMaxLength(120);
+        modelBuilder.Entity<Vehicle>().Property(v => v.ImageUrl).HasMaxLength(2048);
         modelBuilder.Entity<Driver>().Property(d => d.FullName).HasMaxLength(160);
         modelBuilder.Entity<MaintenanceRecord>().Property(m => m.Type).HasMaxLength(80);
         modelBuilder.Entity<Passenger>().Property(p => p.FullName).HasMaxLength(160);

@@ -37,6 +37,7 @@ builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
 
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<TripConflictService>();
+builder.Services.AddSingleton<IImageStorageService, SupabaseImageStorageService>();
 builder.Services.AddSingleton<IPaymentGateway, StripePaymentGateway>();
 builder.Services.AddScoped<BookingPaymentService>();
 builder.Services.AddScoped<IRecoveryAgent, NetworkContinuityAgent>();

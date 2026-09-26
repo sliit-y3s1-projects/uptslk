@@ -15,6 +15,7 @@ public class Vehicle
     public int Capacity { get; set; }
     public bool IsAccessible { get; set; }
     public VehicleStatus Status { get; set; } = VehicleStatus.Active;
+    public string? ImageUrl { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
