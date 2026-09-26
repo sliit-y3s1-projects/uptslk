@@ -1,8 +1,12 @@
 import { ArrowRight, Check, MapPin, Ticket, UserRound } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { Button } from "@/components/ui/button";
 
 export function OnboardingPage() {
+  const profilePhotoWarning = (
+    useLocation().state as { profilePhotoWarning?: string } | null
+  )?.profilePhotoWarning;
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">
       <section className="w-full max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 sm:p-12">
@@ -23,6 +27,11 @@ export function OnboardingPage() {
             <UserRound className="size-7" />
           </div>
         </div>
+        {profilePhotoWarning && (
+          <p className="mb-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {profilePhotoWarning} You can try again from My Profile.
+          </p>
+        )}
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-slate-200 p-5">
             <MapPin className="size-6 text-primary" />
@@ -48,7 +57,7 @@ export function OnboardingPage() {
         </div>
         <div className="mt-10 flex justify-end">
           <Button
-            render={<Link to="/book" />}
+            render={<Link to="/" />}
             className="h-12 rounded-xl bg-primary px-6 text-base"
           >
             Start booking <ArrowRight />

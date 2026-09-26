@@ -9,6 +9,7 @@ import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/hooks/useAuth";
 import { apiClient } from "@/lib/api/api-client";
 
@@ -25,42 +26,68 @@ function genderFromNic(value: string) {
 }
 
 export function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, logout, setProfilePhotoUrl } = useAuth();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState(user?.name ?? "");
   const [location, setLocation] = useState(user?.homeLocation ?? "");
   const [nic, setNic] = useState(user?.nicNumber ?? "");
+  const [photo, setPhoto] = useState<string | null>(
+    user?.profilePhotoUrl ?? null,
+  );
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [editSnapshot, setEditSnapshot] = useState({
     name: user?.name ?? "",
     location: user?.homeLocation ?? "",
     nic: user?.nicNumber ?? "",
+    photo: user?.profilePhotoUrl ?? null,
   });
-  const [photo, setPhoto] = useState<string | null>(null);
   const gender = genderFromNic(nic) || user?.gender || "";
   async function handleSave() {
+    setSaveError(null);
     setSaving(true);
     try {
       await apiClient(`/api/v1/auth/me`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        homeLocation: location,
-        nicNumber: nic,
-        gender,
-      }),
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          homeLocation: location,
+          nicNumber: nic,
+          gender,
+        }),
       });
-      setEditSnapshot({ name, location, nic });
+      let savedPhoto = photo;
+      if (photoFile) {
+        const form = new FormData();
+        form.append("file", photoFile);
+        const uploaded = await apiClient<{ profilePhotoUrl: string }>(
+          "/api/v1/auth/me/profile-photo",
+          { method: "POST", body: form },
+        );
+        savedPhoto = uploaded.profilePhotoUrl;
+        setPhoto(uploaded.profilePhotoUrl);
+        setProfilePhotoUrl(uploaded.profilePhotoUrl);
+        setPhotoFile(null);
+      }
+      setEditSnapshot({ name, location, nic, photo: savedPhoto });
       setEditing(false);
+    } catch (cause) {
+      setSaveError(
+        cause instanceof Error
+          ? cause.message
+          : "Could not update your profile.",
+      );
     } finally {
       setSaving(false);
     }
   }
 
   function handleEdit() {
-    setEditSnapshot({ name, location, nic });
+    setSaveError(null);
+    setEditSnapshot({ name, location, nic, photo });
     setEditing(true);
   }
 
@@ -68,8 +95,18 @@ export function ProfilePage() {
     setName(editSnapshot.name);
     setLocation(editSnapshot.location);
     setNic(editSnapshot.nic);
+    setPhoto(editSnapshot.photo);
+    setPhotoFile(null);
+    setSaveError(null);
     setEditing(false);
   }
+
+  useEffect(
+    () => () => {
+      if (photo?.startsWith("blob:")) URL.revokeObjectURL(photo);
+    },
+    [photo],
+  );
 
   useEffect(() => {
     const value = nic.trim().toUpperCase();
@@ -91,7 +128,20 @@ export function ProfilePage() {
     user.role === "Commuter" ? "Commuter account" : user.role;
   function handlePhoto(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (file) setPhoto(URL.createObjectURL(file));
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setSaveError("Choose a JPG, PNG, or WebP image.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setSaveError("Profile images cannot exceed 5 MB.");
+      event.target.value = "";
+      return;
+    }
+    setSaveError(null);
+    setPhotoFile(file);
+    setPhoto(URL.createObjectURL(file));
   }
 
   return (
@@ -107,7 +157,13 @@ export function ProfilePage() {
                 Cancel
               </Button>
               <Button onClick={() => void handleSave()} disabled={saving}>
-                {saving ? "Saving..." : "Save changes"}
+                {saving ? (
+                  <>
+                    <Spinner /> Saving
+                  </>
+                ) : (
+                  "Save changes"
+                )}
               </Button>
             </div>
           ) : (
@@ -121,18 +177,20 @@ export function ProfilePage() {
         <section className="mt-6 overflow-hidden rounded-2xl border-2 border-slate-300 bg-white lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
           <aside className="border-b border-slate-200 bg-white p-6 lg:border-r lg:border-b-0">
             <div className="flex items-center gap-4 lg:block">
-              <label className="group relative flex size-16 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-primary text-lg font-semibold text-primary-foreground lg:size-20 lg:text-xl">
-                <span>
-                  {photo ? (
-                    <img
-                      src={photo}
-                      alt="Profile"
-                      className="size-full object-cover"
-                    />
-                  ) : (
-                    initials
-                  )}
-                </span>
+              <label
+                className={`group relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-lg font-semibold text-primary-foreground lg:size-20 lg:text-xl ${
+                  editing ? "cursor-pointer" : "cursor-default"
+                }`}
+              >
+                {photo ? (
+                  <img
+                    src={photo}
+                    alt="Profile"
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <span>{initials}</span>
+                )}
                 {editing && (
                   <span className="absolute inset-0 flex items-center justify-center bg-slate-950/60 text-white">
                     <ImagePlus className="size-5" />
@@ -140,7 +198,7 @@ export function ProfilePage() {
                 )}
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   className="sr-only"
                   onChange={handlePhoto}
                   disabled={!editing}
@@ -221,6 +279,11 @@ export function ProfilePage() {
                       disabled
                     />
                   </div>
+                  {saveError && (
+                    <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 sm:col-span-2">
+                      {saveError}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <dl className="mt-5 divide-y divide-slate-200 border-y border-slate-200">

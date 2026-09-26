@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { Plus, Search, AlertCircle, Loader2 } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router";
+import { useEffect, useState } from "react";
+import { Plus, Search, AlertCircle, Loader2, ImagePlus } from "lucide-react";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,7 @@ import {
   useCreateVehicle,
   useUpdateVehicle,
   useDeactivateVehicle,
+  useUploadVehicleImage,
 } from "./hooks";
 import type {
   VehicleType,
@@ -138,9 +140,13 @@ export function VehiclesPage({
             >
               <div className="flex w-24 shrink-0 items-center justify-center p-2">
                 <img
-                  src="/vehicle-placeholder.svg"
-                  alt="UPTS bus placeholder"
-                  className="size-20 rounded-md bg-muted object-contain"
+                  src={vehicle.imageUrl ?? "/vehicle-placeholder.svg"}
+                  alt={
+                    vehicle.imageUrl
+                      ? `${vehicle.plateNumber} vehicle`
+                      : "UPTS bus placeholder"
+                  }
+                  className={`size-20 rounded-md bg-muted ${vehicle.imageUrl ? "object-cover" : "object-contain"}`}
                 />
               </div>
               <div className="flex min-w-0 flex-1 flex-col py-2 pr-3">
@@ -196,6 +202,7 @@ export function VehicleProfilePage({
 } = {}) {
   const { vehicleId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     data: vehicle,
     isLoading,
@@ -205,6 +212,9 @@ export function VehicleProfilePage({
   } = useVehicle(vehicleId);
   const deactivateMutation = useDeactivateVehicle();
   const [actionError, setActionError] = useState<string | null>(null);
+  const imageWarning = (
+    location.state as { vehicleImageWarning?: string } | null
+  )?.vehicleImageWarning;
 
   if (isLoading) {
     return (
@@ -292,12 +302,22 @@ export function VehicleProfilePage({
         </div>
       )}
 
+      {imageWarning && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          {imageWarning}
+        </div>
+      )}
+
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(330px,0.9fr)]">
         <article className="overflow-hidden rounded-lg border bg-card">
           <img
-            src="/vehicle-placeholder.svg"
-            alt={`Placeholder for ${vehicle.plateNumber}`}
-            className="h-64 w-full object-cover"
+            src={vehicle.imageUrl ?? "/vehicle-placeholder.svg"}
+            alt={
+              vehicle.imageUrl
+                ? `${vehicle.plateNumber} vehicle`
+                : `Placeholder for ${vehicle.plateNumber}`
+            }
+            className={`h-64 w-full bg-muted ${vehicle.imageUrl ? "object-cover" : "object-contain"}`}
           />
           <div className="grid gap-4 p-5 sm:grid-cols-3">
             <Info label="Registration" value={vehicle.plateNumber} />
@@ -469,6 +489,7 @@ function VehicleFormInner({
   const editing = Boolean(vehicleId);
   const createMutation = useCreateVehicle();
   const updateMutation = useUpdateVehicle();
+  const uploadImageMutation = useUploadVehicleImage();
 
   const [plateNumber, setPlateNumber] = useState(existing?.plateNumber ?? "");
   const [model, setModel] = useState(existing?.model ?? "");
@@ -484,6 +505,36 @@ function VehicleFormInner({
     existing?.status ?? "Active",
   );
   const [formError, setFormError] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    existing?.imageUrl ?? null,
+  );
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview?.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
+
+  function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setFormError("Choose a JPG, PNG, or WebP vehicle image.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError("The vehicle image must be 5 MB or smaller.");
+      event.target.value = "";
+      return;
+    }
+
+    setFormError(null);
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -521,9 +572,28 @@ function VehicleFormInner({
     try {
       if (editing && vehicleId) {
         await updateMutation.mutateAsync({ id: vehicleId, data: payload });
+        if (imageFile) {
+          await uploadImageMutation.mutateAsync({ vehicleId, file: imageFile });
+        }
         navigate(`/fleet/vehicles/${vehicleId}`);
       } else {
         const created = await createMutation.mutateAsync(payload);
+        if (imageFile) {
+          try {
+            await uploadImageMutation.mutateAsync({
+              vehicleId: created.id,
+              file: imageFile,
+            });
+          } catch {
+            navigate(`/fleet/vehicles/${created.id}`, {
+              state: {
+                vehicleImageWarning:
+                  "The vehicle was registered, but its image could not be uploaded. You can add it from Edit vehicle.",
+              },
+            });
+            return;
+          }
+        }
         navigate(`/fleet/vehicles/${created.id}`);
       }
     } catch (err) {
@@ -531,7 +601,10 @@ function VehicleFormInner({
     }
   }
 
-  const isSubmitting = createMutation.isPending || updateMutation.isPending;
+  const isSubmitting =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    uploadImageMutation.isPending;
 
   return (
     <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
@@ -554,6 +627,33 @@ function VehicleFormInner({
             <span>{formError}</span>
           </div>
         )}
+
+        <div className="mb-5 flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center">
+          <img
+            src={imagePreview ?? "/vehicle-placeholder.svg"}
+            alt={imagePreview ? "Vehicle image preview" : "Vehicle placeholder"}
+            className={`h-28 w-full rounded-lg border bg-muted sm:w-44 ${imagePreview ? "object-cover" : "object-contain"}`}
+          />
+          <div className="space-y-2">
+            <div>
+              <p className="text-sm font-medium">Primary vehicle image</p>
+              <p className="text-xs text-muted-foreground">
+                Optional · JPG, PNG, or WebP · up to 5 MB
+              </p>
+            </div>
+            <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border bg-background px-3 text-sm font-medium transition-colors hover:bg-muted">
+              <ImagePlus className="size-4" />
+              {imagePreview ? "Replace image" : "Choose image"}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                onChange={handleImageChange}
+                disabled={isSubmitting}
+              />
+            </label>
+          </div>
+        </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="grid gap-1.5 text-sm font-medium">
@@ -683,6 +783,7 @@ function VehicleFormInner({
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Spinner />}
             {isSubmitting
               ? editing
                 ? "Saving changes..."

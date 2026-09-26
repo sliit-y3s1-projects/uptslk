@@ -87,7 +87,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return data.role as string;
   }
 
-  async function register(name: string, email: string, password: string) {
+  async function register(
+    name: string,
+    email: string,
+    password: string,
+    profilePhoto?: File,
+  ) {
     const res = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -96,6 +101,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (!res.ok) throw new Error("Registration failed");
     const data = await res.json();
+    let profilePhotoUrl = data.profilePhotoUrl as string | null | undefined;
+    let profilePhotoWarning: string | null = null;
+    if (profilePhoto) {
+      const form = new FormData();
+      form.append("file", profilePhoto);
+      const upload = await fetch(
+        `${API_BASE_URL}/api/v1/auth/me/profile-photo`,
+        {
+          method: "POST",
+          body: form,
+          credentials: "include",
+        },
+      );
+      if (upload.ok) {
+        const uploaded = (await upload.json()) as { profilePhotoUrl: string };
+        profilePhotoUrl = uploaded.profilePhotoUrl;
+      } else {
+        const body = (await upload.json().catch(() => null)) as {
+          error?: string;
+          detail?: string;
+        } | null;
+        profilePhotoWarning =
+          body?.error ??
+          body?.detail ??
+          "Your account was created, but the profile image could not be uploaded.";
+      }
+    }
+
     setToken("cookie-session");
     setUser({
       id: data.userId,
@@ -107,8 +140,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       homeLocation: data.homeLocation,
       nicNumber: data.nicNumber,
       gender: data.gender,
-      profilePhotoUrl: data.profilePhotoUrl,
+      profilePhotoUrl,
     });
+    return profilePhotoWarning;
   }
 
   function logout() {
@@ -124,9 +158,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, 0);
   }
 
+  function setProfilePhotoUrl(profilePhotoUrl: string) {
+    setUser((current) =>
+      current ? { ...current, profilePhotoUrl } : current,
+    );
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, token, login, register, logout, loading }}
+      value={{
+        user,
+        token,
+        login,
+        register,
+        setProfilePhotoUrl,
+        logout,
+        loading,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Eye, EyeOff, ImagePlus } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -12,10 +12,37 @@ export function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(
+    () => () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+    },
+    [photoPreview],
+  );
+
+  function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setError("Choose a JPG, PNG, or WebP image.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Profile images cannot exceed 5 MB.");
+      event.target.value = "";
+      return;
+    }
+    setError(null);
+    setProfilePhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,8 +51,15 @@ export function RegisterPage() {
     try {
       // register() always creates a Commuter account, role is not
       // exposed to the client, see AuthContext
-      await register(name, email, password);
-      navigate("/onboarding");
+      const profilePhotoWarning = await register(
+        name,
+        email,
+        password,
+        profilePhoto ?? undefined,
+      );
+      navigate("/onboarding", {
+        state: profilePhotoWarning ? { profilePhotoWarning } : undefined,
+      });
     } catch (cause) {
       let message = "Could not create account, please try again";
       if (cause instanceof Error) {
@@ -59,6 +93,41 @@ export function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="w-full space-y-4 text-left">
+          <div className="space-y-1.5">
+            <Label htmlFor="profile-photo">Profile photo (optional)</Label>
+            <label
+              htmlFor="profile-photo"
+              className="flex cursor-pointer items-center gap-4 rounded-xl border border-slate-300 p-3 transition-colors hover:border-primary"
+            >
+              <span className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-primary">
+                {photoPreview ? (
+                  <img
+                    src={photoPreview}
+                    alt="Selected profile"
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <ImagePlus className="size-5" />
+                )}
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-medium text-slate-900">
+                  {profilePhoto?.name ?? "Choose a profile photo"}
+                </span>
+                <span className="mt-1 block text-xs text-slate-500">
+                  JPG, PNG, or WebP · Up to 5 MB
+                </span>
+              </span>
+              <input
+                id="profile-photo"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                onChange={handlePhotoChange}
+                disabled={submitting}
+              />
+            </label>
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="name">Full Name</Label>
             <Input

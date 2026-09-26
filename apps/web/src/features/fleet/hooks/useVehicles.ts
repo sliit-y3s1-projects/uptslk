@@ -4,6 +4,7 @@ import {
   deactivateVehicle,
   getVehicle,
   getVehicles,
+  uploadVehicleImage,
   updateVehicle,
 } from "../services/vehicles.service";
 import type {
@@ -58,6 +59,20 @@ export function useDeactivateVehicle() {
     onSuccess: (_data, vehicleId) => {
       queryClient.invalidateQueries({ queryKey: ["vehicles"] });
       queryClient.invalidateQueries({ queryKey: ["vehicles", vehicleId] });
+    },
+  });
+}
+
+export function useUploadVehicleImage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ vehicleId, file }: { vehicleId: string; file: File }) =>
+      uploadVehicleImage(vehicleId, file),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["vehicles"] });
+      queryClient.invalidateQueries({
+        queryKey: ["vehicles", variables.vehicleId],
+      });
     },
   });
 }

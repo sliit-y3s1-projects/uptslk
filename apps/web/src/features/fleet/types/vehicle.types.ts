@@ -20,6 +20,7 @@ export interface VehicleListItem {
   capacity: number;
   isAccessible: boolean;
   status: VehicleStatus;
+  imageUrl?: string | null;
   maintenanceCount: number;
 }
 
@@ -37,6 +38,7 @@ export interface VehicleDetail {
   capacity: number;
   isAccessible: boolean;
   status: VehicleStatus;
+  imageUrl?: string | null;
   maintenance: VehicleMaintenanceItem[];
 }
 

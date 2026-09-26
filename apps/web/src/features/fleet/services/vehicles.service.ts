@@ -61,3 +61,19 @@ export async function deactivateVehicle(vehicleId: string): Promise<void> {
     method: "DELETE",
   });
 }
+
+export async function uploadVehicleImage(
+  vehicleId: string,
+  file: File,
+): Promise<{ imageUrl: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return apiClient<{ imageUrl: string }>(
+    `/api/v1/vehicles/${vehicleId}/image`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
+}
