@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff, LockKeyhole } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { Button } from "@/components/ui/button";
@@ -48,15 +48,12 @@ export function SignInPanel() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10 sm:px-6">
       <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-7 sm:p-9">
-        <div className="mb-8 space-y-3">
-          <div className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <LockKeyhole className="size-5" />
-          </div>
+        <div className="mb-7">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
-            Welcome back
+            Sign in to UPTSLK
           </h1>
-          <p className="text-sm leading-6 text-slate-500">
-            Sign in to continue to your UPTSLK dashboard.
+          <p className="mt-2 text-sm text-slate-500">
+            Enter your account details to continue.
           </p>
         </div>
 
@@ -105,7 +102,7 @@ export function SignInPanel() {
 
           <Button
             type="submit"
-            className="h-11 w-full rounded-lg"
+            className="h-11 w-full"
             disabled={submitting}
           >
             {submitting ? "Signing in..." : "Sign In"}

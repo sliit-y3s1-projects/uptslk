@@ -90,8 +90,6 @@ import {
 } from "@/features/super-admin/AccessPages";
 import {
   AuditLogPage,
-  PlatformHealthPage,
-  SystemSettingsPage,
 } from "@/features/super-admin/GovernancePages";
 
 function App() {
@@ -226,8 +224,6 @@ function App() {
             <Route path="/admin/roles" element={<RolesPage />} />
             <Route path="/admin/access" element={<AccessRequestsPage />} />
             <Route path="/admin/audit" element={<AuditLogPage />} />
-            <Route path="/admin/health" element={<PlatformHealthPage />} />
-            <Route path="/admin/settings" element={<SystemSettingsPage />} />
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </Routes>
         </SuperAdminShell>

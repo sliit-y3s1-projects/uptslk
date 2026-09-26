@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { MapPinned, Plus, Trash2, Loader2, ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  Loader2,
+  MapPinned,
+  Plus,
+  Power,
+  PowerOff,
+  Trash2,
+} from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +20,16 @@ import {
 } from "@/components/ui/select";
 import { PageHeading } from "@/components/shared/PageHeading";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +44,7 @@ import {
   useCreateRoute,
   useUpdateRoute,
   useArchiveRoute,
+  useReactivateRoute,
   useCreateDirection,
   useUpdateDirection,
 } from "./hooks/useRoutes";
@@ -113,13 +132,14 @@ export function RouteDetailPage({
   const { routeId } = useParams();
   const { data: route, isLoading, error } = useRoute(routeId);
   const archiveMutation = useArchiveRoute();
+  const reactivateMutation = useReactivateRoute();
   const createDirection = useCreateDirection(routeId ?? "");
   const updateDirection = useUpdateDirection(routeId ?? "");
   const { data: centres = [] } = useCentres();
   const [addDirectionOpen, setAddDirectionOpen] = useState(false);
   const [editingDirection, setEditingDirection] =
     useState<RouteDirection | null>(null);
-  const navigate = useNavigate();
+  const [deactivateOpen, setDeactivateOpen] = useState(false);
 
   if (isLoading)
     return (
@@ -131,10 +151,7 @@ export function RouteDetailPage({
 
   const handleDeactivate = () => {
     archiveMutation.mutate(route.id, {
-      onSuccess: () => {
-        console.log("Success");
-        navigate(basePath);
-      },
+      onSuccess: () => setDeactivateOpen(false),
     });
   };
 
@@ -156,23 +173,60 @@ export function RouteDetailPage({
               >
                 Edit route
               </Button>
-              <Button
-                variant="destructive"
-                onClick={handleDeactivate}
-                disabled={archiveMutation.isPending}
-              >
-                {archiveMutation.isPending ? (
-                  <Loader2 className="animate-spin size-4" />
-                ) : (
-                  <>
-                    <Trash2 /> Deactivate
-                  </>
-                )}
-              </Button>
+              {route.isActive ? (
+                <Button
+                  variant="destructive"
+                  onClick={() => setDeactivateOpen(true)}
+                  disabled={archiveMutation.isPending}
+                >
+                  <PowerOff /> Deactivate
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => reactivateMutation.mutate(route.id)}
+                  disabled={reactivateMutation.isPending}
+                >
+                  {reactivateMutation.isPending ? (
+                    <Loader2 className="animate-spin size-4" />
+                  ) : (
+                    <>
+                      <Power /> Reactivate
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           )
         }
       />
+      <AlertDialog open={deactivateOpen} onOpenChange={setDeactivateOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate this route?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Route {route.routeNumber} will no longer be available for active
+              operations. Its configuration and history will be kept, and you
+              can reactivate it later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={archiveMutation.isPending}>
+              Keep active
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={handleDeactivate}
+              disabled={archiveMutation.isPending}
+            >
+              {archiveMutation.isPending ? (
+                <Loader2 className="animate-spin size-4" />
+              ) : (
+                "Deactivate route"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_340px]">
         <article className="rounded-lg border bg-card p-5">
           <div className="flex items-center justify-between">
@@ -323,8 +377,8 @@ export function RouteDetailPage({
         </article>
       </section>
       <Dialog open={addDirectionOpen} onOpenChange={setAddDirectionOpen}>
-        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl">
-          <DialogHeader>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-4xl">
+          <DialogHeader className="mb-4">
             <DialogTitle>Add route direction</DialogTitle>
             <DialogDescription>
               Directions represent the actual journey passengers take. The
@@ -348,8 +402,8 @@ export function RouteDetailPage({
         open={editingDirection !== null}
         onOpenChange={(open) => !open && setEditingDirection(null)}
       >
-        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl">
-          <DialogHeader>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-4xl">
+          <DialogHeader className="mb-4">
             <DialogTitle>Edit route direction</DialogTitle>
             <DialogDescription>
               Update the terminal pair and travel time. Existing timetables
@@ -826,7 +880,7 @@ function DirectionForm({
         });
       }}
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className="grid gap-1.5 text-sm font-medium">
           Departure centre
           <Select
@@ -905,7 +959,7 @@ function DirectionForm({
           placeholder="45"
         />
       </div>
-      <section className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+      <section className="rounded-xl border border-slate-300 bg-slate-50 p-4">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
             <h3 className="font-medium">Ordered stops</h3>
@@ -914,7 +968,7 @@ function DirectionForm({
               the intermediate stops in travel order.
             </p>
           </div>
-          <span className="rounded-full bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground">
+          <span className="rounded-full border border-slate-300 bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground">
             {stops.length} stops
           </span>
         </div>
@@ -937,8 +991,8 @@ function DirectionForm({
                   readOnly={isTerminal}
                   className={
                     isTerminal
-                      ? "border-emerald-200 bg-emerald-50 font-medium text-emerald-900 focus-visible:border-emerald-400 focus-visible:ring-emerald-200"
-                      : undefined
+                      ? "border-slate-400 bg-slate-100 font-medium text-slate-900 focus-visible:border-primary"
+                      : "border-slate-400 bg-white focus-visible:border-primary"
                   }
                   placeholder={
                     isTerminal
@@ -948,7 +1002,7 @@ function DirectionForm({
                   required
                 />
                 {isTerminal ? (
-                  <span className="w-20 shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-center text-xs font-semibold text-emerald-800">
+                  <span className="w-20 shrink-0 rounded-full border border-slate-300 bg-slate-100 px-2 py-1 text-center text-xs font-semibold text-slate-700">
                     Terminal
                   </span>
                 ) : (

@@ -1,5 +1,4 @@
 import {
-  Activity,
   Building2,
   ChevronRight,
   ShieldAlert,
@@ -33,7 +32,7 @@ export function SuperAdminOverviewPage() {
     <main className="flex flex-1 flex-col gap-5 bg-muted/20 p-5">
       <PageHeading
         title="Organization overview"
-        description="Govern centres, people, access, and platform health across UPTSLK."
+        description="Govern centres, people, and access across UPTSLK."
         action={
           <div className="flex gap-2">
             <Button
@@ -48,7 +47,7 @@ export function SuperAdminOverviewPage() {
           </div>
         }
       />
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <Metric
           icon={Building2}
           label="Operating centres"
@@ -70,12 +69,6 @@ export function SuperAdminOverviewPage() {
           label="Access requests"
           value="—"
           detail="No access-request API"
-        />
-        <Metric
-          icon={Activity}
-          label="Platform health"
-          value="—"
-          detail="Health monitoring unavailable"
         />
       </section>
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_380px]">

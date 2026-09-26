@@ -1,4 +1,4 @@
-import { Landmark, Settings, ShieldCheck, UsersRound } from "lucide-react";
+import { Landmark, ShieldCheck, UsersRound } from "lucide-react";
 import { NavLink, useLocation } from "react-router";
 import {
   Sidebar,
@@ -37,13 +37,7 @@ const groups = [
     icon: ShieldCheck,
     items: [
       { title: "Audit log", url: "/admin/audit" },
-      { title: "Platform health", url: "/admin/health" },
     ],
-  },
-  {
-    label: "System",
-    icon: Settings,
-    items: [{ title: "Settings", url: "/admin/settings" }],
   },
 ];
 

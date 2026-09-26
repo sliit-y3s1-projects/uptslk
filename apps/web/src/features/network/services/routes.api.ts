@@ -36,6 +36,10 @@ export const routesApi = {
     }),
   archiveRoute: (routeId: string) =>
     apiClient<void>("/api/v1/routes/" + routeId, { method: "DELETE" }),
+  reactivateRoute: (routeId: string) =>
+    apiClient<void>("/api/v1/routes/" + routeId + "/reactivate", {
+      method: "POST",
+    }),
 
   getSchedules: (routeId: string) =>
     apiClient<RouteSchedule[]>("/api/v1/routes/" + routeId + "/schedules"),

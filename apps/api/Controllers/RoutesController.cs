@@ -129,6 +129,18 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return NoContent();
     }
 
+    [HttpPost("{routeId:guid}/reactivate")]
+    public async Task<IActionResult> Reactivate(Guid routeId)
+    {
+        var route = await db.Routes.FindAsync(routeId);
+        if (route is null) return NotFound();
+
+        route.IsActive = true;
+        route.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
+
     [HttpGet("{routeId:guid}/directions")]
     public async Task<IActionResult> ListDirections(Guid routeId)
     {

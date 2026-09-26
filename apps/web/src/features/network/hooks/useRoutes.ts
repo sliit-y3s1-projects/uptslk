@@ -55,6 +55,17 @@ export function useArchiveRoute() {
   });
 }
 
+export function useReactivateRoute() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (routeId: string) => routesApi.reactivateRoute(routeId),
+    onSuccess: (_, routeId) => {
+      queryClient.invalidateQueries({ queryKey: ["routes", routeId] });
+      queryClient.invalidateQueries({ queryKey: ["routes"] });
+    },
+  });
+}
+
 export function useSchedules(routeId?: string) {
   return useQuery({
     queryKey: ["routes", routeId, "schedules"],

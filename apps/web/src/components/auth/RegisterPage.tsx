@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff, UserRound } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -48,15 +48,12 @@ export function RegisterPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
       <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-7 sm:p-9">
-        <div className="mb-8 space-y-3">
-          <div className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <UserRound className="size-5" />
-          </div>
+        <div className="mb-7">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
-            Create your account
+            Create your UPTSLK account
           </h1>
-          <p className="text-sm leading-6 text-slate-500">
-            Join UPTSLK to book seats and manage your journeys.
+          <p className="mt-2 text-sm text-slate-500">
+            Enter your details to get started.
           </p>
         </div>
 
@@ -115,7 +112,7 @@ export function RegisterPage() {
 
           <Button
             type="submit"
-            className="h-11 w-full rounded-lg"
+            className="h-11 w-full"
             disabled={submitting}
           >
             {submitting ? "Creating account..." : "Sign Up"}

@@ -12,8 +12,6 @@ const labels: Record<string, string> = {
   roles: "Roles & Permissions",
   access: "Access Requests",
   audit: "Audit Log",
-  health: "Platform Health",
-  settings: "System Settings",
   operations: "Centre Operations",
   routes: "Centre Routes",
   vehicles: "Centre Fleet",

@@ -1,4 +1,5 @@
 import {
+  ArrowLeft,
   Building2,
   BusFront,
   ChevronRight,
@@ -289,10 +290,22 @@ export function CentreFormPage() {
     <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-5">
       <PageHeading
         title={existing ? `Edit ${existing.name}` : "Create multimodal centre"}
-        description="Define the centre identity, readiness, facilities, and governance owner."
+        description={
+          existing
+            ? "Update its core information and operating status."
+            : "Add a centre to the UPTSLK network."
+        }
+        action={
+          <Button
+            variant="outline"
+            render={<Link to="/admin/centres" />}
+          >
+            <ArrowLeft /> All centres
+          </Button>
+        }
       />
       <form
-        className="max-w-4xl rounded-lg border bg-card p-5"
+        className="w-full overflow-hidden rounded-xl border border-slate-300 bg-card"
         onSubmit={(event) => {
           event.preventDefault();
           const form = new FormData(event.currentTarget);
@@ -324,36 +337,28 @@ export function CentreFormPage() {
           }
         }}
       >
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            name="code"
-            label="Centre code (Unique)"
-            value={existing?.code}
-            placeholder="MAK"
-            disabled={!!existing}
-          />
-          <Field
-            name="name"
-            label="Centre name"
-            value={existing?.name}
-            placeholder="Makumbura MMC"
-          />
-          <Field
-            name="city"
-            label="City"
-            value={existing?.city}
-            placeholder="Kottawa"
-          />
-          <Field
-            name="district"
-            label="District"
-            value={existing?.district}
-            placeholder="Colombo"
-          />
-          <label className="grid gap-1.5 text-sm font-medium">
+        <div className="grid gap-x-5 gap-y-5 p-6 md:grid-cols-2 xl:grid-cols-12">
+          <div className="xl:col-span-3">
+            <Field
+              name="code"
+              label="Centre code"
+              value={existing?.code}
+              placeholder="MAK"
+              disabled={!!existing}
+            />
+          </div>
+          <div className="xl:col-span-5">
+            <Field
+              name="name"
+              label="Centre name"
+              value={existing?.name}
+              placeholder="Makumbura MMC"
+            />
+          </div>
+          <label className="grid gap-1.5 text-sm font-medium md:col-span-2 xl:col-span-4">
             Operational status
             <Select name="status" defaultValue={existing?.status ?? "Planned"}>
-              <SelectTrigger className="w-full bg-muted/60">
+              <SelectTrigger className="h-11 w-full bg-background px-3">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -364,17 +369,35 @@ export function CentreFormPage() {
               </SelectContent>
             </Select>
           </label>
-          <Field
-            name="description"
-            label="Description"
-            value={existing?.description || ""}
-            placeholder="Connected modes and centre purpose"
-            required={false}
-          />
+          <div className="xl:col-span-4">
+            <Field
+              name="city"
+              label="City"
+              value={existing?.city}
+              placeholder="Kottawa"
+            />
+          </div>
+          <div className="xl:col-span-4">
+            <Field
+              name="district"
+              label="District"
+              value={existing?.district}
+              placeholder="Colombo"
+            />
+          </div>
+          <div className="md:col-span-2 xl:col-span-4">
+            <Field
+              name="description"
+              label="Description (optional)"
+              value={existing?.description || ""}
+              placeholder="Terminal purpose or connected modes"
+              required={false}
+            />
+          </div>
         </div>
-        <div className="mt-5 flex justify-end gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/70 px-5 py-4 sm:px-6">
           {(createMutation.isError || updateMutation.isError) && (
-            <span className="text-sm text-red-500 self-center mr-auto">
+            <span className="mr-auto text-sm text-red-600">
               Failed to save centre. Please try again.
             </span>
           )}
@@ -426,6 +449,7 @@ function Field({
         type={type}
         required={required}
         disabled={disabled}
+        className="h-11 px-3"
       />
     </label>
   );

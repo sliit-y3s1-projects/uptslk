@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
-import { Ban, BusFront, CheckCircle2, Plus, RotateCcw } from "lucide-react";
+import {
+  Ban,
+  BusFront,
+  CheckCircle2,
+  Pencil,
+  Plus,
+  RotateCcw,
+} from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +14,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -30,6 +38,7 @@ import {
 } from "@/features/centres/hooks/useCentres";
 import { useTrips } from "./hooks/useTrips";
 import type { BayOperation } from "@/mock/centre-operations";
+import type { Bay } from "@/features/centres/types";
 
 export function BayManagementPage() {
   const { user } = useAuth();
@@ -75,7 +84,9 @@ export function BayManagementPage() {
   );
   const [selectedCode, setSelectedCode] = useState<string>();
   const [showCreate, setShowCreate] = useState(false);
+  const [editingBay, setEditingBay] = useState<Bay | null>(null);
   const [createError, setCreateError] = useState("");
+  const [editError, setEditError] = useState("");
   const selected = bays.find((bay) => bay.bay === selectedCode) ?? bays[0];
   const setBayStatus = (status: "Available" | "Occupied" | "OutOfService") => {
     const bay = apiBays.find((item) => item.code === selected?.bay);
@@ -121,7 +132,7 @@ export function BayManagementPage() {
             </DialogDescription>
           </DialogHeader>
           <form
-            className="rounded-lg border bg-card p-4"
+            className="grid gap-4"
             onSubmit={(event) => {
               event.preventDefault();
               setCreateError("");
@@ -148,33 +159,11 @@ export function BayManagementPage() {
               );
             }}
           >
-            <div className="grid gap-3 md:grid-cols-3">
-              <label className="grid gap-1.5 text-sm font-medium">
-                Bay code
-                <Input name="code" placeholder="B14" required />
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium">
-                Bay name
-                <Input name="name" placeholder="Express boarding bay" />
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium">
-                Status
-                <Select name="status" defaultValue="Available">
-                  <SelectTrigger className="w-full bg-muted/60">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Available">Available</SelectItem>
-                    <SelectItem value="Occupied">Occupied</SelectItem>
-                    <SelectItem value="OutOfService">Out of service</SelectItem>
-                  </SelectContent>
-                </Select>
-              </label>
-            </div>
+            <BayFormFields />
             {createError && (
-              <p className="mt-3 text-sm text-red-600">{createError}</p>
+              <p className="text-sm text-red-600">{createError}</p>
             )}
-            <div className="mt-3 flex justify-end gap-2">
+            <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
@@ -185,8 +174,76 @@ export function BayManagementPage() {
               <Button type="submit" disabled={createBay.isPending}>
                 {createBay.isPending ? "Creating..." : "Create bay"}
               </Button>
-            </div>
+            </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={editingBay !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditingBay(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit bay</DialogTitle>
+            <DialogDescription>
+              Update the bay information and availability status.
+            </DialogDescription>
+          </DialogHeader>
+          {editingBay && (
+            <form
+              className="grid gap-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setEditError("");
+                const form = new FormData(event.currentTarget);
+                const code = String(form.get("code")).trim().toUpperCase();
+                updateBay.mutate(
+                  {
+                    bayId: editingBay.id,
+                    data: {
+                      code,
+                      name: String(form.get("name") || "") || undefined,
+                      status: String(form.get("status")) as
+                        | "Available"
+                        | "Occupied"
+                        | "OutOfService",
+                    },
+                  },
+                  {
+                    onSuccess: () => {
+                      setSelectedCode(code);
+                      setEditingBay(null);
+                    },
+                    onError: (reason) =>
+                      setEditError(
+                        reason instanceof Error
+                          ? reason.message
+                          : "Unable to update bay.",
+                      ),
+                  },
+                );
+              }}
+            >
+              <BayFormFields bay={editingBay} />
+              {editError && (
+                <p className="text-sm text-red-600">{editError}</p>
+              )}
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditingBay(null)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateBay.isPending}>
+                  {updateBay.isPending ? "Saving..." : "Save changes"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
       <section className="grid gap-3 sm:grid-cols-3">
@@ -249,6 +306,19 @@ export function BayManagementPage() {
             )}
             <div className="mt-5 grid gap-2">
               <Button
+                variant="outline"
+                onClick={() => {
+                  const bay = apiBays.find(
+                    (item) => item.code === selected.bay,
+                  );
+                  if (!bay) return;
+                  setEditError("");
+                  setEditingBay(bay);
+                }}
+              >
+                <Pencil /> Edit bay
+              </Button>
+              <Button
                 onClick={() => setBayStatus("Occupied")}
                 disabled={selected.state === "Closed" || updateBay.isPending}
               >
@@ -277,6 +347,39 @@ export function BayManagementPage() {
     </main>
   );
 }
+
+function BayFormFields({ bay }: { bay?: Bay }) {
+  return (
+    <div className="grid gap-4">
+      <label className="grid gap-1.5 text-sm font-medium">
+        Bay code
+        <Input name="code" defaultValue={bay?.code} placeholder="B14" required />
+      </label>
+      <label className="grid gap-1.5 text-sm font-medium">
+        Bay name
+        <Input
+          name="name"
+          defaultValue={bay?.name ?? ""}
+          placeholder="Express boarding bay"
+        />
+      </label>
+      <label className="grid gap-1.5 text-sm font-medium">
+        Status
+        <Select name="status" defaultValue={bay?.status ?? "Available"}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Available">Available</SelectItem>
+            <SelectItem value="Occupied">Occupied</SelectItem>
+            <SelectItem value="OutOfService">Out of service</SelectItem>
+          </SelectContent>
+        </Select>
+      </label>
+    </div>
+  );
+}
+
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <article className="rounded-lg border bg-card p-4">
