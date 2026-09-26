@@ -17,16 +17,6 @@ export type PassengerZone = {
   wait: string;
   trend: string;
 };
-export type AssistanceCase = {
-  id: string;
-  centreId: string;
-  type: "Accessibility" | "Lost property";
-  passenger: string;
-  detail: string;
-  status: "Open" | "Assigned" | "Resolved";
-  owner: string;
-};
-
 export const bayOperations: Record<string, BayOperation[]> = {
   makumbura: [
     {
@@ -164,44 +154,6 @@ export const passengerZones: PassengerZone[] = [
   },
 ];
 
-export const assistanceCases: AssistanceCase[] = [
-  {
-    id: "AST-211",
-    centreId: "makumbura",
-    type: "Accessibility",
-    passenger: "S. Wijesinghe",
-    detail: "Wheelchair boarding assistance · EX01",
-    status: "Assigned",
-    owner: "Passenger care desk",
-  },
-  {
-    id: "LST-094",
-    centreId: "makumbura",
-    type: "Lost property",
-    passenger: "N. Perera",
-    detail: "Black backpack reported near Bay B07",
-    status: "Open",
-    owner: "Unassigned",
-  },
-  {
-    id: "AST-219",
-    centreId: "kadawatha",
-    type: "Accessibility",
-    passenger: "M. Fernando",
-    detail: "Assistance requested for Route 177",
-    status: "Open",
-    owner: "Unassigned",
-  },
-  {
-    id: "LST-101",
-    centreId: "kadawatha",
-    type: "Lost property",
-    passenger: "T. Silva",
-    detail: "Mobile phone handed to information desk",
-    status: "Assigned",
-    owner: "Information desk",
-  },
-];
 
 export const centreFinance = {
   makumbura: {

@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 
 export function RegisterPage() {
   const { register } = useAuth();
@@ -115,7 +116,14 @@ export function RegisterPage() {
             className="h-11 w-full"
             disabled={submitting}
           >
-            {submitting ? "Creating account..." : "Sign Up"}
+            {submitting ? (
+              <>
+                <Spinner className="size-4" />
+                Creating account
+              </>
+            ) : (
+              "Sign Up"
+            )}
           </Button>
         </form>
         <p className="mt-6 text-center text-sm text-slate-500">

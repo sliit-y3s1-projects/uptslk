@@ -35,7 +35,6 @@ const data = {
         { title: "Bay management", url: "/operations/bays" },
         { title: "Incidents", url: "/operations/incidents" },
         { title: "Recovery agents", url: "/operations/agent-recovery" },
-        { title: "Approvals", url: "/operations/approvals" },
       ],
     },
     {
@@ -44,7 +43,6 @@ const data = {
       items: [
         { title: "Routes", url: "/network/routes" },
         { title: "Timetables", url: "/network/timetables" },
-        { title: "Stops", url: "/network/stops" },
       ],
     },
     {
@@ -61,19 +59,12 @@ const data = {
       icon: UserMultipleIcon,
       items: [
         { title: "Passenger flow", url: "/passengers/flow" },
-        { title: "Assistance", url: "/passengers/assistance" },
-        { title: "Support", url: "/riders/support" },
       ],
     },
     {
-      title: "Fares & finance",
+      title: "Fares",
       icon: Ticket01Icon,
-      items: [
-        { title: "Bookings", url: "/fares/bookings" },
-        { title: "Fare rules", url: "/fares/fare-rules" },
-        { title: "Payments", url: "/fares/payments" },
-        { title: "Reconciliation", url: "/fares/reconciliation" },
-      ],
+      items: [{ title: "Fare rules", url: "/fares/fare-rules" }],
     },
   ],
 };
@@ -87,25 +78,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar className="border-r-2 border-slate-300" {...props}>
-      <SidebarHeader className="border-b border-sidebar-border px-2 py-3">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              render={
-                <a href="/operations" aria-label="UPTSLK Console">
-                  <span
-                    className="text-xl font-bold tracking-[0.06em] text-sidebar-foreground"
-                    style={{ fontFamily: "'Geist Variable', sans-serif" }}
-                  >
-                    {isAdmin ? "ADMIN" : "CENTRE"}{" "}
-                    <span className="text-primary">OPS</span>
-                  </span>
-                </a>
-              }
-            />
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarHeader className="h-14 justify-center border-b border-sidebar-border px-5 py-0">
+        <NavLink
+          to="/operations"
+          aria-label={`${isAdmin ? "Admin" : "Centre"} operations`}
+          className="w-fit text-[22px] font-semibold tracking-[-0.045em] text-sidebar-foreground"
+        >
+          <span className="font-bold text-primary">UPTS</span>{" "}
+          {isAdmin ? "Admin" : "Centre"}{" "}
+          <span className="font-bold text-primary">Ops</span>
+        </NavLink>
       </SidebarHeader>
       <SidebarContent className="gap-0 px-0 py-2">
         {data.navMain.map((item) => (
@@ -114,7 +96,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             className="border-t-2 border-sidebar-border px-0 py-2 first:border-t-0"
           >
             <SidebarGroupLabel
-              className="h-8 gap-2.5 px-5 text-[15px] font-semibold tracking-[0.02em] text-primary"
+              className="h-8 gap-2.5 px-5 text-base font-semibold tracking-[0.02em] text-primary"
             >
               <HugeiconsIcon
                 icon={item.icon}
@@ -130,7 +112,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     isActive={matchesPath(subItem.url)}
                     tooltip={subItem.title}
                     render={<NavLink to={subItem.url} />}
-                    className="h-8 rounded-none bg-transparent px-5 text-[13px] font-medium text-sidebar-foreground hover:bg-transparent hover:text-primary data-active:bg-primary data-active:font-semibold data-active:text-primary-foreground data-active:hover:bg-primary data-active:hover:text-primary-foreground"
+                    className="h-8 rounded-none bg-transparent px-5 text-sm font-medium text-sidebar-foreground hover:bg-transparent hover:text-primary data-active:bg-primary data-active:font-semibold data-active:text-primary-foreground data-active:hover:bg-primary data-active:hover:text-primary-foreground"
                   >
                     <span>{subItem.title}</span>
                   </SidebarMenuButton>

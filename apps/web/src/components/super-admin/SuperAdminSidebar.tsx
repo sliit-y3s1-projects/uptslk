@@ -45,19 +45,15 @@ export function SuperAdminSidebar() {
   const { pathname } = useLocation();
   return (
     <Sidebar className="border-r-2 border-slate-300">
-      <SidebarHeader className="border-b border-sidebar-border px-2 py-3">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<NavLink to="/admin" />}>
-              <span
-                className="text-xl font-bold tracking-[0.06em] text-sidebar-foreground"
-                style={{ fontFamily: "'Geist Variable', sans-serif" }}
-              >
-                ADMIN <span className="text-primary">OPS</span>
-              </span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarHeader className="h-14 justify-center border-b border-sidebar-border px-5 py-0">
+        <NavLink
+          to="/admin"
+          aria-label="Admin operations"
+          className="w-fit text-[22px] font-semibold tracking-[-0.045em] text-sidebar-foreground"
+        >
+          <span className="font-bold text-primary">UPTS</span> Admin{" "}
+          <span className="font-bold text-primary">Ops</span>
+        </NavLink>
       </SidebarHeader>
       <SidebarContent className="gap-0 px-0 py-2">
         {groups.map((group) => (
@@ -66,7 +62,7 @@ export function SuperAdminSidebar() {
             className="border-t-2 border-sidebar-border px-0 py-2 first:border-t-0"
           >
             <SidebarGroupLabel
-              className="h-8 gap-2.5 px-5 text-[15px] font-semibold tracking-[0.02em] text-primary"
+              className="h-8 gap-2.5 px-5 text-base font-semibold tracking-[0.02em] text-primary"
             >
               <group.icon className="size-4" />
               <span>{group.label}</span>
@@ -82,7 +78,7 @@ export function SuperAdminSidebar() {
                     <SidebarMenuButton
                       isActive={isActive}
                       tooltip={item.title}
-                      className="h-8 rounded-none bg-transparent px-5 text-[13px] font-medium text-sidebar-foreground hover:bg-transparent hover:text-primary data-active:bg-primary data-active:font-semibold data-active:text-primary-foreground data-active:hover:bg-primary data-active:hover:text-primary-foreground"
+                      className="h-8 rounded-none bg-transparent px-5 text-sm font-medium text-sidebar-foreground hover:bg-transparent hover:text-primary data-active:bg-primary data-active:font-semibold data-active:text-primary-foreground data-active:hover:bg-primary data-active:hover:text-primary-foreground"
                       render={<NavLink to={item.url} />}
                     >
                       <span>{item.title}</span>

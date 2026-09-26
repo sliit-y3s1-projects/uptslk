@@ -35,7 +35,7 @@ export function CommuterHeader() {
         >
           UPTSLK{" "}
           <span className="hidden font-normal text-slate-500 sm:inline">
-            Bus booking
+            Seat Reservation
           </span>
         </Link>
         <nav className="flex items-center gap-1 sm:gap-2">
@@ -63,8 +63,7 @@ export function CommuterHeader() {
                 </Button>
               )}
               <Button
-                variant="outline"
-                className="hidden rounded-full border-slate-300 bg-white px-5 sm:h-12 min-[480px]:inline-flex"
+                className="hidden rounded-full border-red-500 bg-red-500 px-5 text-white hover:bg-red-600 sm:h-12 min-[480px]:inline-flex"
                 onClick={() => {
                   logout();
                   navigate("/");

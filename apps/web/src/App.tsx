@@ -24,12 +24,10 @@ import {
 } from "@/features/agent-recovery/AgentRecoveryPages";
 import { BayManagementPage } from "@/features/operations/BayManagementPage";
 import { IncidentsPage } from "@/features/operations/IncidentsPage";
-import { ApprovalsPage } from "@/features/operations/ApprovalsPage";
 import { IncidentFormPage } from "@/features/operations/IncidentFormPage";
 import { TripDetailPage } from "@/features/operations/TripDetailPage";
 import { TripFormPage } from "@/features/operations/TripFormPage";
 import { TripHistoryPage } from "@/features/operations/TripHistoryPage";
-import { StopsPage } from "@/features/network/NetworkPages";
 import { TimetablesPage } from "@/features/network/TimetablesPage";
 import {
   DriverDetailPage,
@@ -51,11 +49,8 @@ import {
   VehicleProfilePage,
   VehiclesPage,
 } from "@/features/fleet/VehiclesPage";
-import { RidersPage, SupportPage } from "@/features/riders/RiderPages";
-import {
-  AssistancePage,
-  PassengerFlowPage,
-} from "@/features/riders/PassengerOperationsPages";
+import { RidersPage } from "@/features/riders/RiderPages";
+import { PassengerFlowPage } from "@/features/riders/PassengerOperationsPages";
 import {
   BookingManagementPage,
   FareRulesManagementPage,
@@ -263,7 +258,6 @@ function App() {
             path="/operations/incidents/new"
             element={<IncidentFormPage />}
           />
-          <Route path="/operations/approvals" element={<ApprovalsPage />} />
           <Route path="/network/routes" element={<RoutesPage />} />
           <Route path="/network/routes/new" element={<RouteFormPage />} />
           <Route
@@ -275,7 +269,6 @@ function App() {
             element={<RouteFormPage />}
           />
           <Route path="/network/timetables" element={<TimetablesPage />} />
-          <Route path="/network/stops" element={<StopsPage />} />
           <Route path="/fleet/vehicles" element={<VehiclesPage />} />
           <Route path="/fleet/vehicles/new" element={<VehicleFormPage />} />
           <Route
@@ -310,9 +303,7 @@ function App() {
             element={<MaintenanceFormPage />}
           />
           <Route path="/passengers/flow" element={<PassengerFlowPage />} />
-          <Route path="/passengers/assistance" element={<AssistancePage />} />
           <Route path="/riders/accounts" element={<RidersPage />} />
-          <Route path="/riders/support" element={<SupportPage />} />
           <Route path="/fares/tickets" element={<TicketsPage />} />
           <Route path="/fares/bookings" element={<BookingManagementPage />} />
           <Route

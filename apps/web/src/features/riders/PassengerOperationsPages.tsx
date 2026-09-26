@@ -13,7 +13,6 @@ import {
 import { dateTime } from "./components/format";
 import { useTrips, useManifest } from "@/features/fares/hooks/useBookings";
 import { CentrePicker } from "@/features/fares/components/CentrePicker";
-import { RequestQueue } from "./RequestQueue";
 
 const PAGE_SIZE = 50;
 
@@ -306,15 +305,5 @@ function StatusPill({ status }: { status: string }) {
     <span className={`rounded-full px-2 py-1 text-xs font-medium ${style}`}>
       {status}
     </span>
-  );
-}
-
-export function AssistancePage() {
-  return (
-    <RequestQueue
-      type="Assistance"
-      title="Passenger assistance"
-      description="Track accessibility and journey assistance from request to resolution."
-    />
   );
 }
