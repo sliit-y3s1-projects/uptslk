@@ -14,6 +14,7 @@ public sealed class CreateMyBookingRequest
 {
     public Guid TripId { get; init; }
     [Range(1, 10)] public int PassengerCount { get; init; } = 1;
+    public bool UseMobileReturnUrl { get; init; }
 }
 
 public sealed class UpdateBookingStatusRequest

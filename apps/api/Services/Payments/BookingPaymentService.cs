@@ -50,7 +50,8 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
             var (firstName, lastName) = SplitName(passenger.FullName);
             var session = await gateway.CreateCheckoutAsync(new PaymentCheckoutRequest(
                 payment.ProviderOrderId, payment.Amount, payment.Currency, firstName, lastName,
-                passenger.Email ?? "passenger@upts.lk", passenger.PhoneNumber, $"UPTS trip {trip.Route.RouteNumber}"), cancellationToken);
+                passenger.Email ?? "passenger@upts.lk", passenger.PhoneNumber, $"UPTS trip {trip.Route.RouteNumber}",
+                request.UseMobileReturnUrl), cancellationToken);
             payment.ProviderCheckoutId = session.ProviderCheckoutId;
             payment.ProviderPaymentId = session.ProviderPaymentId;
             payment.Status = PaymentStatus.Pending;

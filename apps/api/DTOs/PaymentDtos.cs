@@ -9,6 +9,7 @@ public sealed class StartCheckoutRequest
     public Guid PassengerId { get; init; }
     [Range(1, 10)] public int PassengerCount { get; init; } = 1;
     public PaymentProvider Provider { get; init; } = PaymentProvider.Stripe;
+    public bool UseMobileReturnUrl { get; init; }
 }
 
 

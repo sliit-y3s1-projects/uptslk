@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/app_ui.dart';
+import '../../state/auth_store.dart';
+import '../profile/profile_page.dart';
 import 'commuter_home_page.dart';
 import 'commuter_tickets_page.dart';
-import 'commuter_profile_page.dart';
 
 class CommuterShell extends StatefulWidget {
-  const CommuterShell({super.key});
+  const CommuterShell({super.key, required this.authStore});
+
+  final AuthStore authStore;
 
   @override
   State<CommuterShell> createState() => _CommuterShellState();
@@ -13,26 +18,50 @@ class CommuterShell extends StatefulWidget {
 
 class _CommuterShellState extends State<CommuterShell> {
   int _currentIndex = 0;
+  int _ticketRefreshSignal = 0;
 
-  final List<Widget> _pages = [
-    const CommuterHomePage(),
-    const CommuterTicketsPage(),
-    const CommuterProfilePage(),
-  ];
+  void _openTickets() {
+    if (!mounted) return;
+    setState(() {
+      _currentIndex = 1;
+      _ticketRefreshSignal++;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final user = widget.authStore.user;
+    if (user == null) return const SizedBox.shrink();
+
+    final firstName = user.name.trim().split(RegExp(r'\s+')).first;
     return Scaffold(
-      body: _pages[_currentIndex],
-      bottomNavigationBar: NavigationBar(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          CommuterHomePage(
+            firstName: firstName.isEmpty ? 'Commuter' : firstName,
+            authStore: widget.authStore,
+            onOpenTickets: _openTickets,
+          ),
+          CommuterTicketsPage(
+            authStore: widget.authStore,
+            refreshSignal: _ticketRefreshSignal,
+          ),
+          ProfilePage(
+            authStore: widget.authStore,
+            user: user,
+            showJourneyAction: false,
+          ),
+        ],
+      ),
+      bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
+        onSelected: (index) {
           setState(() {
             _currentIndex = index;
+            if (index == 1) _ticketRefreshSignal++;
           });
         },
-        backgroundColor: AppTheme.surface,
-        indicatorColor: AppTheme.brandLight,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.search_outlined),
@@ -41,7 +70,10 @@ class _CommuterShellState extends State<CommuterShell> {
           ),
           NavigationDestination(
             icon: Icon(Icons.confirmation_number_outlined),
-            selectedIcon: Icon(Icons.confirmation_number, color: AppTheme.brandPrimary),
+            selectedIcon: Icon(
+              Icons.confirmation_number,
+              color: AppTheme.brandPrimary,
+            ),
             label: 'Tickets',
           ),
           NavigationDestination(

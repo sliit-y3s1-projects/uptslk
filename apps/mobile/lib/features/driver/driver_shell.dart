@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/app_ui.dart';
 import 'driver_home_page.dart';
 import 'driver_profile_page.dart';
 
@@ -22,15 +24,13 @@ class _DriverShellState extends State<DriverShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _pages[_currentIndex],
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
+        onSelected: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
-        backgroundColor: AppTheme.surface,
-        indicatorColor: AppTheme.brandLight,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.route_outlined),

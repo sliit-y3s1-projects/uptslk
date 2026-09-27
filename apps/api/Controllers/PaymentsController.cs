@@ -23,7 +23,7 @@ public class PaymentsController(
     {
         var (session, error, statusCode) = await bookingPayments.StartCheckoutAsync(request, cancellationToken);
         if (session is null) return StatusCode(statusCode, new { error });
-        return Ok(new { url = session.Url });
+        return Ok(new { url = session.Url, orderId = session.OrderId });
     }
 
     [Authorize(Roles = "Commuter")]
@@ -43,10 +43,11 @@ public class PaymentsController(
             TripId = request.TripId,
             PassengerId = passengerId.Value,
             PassengerCount = request.PassengerCount,
-            Provider = PaymentProvider.Stripe
+            Provider = PaymentProvider.Stripe,
+            UseMobileReturnUrl = request.UseMobileReturnUrl
         }, cancellationToken);
         if (session is null) return StatusCode(statusCode, new { error });
-        return Ok(new { url = session.Url });
+        return Ok(new { url = session.Url, orderId = session.OrderId });
     }
 
     [AllowAnonymous]
@@ -95,10 +96,34 @@ public class PaymentsController(
         return Ok(new { payment.BookingId, payment.Status, payment.Amount, payment.Currency, payment.Provider, payment.UpdatedAt });
     }
 
+    [AllowAnonymous]
+    [HttpGet("mobile-return")]
+    public async Task<IActionResult> MobileReturn([FromQuery] string orderId, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(orderId)) return BadRequest();
+        await bookingPayments.ReconcileStripeCheckoutAsync(orderId, cancellationToken);
+        return Redirect(MobileAppUrl("payment-return", orderId));
+    }
+
+    [AllowAnonymous]
+    [HttpGet("mobile-cancel")]
+    public IActionResult MobileCancel([FromQuery] string orderId)
+    {
+        if (string.IsNullOrWhiteSpace(orderId)) return BadRequest();
+        return Redirect(MobileAppUrl("payment-cancel", orderId));
+    }
+
     [HttpPost("bookings/{bookingId:guid}/refund")]
     public async Task<IActionResult> Refund(Guid bookingId, RequestPaymentRefundRequest request, CancellationToken cancellationToken)
     {
         var (error, statusCode) = await bookingPayments.RequestRefundAsync(bookingId, request.Reason, cancellationToken);
         return error is null ? NoContent() : StatusCode(statusCode, new { error });
+    }
+
+    private string MobileAppUrl(string host, string orderId)
+    {
+        var scheme = configuration["Payments:Stripe:MobileAppScheme"] ?? "uptslk";
+        if (!Uri.CheckSchemeName(scheme)) scheme = "uptslk";
+        return $"{scheme}://{host}?orderId={Uri.EscapeDataString(orderId)}";
     }
 }

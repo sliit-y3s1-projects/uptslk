@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_theme.dart';
 import '../../main.dart';
 
@@ -13,7 +14,10 @@ class DriverProfilePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Profile',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: AppTheme.surface,
         foregroundColor: AppTheme.brandPrimary,
         elevation: 0,
@@ -32,15 +36,33 @@ class DriverProfilePage extends StatelessWidget {
               backgroundColor: AppTheme.brandLight,
               child: Text(
                 user.name[0].toUpperCase(),
-                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.brandPrimary),
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.brandPrimary,
+                ),
               ),
             ),
             const SizedBox(height: 16),
-            Text(user.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.ink)),
-            Text('Vehicle: ND-8899', style: const TextStyle(fontSize: 16, color: AppTheme.muted, fontWeight: FontWeight.w600)),
-            
+            Text(
+              user.name,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.ink,
+              ),
+            ),
+            Text(
+              'Vehicle: ND-8899',
+              style: const TextStyle(
+                fontSize: 16,
+                color: AppTheme.muted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+
             const SizedBox(height: 48),
-            
+
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
@@ -51,9 +73,14 @@ class DriverProfilePage extends StatelessWidget {
                   foregroundColor: AppTheme.danger,
                   side: const BorderSide(color: AppTheme.danger),
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                child: const Text('Logout', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Logout',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],

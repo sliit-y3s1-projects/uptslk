@@ -1,9 +1,13 @@
-# UPTSLK mobile app — AI implementation brief
+# UPTSLK mobile app - implementation brief
 
 ## Objective
 
-Build a small, polished Flutter UI prototype for the UPTSLK final-viva
-demonstration. It supports two roles:
+Build a small, polished Flutter application for the UPTSLK final-viva
+demonstration. The first completed integration milestone is real API-backed
+authentication and profile retrieval. The remaining commuter and driver flows
+will be converted from mock data one at a time.
+
+The final app supports two roles:
 
 1. Commuter: find a bus, choose a departure, create a mock booking, and view
    tickets.
@@ -12,19 +16,26 @@ demonstration. It supports two roles:
 The app should look credible and cohesive with the UPTSLK web platform, but it
 must remain deliberately small and easy to demonstrate.
 
-## Strict scope
+## Current authentication milestone
 
-- Build only a Flutter UI with local mock data and in-memory state.
-- Do not integrate the ASP.NET API, Choreo, Neon, Stripe, or any database.
-- Do not add HTTP clients, Firebase, secure storage, real authentication,
-  maps, push notifications, QR scanning, or payment packages.
-- Do not use real credentials, tokens, API URLs, or secrets.
+- Use `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, and
+  `GET /api/v1/auth/me` from the existing ASP.NET Core API.
+- Use the returned JWT as an in-memory bearer token for this milestone.
+- A successful sign-in or registration must open **My profile**. Do not open
+  the old mock commuter or driver shells yet.
+- Public registration creates a commuter account only. Staff accounts remain
+  administrator-managed.
+- Do not show hard-coded demo credentials, demo login cards, a manual role
+  picker, Firebase, a database client, maps, payment SDKs, or notifications.
+- Do not persist the JWT yet. Secure storage and refresh-token handling are a
+  later, deliberate session-management milestone.
 - Do not build admin or centre-operations functionality. Those remain in the
   web portal.
-- Do not add a package unless it creates a clear visible benefit. Prefer the
-  Flutter SDK, Material 3 widgets, and Material icons.
+- The `http` package is permitted for this API boundary. Keep dependencies
+  otherwise minimal.
 
-Restarting the app may reset mock bookings and duty statuses. That is expected.
+The old mock travel and duty screens are not part of this milestone. They must
+be replaced rather than extended when their API integration begins.
 
 ## Project location and commands
 
@@ -35,32 +46,29 @@ Linux:
     cd apps/mobile
     flutter analyze
     flutter test
-    flutter run
+    flutter run --dart-define=UPTSLK_API_BASE_URL=http://10.0.2.2:5250
 
 Windows PowerShell:
 
     Set-Location apps/mobile
     flutter analyze
     flutter test
-    flutter run
+    flutter run --dart-define=UPTSLK_API_BASE_URL=http://10.0.2.2:5250
 
-## Local demo login
+For a physical device, replace `10.0.2.2` with the LAN IP address of the
+computer running the API. For the deployed API, pass its HTTPS Choreo URL.
 
-Show these credentials below the login form in compact Demo access cards. They
-are UI-only values and must not call a backend.
+## Authentication behavior
 
-| Role | Email | Password | Landing screen |
-| --- | --- | --- | --- |
-| Commuter | commuter@demo.upts.lk | Demo12345 | Find a bus |
-| Driver | nimal.driver@demo.upts.lk | Demo12345 | Today's duties |
+The sign-in screen must contain email, password, loading, validation, API error,
+and sign-up entry states. The sign-up screen must contain full name, email,
+password, confirm password, and a clear explanation that it creates a commuter
+account. Keep the visual treatment custom: use composed surfaces, custom field
+containers, clear spacing, and a branded primary action rather than default
+Material form styling.
 
-Rules:
-
-- Tapping a demo card may prefill its email and password.
-- The user must still press Sign in.
-- Accept only these two combinations.
-- For another combination, show: “Use one of the demo accounts shown below.”
-- Logout returns to login and clears in-memory session state.
+The profile screen must show the name, email, role, profile photo when present,
+home location, identity-verification status, and an in-memory sign-out action.
 
 ## Visual language
 
@@ -250,9 +258,8 @@ Create folders only when they contain real files:
 
     apps/mobile/lib/
       main.dart
-      app.dart
       core/theme/app_theme.dart
-      core/constants/demo_accounts.dart
+      core/config/api_config.dart
       data/mock_data.dart
       models/
         app_user.dart
@@ -260,7 +267,8 @@ Create folders only when they contain real files:
         departure.dart
         booking.dart
         driver_duty.dart
-      state/demo_store.dart
+      services/auth_api_service.dart
+      state/auth_store.dart
       shared/widgets/
         app_card.dart
         app_primary_button.dart
@@ -269,7 +277,11 @@ Create folders only when they contain real files:
         section_header.dart
         status_chip.dart
       features/
-        auth/login_page.dart
+        auth/
+          auth_widgets.dart
+          login_page.dart
+          register_page.dart
+        profile/profile_page.dart
         commuter/
           commuter_shell.dart
           commuter_home_page.dart
@@ -296,33 +308,32 @@ clarifies a page, or owns a small interaction.
 
 ## Build order
 
-1. Theme, app shell, models, mock data, and demo store.
-2. Login and role-based navigation.
-3. Commuter search, results, review, and local booking.
-4. Tickets and commuter profile.
-5. Driver duties, details, and status progression.
-6. Driver profile and logout.
-7. Run analysis/tests and test both accounts on an Android-sized emulator.
+1. Theme, API configuration, user model, auth API service, and auth store.
+2. Sign-in, registration, loading, validation, and failure states.
+3. Profile retrieval and in-memory sign-out.
+4. Replace commuter journey search with API-backed route and trip data.
+5. Replace booking and tickets with API-backed capacity and payment flows.
+6. Replace driver duties and status progression with API-backed operations.
+7. Add secure session storage and refresh handling after API flows are stable.
 
 ## Definition of done
 
 - [ ] flutter analyze has no errors.
-- [ ] Both listed demo accounts sign in locally.
-- [ ] A commuter can search, select a departure, change passenger count,
-      confirm a booking, and see it in My Tickets.
-- [ ] A driver can open a duty and progress its local status.
-- [ ] Logout works for both roles.
-- [ ] No application feature calls a network, database, API, or payment service.
+- [ ] A real existing account can sign in through the ASP.NET API.
+- [ ] A new commuter can register through the ASP.NET API.
+- [ ] The authenticated profile is loaded using `GET /api/v1/auth/me`.
+- [ ] Sign-out clears the in-memory session and returns to sign-in.
+- [ ] No hard-coded demo credentials remain in the reachable application.
 - [ ] Screens do not overflow on a typical Android phone.
-- [ ] Colours, cards, spacing, buttons, and status chips are consistent.
+- [ ] The auth experience uses custom composed controls rather than default
+      Material-looking form elements.
 
 ## Final instruction
 
 Implement the smallest complete flow first. When uncertain, choose one calm
 screen with one clear primary action over a dense dashboard or an extra feature.
 
-    Commuter signs in → finds a bus → confirms a booking → sees a ticket.
-    Driver signs in → sees today’s duty → starts and completes the duty.
+    User signs in or registers → profile is retrieved → user signs out.
 
 Everything beyond this is a future phase after backend integration is
 explicitly requested.

@@ -4,6 +4,8 @@ using api.Enums;
 using api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace api.Controllers;
 
@@ -29,6 +31,23 @@ public class FareRulesController(AppDbContext db) : ControllerBase
             FareRuleId = rule.Id,
             Fare = rule.Amount
         });
+    }
+
+    [Authorize(Roles = "Commuter")]
+    [HttpGet("quote/me")]
+    public async Task<IActionResult> QuoteForCurrentUser([FromQuery] Guid tripId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userId, out var parsedUserId)) return Unauthorized();
+
+        var passengerId = await db.Passengers.AsNoTracking()
+            .Where(item => item.UserId == parsedUserId && item.IsActive)
+            .Select(item => (Guid?)item.Id)
+            .SingleOrDefaultAsync();
+        if (!passengerId.HasValue)
+            return BadRequest(new { error = "No active passenger profile is linked to this account." });
+
+        return await Quote(tripId, passengerId.Value);
     }
 
     [HttpGet]

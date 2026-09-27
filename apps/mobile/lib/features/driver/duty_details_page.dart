@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_theme.dart';
 import '../../main.dart';
 
@@ -23,8 +24,14 @@ class DutyDetailsPage extends StatelessWidget {
         // Find the duty by ID every time it builds, so we get the fresh status!
         final duty = demoStore.myDuties.firstWhere((d) => d.id == dutyId);
         final dep = duty.departure;
-        
-        final statuses = ['Scheduled', 'Ready', 'Boarding', 'Departed', 'Completed'];
+
+        final statuses = [
+          'Scheduled',
+          'Ready',
+          'Boarding',
+          'Departed',
+          'Completed',
+        ];
         final isCompleted = duty.status == 'Completed';
         final currentIndex = statuses.indexOf(duty.status);
 
@@ -54,7 +61,9 @@ class DutyDetailsPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: isCompleted ? AppTheme.success : AppTheme.brandPrimary,
+                    color: isCompleted
+                        ? AppTheme.success
+                        : AppTheme.brandPrimary,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -62,27 +71,43 @@ class DutyDetailsPage extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(isCompleted ? Icons.check : Icons.directions_bus, color: Colors.white),
+                        child: Icon(
+                          isCompleted ? Icons.check : Icons.directions_bus,
+                          color: Colors.white,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Current Status', style: TextStyle(color: AppTheme.brandLight, fontSize: 12)),
-                            Text(duty.status, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                            const Text(
+                              'Current Status',
+                              style: TextStyle(
+                                color: AppTheme.brandLight,
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              duty.status,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Info Card
                 Container(
                   padding: const EdgeInsets.all(20),
@@ -109,7 +134,13 @@ class DutyDetailsPage extends StatelessWidget {
                         children: [
                           const Icon(Icons.group, color: AppTheme.muted),
                           const SizedBox(width: 12),
-                          Text('${duty.passengerCount} Expected Passengers', style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.ink)),
+                          Text(
+                            '${duty.passengerCount} Expected Passengers',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.ink,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -129,19 +160,26 @@ class DutyDetailsPage extends StatelessWidget {
                     backgroundColor: AppTheme.brandPrimary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     disabledBackgroundColor: AppTheme.border,
                   ),
                   child: Text(
-                    isCompleted ? 'Duty Finished' : 'Update to ${statuses[currentIndex + 1]}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    isCompleted
+                        ? 'Duty Finished'
+                        : 'Update to ${statuses[currentIndex + 1]}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
         );
-      }
+      },
     );
   }
 
@@ -149,9 +187,19 @@ class DutyDetailsPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: AppTheme.muted, fontSize: 12)),
+        Text(
+          label,
+          style: const TextStyle(color: AppTheme.muted, fontSize: 12),
+        ),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.ink, fontSize: 16)),
+        Text(
+          value,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.ink,
+            fontSize: 16,
+          ),
+        ),
       ],
     );
   }

@@ -1,3 +1,9 @@
+import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.LibraryExtension
+
+val unifiedNdkVersion = "30.0.16248370"
+val unifiedCompileSdk = 36
+
 allprojects {
     repositories {
         google()
@@ -16,6 +22,18 @@ subprojects {
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
 subprojects {
+    if (name != "app") {
+        afterEvaluate {
+            extensions.findByType(ApplicationExtension::class.java)?.apply {
+                compileSdk = unifiedCompileSdk
+                ndkVersion = unifiedNdkVersion
+            }
+            extensions.findByType(LibraryExtension::class.java)?.apply {
+                compileSdk = unifiedCompileSdk
+                ndkVersion = unifiedNdkVersion
+            }
+        }
+    }
     project.evaluationDependsOn(":app")
 }
 

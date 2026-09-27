@@ -5,7 +5,8 @@ class DriverDuty {
   final Departure departure;
   final String vehiclePlate;
   final int passengerCount;
-  final String status; // 'Scheduled', 'Ready', 'Boarding', 'Departed', 'Completed'
+  final String
+  status; // 'Scheduled', 'Ready', 'Boarding', 'Departed', 'Completed'
   final List<String> stops;
 
   const DriverDuty({
