@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/app_user.dart';
 import '../models/booking.dart';
 import '../models/driver_duty.dart';
@@ -13,16 +14,18 @@ class DemoStore extends ChangeNotifier {
     currentUser = user;
     if (user.role == 'driver') {
       // Load mock duties for the driver
-      myDuties = MockData.driverDuties.map((d) => 
-        DriverDuty(
-          id: d.id, 
-          departure: d.departure, 
-          vehiclePlate: d.vehiclePlate, 
-          passengerCount: d.passengerCount, 
-          status: d.status, 
-          stops: d.stops
-        )
-      ).toList();
+      myDuties = MockData.driverDuties
+          .map(
+            (d) => DriverDuty(
+              id: d.id,
+              departure: d.departure,
+              vehiclePlate: d.vehiclePlate,
+              passengerCount: d.passengerCount,
+              status: d.status,
+              stops: d.stops,
+            ),
+          )
+          .toList();
     }
     notifyListeners();
   }
@@ -32,18 +35,23 @@ class DemoStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  void addBooking(Booking booking) {
+    myBookings.add(booking);
+    notifyListeners();
+  }
+
   void updateDutyStatus(String dutyId, String newStatus) {
     final index = myDuties.indexWhere((d) => d.id == dutyId);
     if (index != -1) {
       final d = myDuties[index];
       // Create a new duty object with the updated status
       myDuties[index] = DriverDuty(
-        id: d.id, 
-        departure: d.departure, 
-        vehiclePlate: d.vehiclePlate, 
-        passengerCount: d.passengerCount, 
-        status: newStatus, 
-        stops: d.stops
+        id: d.id,
+        departure: d.departure,
+        vehiclePlate: d.vehiclePlate,
+        passengerCount: d.passengerCount,
+        status: newStatus,
+        stops: d.stops,
       );
       notifyListeners();
     }

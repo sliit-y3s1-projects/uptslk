@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/app_ui.dart';
+import '../../state/auth_store.dart';
+import '../profile/profile_page.dart';
 import 'driver_home_page.dart';
-import 'driver_profile_page.dart';
 
 class DriverShell extends StatefulWidget {
-  const DriverShell({super.key});
+  const DriverShell({super.key, required this.authStore});
+
+  final AuthStore authStore;
 
   @override
   State<DriverShell> createState() => _DriverShellState();
@@ -13,24 +18,28 @@ class DriverShell extends StatefulWidget {
 class _DriverShellState extends State<DriverShell> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [
-    const DriverHomePage(),
-    const DriverProfilePage(),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final user = widget.authStore.user;
+    if (user == null) return const SizedBox.shrink();
+    final pages = [
+      DriverHomePage(authStore: widget.authStore),
+      ProfilePage(
+        authStore: widget.authStore,
+        user: user,
+        showJourneyAction: false,
+      ),
+    ];
+
     return Scaffold(
-      body: _pages[_currentIndex],
-      bottomNavigationBar: NavigationBar(
+      body: IndexedStack(index: _currentIndex, children: pages),
+      bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
+        onSelected: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
-        backgroundColor: AppTheme.surface,
-        indicatorColor: AppTheme.brandLight,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.route_outlined),

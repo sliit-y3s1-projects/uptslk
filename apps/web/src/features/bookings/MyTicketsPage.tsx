@@ -58,7 +58,7 @@ export function MyTicketsPage() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
             My tickets
           </h1>
-          <Link to="/">
+          <Link to="/reservation">
             <Button className="hidden rounded-full sm:inline-flex">
               Book a journey
             </Button>
@@ -77,7 +77,7 @@ export function MyTicketsPage() {
             <p className="mt-1 text-sm text-slate-500">
               Your paid bookings will appear here.
             </p>
-            <Link to="/">
+            <Link to="/reservation">
               <Button className="mt-5 rounded-full">Find a journey</Button>
             </Link>
           </div>
@@ -107,7 +107,7 @@ export function MyTicketsPage() {
               ))}
           </TicketGroup>
         )}
-        <Link to="/" className="mt-6 block sm:hidden">
+        <Link to="/reservation" className="mt-6 block sm:hidden">
           <Button className="w-full rounded-full">Book a journey</Button>
         </Link>
       </section>

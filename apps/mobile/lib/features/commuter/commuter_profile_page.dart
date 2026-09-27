@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_theme.dart';
 import '../../main.dart';
 
@@ -13,7 +14,10 @@ class CommuterProfilePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Profile',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: AppTheme.surface,
         foregroundColor: AppTheme.brandPrimary,
         elevation: 0,
@@ -32,15 +36,29 @@ class CommuterProfilePage extends StatelessWidget {
               backgroundColor: AppTheme.brandLight,
               child: Text(
                 user.name[0].toUpperCase(),
-                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.brandPrimary),
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.brandPrimary,
+                ),
               ),
             ),
             const SizedBox(height: 16),
-            Text(user.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.ink)),
-            Text(user.email, style: const TextStyle(fontSize: 16, color: AppTheme.muted)),
-            
+            Text(
+              user.name,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.ink,
+              ),
+            ),
+            Text(
+              user.email,
+              style: const TextStyle(fontSize: 16, color: AppTheme.muted),
+            ),
+
             const SizedBox(height: 48),
-            
+
             Container(
               decoration: BoxDecoration(
                 color: AppTheme.surface,
@@ -49,7 +67,10 @@ class CommuterProfilePage extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildMenuRow(Icons.account_balance_wallet, 'Wallet & Payments'),
+                  _buildMenuRow(
+                    Icons.account_balance_wallet,
+                    'Wallet & Payments',
+                  ),
                   const Divider(color: AppTheme.border, height: 1),
                   _buildMenuRow(Icons.history, 'Travel History'),
                   const Divider(color: AppTheme.border, height: 1),
@@ -57,9 +78,9 @@ class CommuterProfilePage extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
@@ -70,9 +91,14 @@ class CommuterProfilePage extends StatelessWidget {
                   foregroundColor: AppTheme.danger,
                   side: const BorderSide(color: AppTheme.danger),
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                child: const Text('Logout', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Logout',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_theme.dart';
 import '../../models/booking.dart';
 
@@ -11,7 +12,20 @@ String formatTime(DateTime d) {
 }
 
 String formatDate(DateTime d) {
-  const m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const m = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   return '${d.day.toString().padLeft(2, '0')} ${m[d.month - 1]} ${d.year}';
 }
 
@@ -45,10 +59,14 @@ class BookingSuccessPage extends StatelessWidget {
               const SizedBox(height: 32),
               const Text(
                 'Booking confirmed',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 48),
-              
+
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
@@ -58,13 +76,20 @@ class BookingSuccessPage extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      '${dep.direction.routeNumber} · $timeStr',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.ink),
+                      '${dep.direction.routeNumber}  -  $timeStr',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.ink,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '$dateStr · ${dep.bayCode}',
-                      style: const TextStyle(fontSize: 16, color: AppTheme.muted),
+                      '$dateStr  -  ${dep.bayCode}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: AppTheme.muted,
+                      ),
                     ),
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 24),
@@ -73,14 +98,20 @@ class BookingSuccessPage extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Passengers', style: TextStyle(color: AppTheme.muted)),
-                        Text('${booking.passengerCount}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        const Text(
+                          'Passengers',
+                          style: TextStyle(color: AppTheme.muted),
+                        ),
+                        Text(
+                          '${booking.passengerCount}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 48),
               SizedBox(
                 width: double.infinity,
@@ -92,9 +123,14 @@ class BookingSuccessPage extends StatelessWidget {
                     backgroundColor: Colors.white,
                     foregroundColor: AppTheme.brandPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: const Text('Back to home', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Back to home',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],

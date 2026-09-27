@@ -15,6 +15,8 @@ import { NotFoundPage } from "@/components/NotFoundPage";
 import { RequireRole } from "./components/auth/RequireAuth";
 import { Navigate, Route, Routes, useLocation } from "react-router";
 import { PublicBookingPage } from "@/features/bookings/PublicBookingPage";
+import { LandingPage } from "@/features/landing/LandingPage";
+import { TeamPage as PublicTeamPage } from "@/features/landing/TeamPage";
 import { AdminShell } from "@/components/layout/AdminShell";
 import { DispatchPage } from "@/features/operations/DispatchPage";
 import { DutyRosterPage } from "@/features/operations/DutyRosterPage";
@@ -98,7 +100,7 @@ function App() {
       );
       if (anchor) {
         event.preventDefault();
-        window.history.pushState({}, "", "/");
+        window.history.pushState({}, "", "/reservation");
         window.dispatchEvent(new PopStateEvent("popstate"));
       }
     };
@@ -110,7 +112,11 @@ function App() {
   if (loading) return null;
 
   if (!user) {
-    if (location.pathname === "/")
+    if (location.pathname === "/") return <LandingPage />;
+    if (location.pathname === "/team") return <PublicTeamPage />;
+    if (location.pathname === "/book")
+      return <Navigate to="/reservation" replace />;
+    if (location.pathname === "/reservation")
       return (
         <CommuterLayout>
           <PublicBookingPage />
@@ -122,8 +128,11 @@ function App() {
   }
 
   if (location.pathname === "/onboarding") return <OnboardingPage />;
-  if (location.pathname === "/book") return <NotFoundPage />;
-  if (location.pathname === "/")
+  if (location.pathname === "/book")
+    return <Navigate to="/reservation" replace />;
+  if (location.pathname === "/") return <LandingPage />;
+  if (location.pathname === "/team") return <PublicTeamPage />;
+  if (location.pathname === "/reservation")
     return (
       <CommuterLayout>
         <PublicBookingPage />

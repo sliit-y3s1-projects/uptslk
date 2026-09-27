@@ -18,6 +18,6 @@ class Departure {
     required this.bookedPassengers,
     required this.fare,
   });
-  
+
   int get availableSpaces => capacity - bookedPassengers;
 }

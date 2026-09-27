@@ -15,7 +15,9 @@ class MockData {
     Departure(
       id: 'dep-0600',
       direction: kadawathaMakumbura,
-      dateTime: DateTime.now().add(const Duration(days: 1)).copyWith(hour: 6, minute: 0),
+      dateTime: DateTime.now()
+          .add(const Duration(days: 1))
+          .copyWith(hour: 6, minute: 0),
       bayCode: 'KAD-B01',
       capacity: 45,
       bookedPassengers: 1,
@@ -24,7 +26,9 @@ class MockData {
     Departure(
       id: 'dep-0700',
       direction: kadawathaMakumbura,
-      dateTime: DateTime.now().add(const Duration(days: 1)).copyWith(hour: 7, minute: 0),
+      dateTime: DateTime.now()
+          .add(const Duration(days: 1))
+          .copyWith(hour: 7, minute: 0),
       bayCode: 'KAD-B01',
       capacity: 45,
       bookedPassengers: 14,
@@ -33,7 +37,9 @@ class MockData {
     Departure(
       id: 'dep-0800',
       direction: kadawathaMakumbura,
-      dateTime: DateTime.now().add(const Duration(days: 1)).copyWith(hour: 8, minute: 0),
+      dateTime: DateTime.now()
+          .add(const Duration(days: 1))
+          .copyWith(hour: 8, minute: 0),
       bayCode: 'KAD-B02',
       capacity: 45,
       bookedPassengers: 27,

@@ -171,6 +171,12 @@ public class AuthController : ControllerBase
             passenger.FullName = user.Name;
             passenger.Email = user.Email;
         }
+        var driver = await _db.Drivers.SingleOrDefaultAsync(item => item.UserId == user.Id);
+        if (driver is not null)
+        {
+            driver.FullName = user.Name;
+            driver.UpdatedAt = DateTime.UtcNow;
+        }
         var result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded) return BadRequest(new { error = result.Errors.Select(e => e.Description) });
         return Ok(new { user.Id, user.Name, user.Email, Role = user.Role.ToString(), user.CentreId, user.IsActive, user.HomeLocation, user.NicNumber, user.Gender, user.ProfilePhotoUrl });
@@ -255,6 +261,8 @@ public class AuthController : ControllerBase
     {
         if (!Enum.TryParse<UserRole>(req.Role, true, out var role))
             return BadRequest(new { error = "Invalid role" });
+        if (role == UserRole.Driver)
+            return BadRequest(new { error = "Create driver accounts from Centre Ops so the login is linked to a driver record." });
 
         var user = new User
         {

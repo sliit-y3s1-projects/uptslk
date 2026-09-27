@@ -16,13 +16,25 @@ public sealed class StripePaymentGateway(IConfiguration configuration) : IPaymen
             throw new InvalidOperationException("Stripe is not configured. Set Payments:Stripe:SecretKey and Payments:Stripe:WebAppBaseUrl.");
 
         var baseUrl = webAppBaseUrl.TrimEnd('/');
+        var mobileReturnBaseUrl = configuration["Payments:Stripe:MobileReturnBaseUrl"]?.TrimEnd('/');
+        if (request.UseMobileReturnUrl &&
+            (string.IsNullOrWhiteSpace(mobileReturnBaseUrl) ||
+             !Uri.TryCreate(mobileReturnBaseUrl, UriKind.Absolute, out var mobileBaseUri) ||
+             mobileBaseUri.Scheme is not ("http" or "https")))
+            throw new InvalidOperationException("Payments:Stripe:MobileReturnBaseUrl must be an absolute HTTP or HTTPS URL.");
+        var successUrl = request.UseMobileReturnUrl
+            ? $"{mobileReturnBaseUrl}/api/v1/payments/mobile-return?orderId={Uri.EscapeDataString(request.OrderId)}"
+            : $"{baseUrl}/booking/payment-return?orderId={Uri.EscapeDataString(request.OrderId)}";
+        var cancelUrl = request.UseMobileReturnUrl
+            ? $"{mobileReturnBaseUrl}/api/v1/payments/mobile-cancel?orderId={Uri.EscapeDataString(request.OrderId)}"
+            : $"{baseUrl}/booking/payment-cancel?orderId={Uri.EscapeDataString(request.OrderId)}";
         var options = new SessionCreateOptions
         {
             Mode = "payment",
             CustomerEmail = request.Email,
             ClientReferenceId = request.OrderId,
-            SuccessUrl = $"{baseUrl}/booking/payment-return?orderId={Uri.EscapeDataString(request.OrderId)}",
-            CancelUrl = $"{baseUrl}/booking/payment-cancel?orderId={Uri.EscapeDataString(request.OrderId)}",
+            SuccessUrl = successUrl,
+            CancelUrl = cancelUrl,
             Metadata = new Dictionary<string, string> { ["upts_order_id"] = request.OrderId },
             PaymentIntentData = new SessionPaymentIntentDataOptions
             {
@@ -49,7 +61,7 @@ public sealed class StripePaymentGateway(IConfiguration configuration) : IPaymen
                 new RequestOptions { IdempotencyKey = $"checkout-{request.OrderId}" }, cancellationToken);
             if (string.IsNullOrWhiteSpace(session.Url) || string.IsNullOrWhiteSpace(session.Id))
                 throw new InvalidOperationException("Stripe did not return a checkout URL.");
-            return new PaymentCheckoutSession(session.Url, session.Id, session.PaymentIntentId);
+            return new PaymentCheckoutSession(session.Url, session.Id, session.PaymentIntentId, request.OrderId);
         }
         catch (StripeException exception)
         {

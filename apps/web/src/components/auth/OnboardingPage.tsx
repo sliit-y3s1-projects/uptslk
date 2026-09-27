@@ -57,7 +57,7 @@ export function OnboardingPage() {
         </div>
         <div className="mt-10 flex justify-end">
           <Button
-            render={<Link to="/" />}
+            render={<Link to="/reservation" />}
             className="h-12 rounded-xl bg-primary px-6 text-base"
           >
             Start booking <ArrowRight />

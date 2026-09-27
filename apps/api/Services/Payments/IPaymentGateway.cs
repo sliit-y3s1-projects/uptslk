@@ -4,9 +4,13 @@ namespace api.Services.Payments;
 
 public sealed record PaymentCheckoutRequest(
     string OrderId, decimal Amount, string Currency, string FirstName, string LastName,
-    string Email, string Phone, string Description);
+    string Email, string Phone, string Description, bool UseMobileReturnUrl);
 
-public sealed record PaymentCheckoutSession(string Url, string ProviderCheckoutId, string? ProviderPaymentId = null);
+public sealed record PaymentCheckoutSession(
+    string Url,
+    string ProviderCheckoutId,
+    string? ProviderPaymentId = null,
+    string? OrderId = null);
 
 public sealed record PaymentCheckoutStatus(bool IsPaid, string? ProviderPaymentId, long? AmountMinor, string? Currency);
 
