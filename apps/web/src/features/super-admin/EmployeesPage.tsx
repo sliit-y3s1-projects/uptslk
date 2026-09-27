@@ -43,7 +43,7 @@ type Employee = {
   centreId?: string | null;
   isActive: boolean;
 };
-const roles = ["CentreManager", "Dispatcher", "FleetOfficer", "Driver"];
+const roles = ["CentreManager", "Dispatcher", "FleetOfficer"];
 
 export function EmployeesPage() {
   const { data: centres = [] } = useCentres();

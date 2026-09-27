@@ -56,16 +56,11 @@ class _CommuterTicketsPageState extends State<CommuterTicketsPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AppTheme.background,
+    backgroundColor: AppTheme.surface,
     appBar: AppBar(
-      title: const Text(
-        'My tickets',
-        style: TextStyle(fontWeight: FontWeight.w800),
-      ),
-      backgroundColor: AppTheme.background,
-      foregroundColor: AppTheme.ink,
-      elevation: 0,
-      scrolledUnderElevation: 0,
+      title: const Text('My tickets'),
+      backgroundColor: AppTheme.surface,
+      centerTitle: true,
     ),
     body: FutureBuilder<List<MobileTicket>>(
       future: _ticketsFuture,
@@ -98,7 +93,7 @@ class _CommuterTicketsPageState extends State<CommuterTicketsPage> {
           onRefresh: _refresh,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 6, 20, 32),
+            padding: const EdgeInsets.fromLTRB(22, 10, 22, 36),
             children: [
               if (active.isNotEmpty) ...[
                 _SectionTitle(label: 'Upcoming', count: active.length),
@@ -167,7 +162,7 @@ class _CommuterTicketsPageState extends State<CommuterTicketsPage> {
                       style: TextStyle(
                         color: AppTheme.ink,
                         fontSize: 22,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -184,8 +179,8 @@ class _CommuterTicketsPageState extends State<CommuterTicketsPage> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  border: Border.all(color: AppTheme.border),
-                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: AppTheme.borderStrong),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(
                   children: [
@@ -214,7 +209,7 @@ class _CommuterTicketsPageState extends State<CommuterTicketsPage> {
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: AppTheme.ink,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         fontSize: 12,
                       ),
                     ),
@@ -238,13 +233,6 @@ class _CommuterTicketsPageState extends State<CommuterTicketsPage> {
               const SizedBox(height: 10),
               FilledButton(
                 onPressed: () => Navigator.pop(context),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
-                  backgroundColor: AppTheme.brandPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
                 child: const Text('Done'),
               ),
             ],
@@ -268,12 +256,26 @@ class _SectionTitle extends StatelessWidget {
           label,
           style: const TextStyle(
             color: AppTheme.ink,
-            fontSize: 17,
-            fontWeight: FontWeight.w800,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
-      Text('$count', style: const TextStyle(color: AppTheme.muted)),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceMuted,
+          borderRadius: BorderRadius.circular(99),
+        ),
+        child: Text(
+          '$count',
+          style: const TextStyle(
+            color: AppTheme.muted,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     ],
   );
 }
@@ -286,29 +288,29 @@ class _TicketCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: AppTheme.surface,
-    borderRadius: BorderRadius.circular(18),
+    borderRadius: BorderRadius.circular(20),
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          border: Border.all(color: AppTheme.border),
-          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppTheme.borderStrong),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           children: [
             Container(
-              width: 50,
-              height: 50,
+              width: 46,
+              height: 46,
               decoration: BoxDecoration(
                 color: AppTheme.brandLight,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(13),
               ),
               child: const Icon(
                 Icons.qr_code_2_rounded,
                 color: AppTheme.brandPrimary,
-                size: 27,
+                size: 24,
               ),
             ),
             const SizedBox(width: 14),
@@ -321,7 +323,7 @@ class _TicketCard extends StatelessWidget {
                     style: const TextStyle(
                       color: AppTheme.ink,
                       fontSize: 16,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -349,7 +351,19 @@ class _TicketCard extends StatelessWidget {
               children: [
                 _StatusPill(status: ticket.status),
                 const SizedBox(height: 14),
-                const Icon(Icons.chevron_right_rounded, color: AppTheme.muted),
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.surfaceMuted,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: AppTheme.brandPrimary,
+                    size: 16,
+                  ),
+                ),
               ],
             ),
           ],
@@ -388,7 +402,7 @@ class _StatusPill extends StatelessWidget {
         style: TextStyle(
           color: color,
           fontSize: 11,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -412,7 +426,7 @@ class _TicketDetailRow extends StatelessWidget {
           value,
           style: const TextStyle(
             color: AppTheme.ink,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -439,7 +453,7 @@ class _EmptyTickets extends StatelessWidget {
           style: TextStyle(
             color: AppTheme.ink,
             fontSize: 18,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w600,
           ),
         ),
         SizedBox(height: 6),

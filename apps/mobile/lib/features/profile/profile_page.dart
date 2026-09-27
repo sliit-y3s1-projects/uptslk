@@ -161,9 +161,11 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final user = widget.user;
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppTheme.surface,
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: const Text('My profile'),
+        backgroundColor: AppTheme.surface,
+        centerTitle: true,
         actions: [
           if (_editing)
             TextButton(
@@ -181,7 +183,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 22, 20, 32),
+          padding: const EdgeInsets.fromLTRB(22, 10, 22, 36),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
@@ -193,7 +195,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     uploadingPhoto: _uploadingPhoto,
                     onPhotoTap: _uploadingPhoto ? null : _pickPhoto,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 28),
                   if (_editing)
                     _EditProfileForm(
                       nameController: _nameController,
@@ -205,8 +207,15 @@ class _ProfilePageState extends State<ProfilePage> {
                           setState(() => _gender = value),
                       onSave: _saveProfile,
                     )
-                  else
+                  else ...[
+                    Text(
+                      'Personal information',
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(fontSize: 18),
+                    ),
+                    const SizedBox(height: 13),
                     _ProfileDetails(user: user),
+                  ],
                   const SizedBox(height: 24),
                   if (widget.showJourneyAction) ...[
                     FilledButton.icon(
@@ -216,13 +225,6 @@ class _ProfilePageState extends State<ProfilePage> {
                             firstName: user.name.split(' ').first,
                             authStore: widget.authStore,
                           ),
-                        ),
-                      ),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(54),
-                        backgroundColor: AppTheme.brandPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                       icon: const Icon(Icons.search_rounded),
@@ -266,9 +268,8 @@ class _ProfileIdentity extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        border: Border.all(color: AppTheme.border),
-        borderRadius: BorderRadius.circular(22),
+        color: AppTheme.brandLight,
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
         children: [
@@ -277,7 +278,7 @@ class _ProfileIdentity extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 42,
-                backgroundColor: AppTheme.brandLight,
+                backgroundColor: AppTheme.surface,
                 backgroundImage: hasPhoto
                     ? NetworkImage(user.profilePhotoUrl!)
                     : null,
@@ -288,7 +289,7 @@ class _ProfileIdentity extends StatelessWidget {
                         style: const TextStyle(
                           color: AppTheme.brandPrimary,
                           fontSize: 24,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
               ),
@@ -333,7 +334,7 @@ class _ProfileIdentity extends StatelessWidget {
                   style: const TextStyle(
                     color: AppTheme.ink,
                     fontSize: 21,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -348,7 +349,10 @@ class _ProfileIdentity extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.brandLight,
+                    color: AppTheme.surface,
+                    border: Border.all(
+                      color: AppTheme.brandPrimary.withValues(alpha: 0.12),
+                    ),
                     borderRadius: BorderRadius.circular(99),
                   ),
                   child: Text(
@@ -356,7 +360,7 @@ class _ProfileIdentity extends StatelessWidget {
                     style: const TextStyle(
                       color: AppTheme.brandPrimary,
                       fontSize: 12,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -377,8 +381,8 @@ class _ProfileDetails extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     decoration: BoxDecoration(
       color: AppTheme.surface,
-      border: Border.all(color: AppTheme.border),
-      borderRadius: BorderRadius.circular(22),
+      border: Border.all(color: AppTheme.borderStrong),
+      borderRadius: BorderRadius.circular(20),
     ),
     child: Column(
       children: [
@@ -440,8 +444,8 @@ class _EditProfileForm extends StatelessWidget {
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
       color: AppTheme.surface,
-      border: Border.all(color: AppTheme.border),
-      borderRadius: BorderRadius.circular(22),
+      border: Border.all(color: AppTheme.borderStrong),
+      borderRadius: BorderRadius.circular(20),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -451,7 +455,7 @@ class _EditProfileForm extends StatelessWidget {
           style: TextStyle(
             color: AppTheme.ink,
             fontSize: 18,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 18),
@@ -489,13 +493,6 @@ class _EditProfileForm extends StatelessWidget {
         const SizedBox(height: 20),
         FilledButton(
           onPressed: saving ? null : onSave,
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(52),
-            backgroundColor: AppTheme.brandPrimary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
           child: saving
               ? const SizedBox(
                   width: 22,
@@ -548,16 +545,11 @@ class _DetailRow extends StatelessWidget {
     padding: const EdgeInsets.all(17),
     child: Row(
       children: [
-        Container(
-          height: 38,
-          width: 38,
-          decoration: BoxDecoration(
-            color: AppTheme.brandLight,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, size: 19, color: AppTheme.brandPrimary),
+        SizedBox(
+          width: 30,
+          child: Icon(icon, size: 20, color: AppTheme.brandPrimary),
         ),
-        const SizedBox(width: 13),
+        const SizedBox(width: 11),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

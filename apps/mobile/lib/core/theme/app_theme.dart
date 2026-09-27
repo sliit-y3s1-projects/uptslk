@@ -34,7 +34,6 @@ class AppTheme {
     final textTheme = Typography.material2021().black.apply(
       bodyColor: ink,
       displayColor: ink,
-      fontFamily: 'sans-serif',
     );
 
     return ThemeData(
@@ -47,29 +46,29 @@ class AppTheme {
         headlineLarge: textTheme.headlineLarge?.copyWith(
           fontSize: 30,
           height: 1.12,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           letterSpacing: -0.8,
         ),
         headlineMedium: textTheme.headlineMedium?.copyWith(
           fontSize: 24,
           height: 1.18,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           letterSpacing: -0.45,
         ),
         titleLarge: textTheme.titleLarge?.copyWith(
           fontSize: 20,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           letterSpacing: -0.2,
         ),
         titleMedium: textTheme.titleMedium?.copyWith(
           fontSize: 16,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
         ),
         bodyLarge: textTheme.bodyLarge?.copyWith(fontSize: 16, height: 1.45),
         bodyMedium: textTheme.bodyMedium?.copyWith(fontSize: 14, height: 1.45),
         labelLarge: textTheme.labelLarge?.copyWith(
           fontSize: 15,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
         ),
       ),
       appBarTheme: const AppBarTheme(
@@ -81,9 +80,8 @@ class AppTheme {
         centerTitle: false,
         titleTextStyle: TextStyle(
           color: ink,
-          fontFamily: 'sans-serif',
           fontSize: 18,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           letterSpacing: -0.2,
         ),
       ),
@@ -135,11 +133,12 @@ class AppTheme {
           foregroundColor: Colors.white,
           disabledBackgroundColor: border,
           disabledForegroundColor: subtle,
-          minimumSize: const Size(48, 52),
+          minimumSize: const Size(48, 50),
+          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 15),
           elevation: 0,
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radius),
+            borderRadius: BorderRadius.circular(18),
           ),
         ),
       ),
@@ -147,18 +146,20 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: ink,
           minimumSize: const Size(48, 50),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           side: const BorderSide(color: borderStrong),
           elevation: 0,
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radius),
+            borderRadius: BorderRadius.circular(18),
           ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: brandPrimary,
-          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          textStyle: const TextStyle(fontWeight: FontWeight.w500),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusSmall),
           ),

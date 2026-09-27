@@ -6,6 +6,7 @@ import 'state/auth_store.dart';
 import 'services/auth_api_service.dart';
 import 'features/auth/login_page.dart';
 import 'features/commuter/commuter_shell.dart';
+import 'features/driver/driver_shell.dart';
 import 'features/profile/profile_page.dart';
 
 // Legacy mock screens still reference this store. They are not reachable from
@@ -38,6 +39,10 @@ class UPTSLKApp extends StatelessWidget {
 
           if (user.role == 'Commuter') {
             return CommuterShell(authStore: authStore);
+          }
+
+          if (user.role == 'Driver') {
+            return DriverShell(authStore: authStore);
           }
 
           return ProfilePage(authStore: authStore, user: user);

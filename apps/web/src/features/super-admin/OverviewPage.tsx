@@ -5,6 +5,7 @@ import {
   UserPlus,
   UsersRound,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -140,7 +141,7 @@ function Metric({
   value,
   detail,
 }: {
-  icon: typeof Activity;
+  icon: LucideIcon;
   label: string;
   value: string;
   detail: string;

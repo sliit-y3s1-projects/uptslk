@@ -1,227 +1,496 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../../main.dart';
+import '../../models/driver_assignment.dart';
+import '../../services/auth_api_service.dart';
+import '../../services/driver_api_service.dart';
+import '../../state/auth_store.dart';
 import 'duty_details_page.dart';
 
-String formatTime(DateTime d) {
-  final hr = d.hour == 0 ? 12 : (d.hour > 12 ? d.hour - 12 : d.hour);
-  final hrStr = hr.toString().padLeft(2, '0');
-  final minStr = d.minute.toString().padLeft(2, '0');
-  final amPm = d.hour >= 12 ? 'PM' : 'AM';
-  return '$hrStr:$minStr $amPm';
-}
+class DriverHomePage extends StatefulWidget {
+  const DriverHomePage({super.key, required this.authStore});
 
-class DriverHomePage extends StatelessWidget {
-  const DriverHomePage({super.key});
+  final AuthStore authStore;
 
   @override
-  Widget build(BuildContext context) {
-    final userName = demoStore.currentUser?.name.split(' ').first ?? 'Driver';
+  State<DriverHomePage> createState() => _DriverHomePageState();
+}
 
-    return ListenableBuilder(
-      listenable: demoStore,
-      builder: (context, child) {
-        final duties = demoStore.myDuties;
+class _DriverHomePageState extends State<DriverHomePage> {
+  final _service = DriverApiService();
+  late Future<_DriverDashboard> _dashboardFuture;
 
-        return Scaffold(
-          backgroundColor: AppTheme.background,
-          appBar: AppBar(
-            backgroundColor: AppTheme.brandPrimary,
-            elevation: 0,
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Welcome back,',
-                  style: TextStyle(fontSize: 14, color: AppTheme.brandLight),
-                ),
-                Text(
-                  userName,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  @override
+  void initState() {
+    super.initState();
+    _dashboardFuture = _load();
+  }
+
+  Future<_DriverDashboard> _load() async {
+    final token = widget.authStore.token;
+    if (token == null || token.isEmpty) {
+      throw const AuthApiException('Your session has ended. Sign in again.');
+    }
+    final results = await Future.wait([
+      _service.getProfile(token),
+      _service.getDuties(token: token, date: DateTime.now()),
+    ]);
+    return _DriverDashboard(
+      profile: results[0] as DriverOperationalProfile,
+      duties: results[1] as List<DriverAssignment>,
+    );
+  }
+
+  Future<void> _refresh() async {
+    final future = _load();
+    setState(() => _dashboardFuture = future);
+    await future;
+  }
+
+  Future<void> _openDuty(DriverAssignment duty) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DutyDetailsPage(
+          duty: duty,
+          authStore: widget.authStore,
+          service: _service,
+        ),
+      ),
+    );
+    if (mounted) await _refresh();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppTheme.surface,
+    appBar: AppBar(
+      title: const Text('Driver duties'),
+      backgroundColor: AppTheme.surface,
+      centerTitle: true,
+    ),
+    body: FutureBuilder<_DriverDashboard>(
+      future: _dashboardFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError || snapshot.data == null) {
+          return _DriverError(
+            message: snapshot.error is AuthApiException
+                ? (snapshot.error! as AuthApiException).message
+                : 'Could not load your assigned duties.',
+            onRetry: () => setState(() => _dashboardFuture = _load()),
+          );
+        }
+
+        final dashboard = snapshot.data!;
+        return RefreshIndicator(
+          onRefresh: _refresh,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(22, 10, 22, 36),
             children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                color: AppTheme.brandPrimary,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.directions_bus, color: Colors.white),
-                      SizedBox(width: 12),
-                      Text(
-                        'Bus ND-8899 assigned for today',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+              _DriverSummary(profile: dashboard.profile),
+              const SizedBox(height: 28),
+              _DutyHeading(count: dashboard.duties.length),
+              const SizedBox(height: 13),
+              if (dashboard.duties.isEmpty)
+                const _EmptyDuties()
+              else
+                ...dashboard.duties.map(
+                  (duty) => Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: _DutyCard(duty: duty, onTap: () => _openDuty(duty)),
                   ),
                 ),
-              ),
-
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
-                child: Text(
-                  'Today'
-                  's Duties',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.ink,
-                  ),
-                ),
-              ),
-
-              Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: duties.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final duty = duties[index];
-                    final dep = duty.departure;
-                    final isCompleted = duty.status == 'Completed';
-
-                    return InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                DutyDetailsPage(dutyId: duty.id),
-                          ),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppTheme.border),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.ink.withValues(alpha: 0.04),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  formatTime(dep.dateTime),
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.brandPrimary,
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isCompleted
-                                        ? AppTheme.success.withValues(
-                                            alpha: 0.1,
-                                          )
-                                        : (duty.status == 'Scheduled'
-                                              ? AppTheme.muted.withValues(
-                                                  alpha: 0.1,
-                                                )
-                                              : AppTheme.brandPrimary
-                                                    .withValues(alpha: 0.1)),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    duty.status,
-                                    style: TextStyle(
-                                      color: isCompleted
-                                          ? AppTheme.success
-                                          : (duty.status == 'Scheduled'
-                                                ? AppTheme.muted
-                                                : AppTheme.brandPrimary),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Divider(color: AppTheme.border),
-                            ),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.route,
-                                  color: AppTheme.muted,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    '${dep.direction.origin} ? ${dep.direction.destination}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppTheme.ink,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.people_outline,
-                                  color: AppTheme.muted,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '${duty.passengerCount} Passengers boarded',
-                                  style: const TextStyle(color: AppTheme.muted),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
             ],
           ),
         );
       },
+    ),
+  );
+}
+
+class _DriverDashboard {
+  const _DriverDashboard({required this.profile, required this.duties});
+  final DriverOperationalProfile profile;
+  final List<DriverAssignment> duties;
+}
+
+class _DriverSummary extends StatelessWidget {
+  const _DriverSummary({required this.profile});
+  final DriverOperationalProfile profile;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: AppTheme.brandLight,
+      borderRadius: BorderRadius.circular(24),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: const BoxDecoration(
+                color: AppTheme.surface,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.badge_outlined,
+                color: AppTheme.brandPrimary,
+              ),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'ON DUTY WITH UPTSLK',
+                    style: TextStyle(
+                      color: AppTheme.brandPrimary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.7,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    profile.fullName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _SummaryChip(
+              icon: Icons.apartment_outlined,
+              label: profile.centreName,
+            ),
+            _SummaryChip(
+              icon: Icons.credit_card_outlined,
+              label: profile.licenseNumber,
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+class _SummaryChip extends StatelessWidget {
+  const _SummaryChip({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+    decoration: BoxDecoration(
+      color: AppTheme.surface,
+      borderRadius: BorderRadius.circular(99),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 15, color: AppTheme.brandPrimary),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
+      ],
+    ),
+  );
+}
+
+class _DutyHeading extends StatelessWidget {
+  const _DutyHeading({required this.count});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(
+        child: Text(
+          'Today’s assignments',
+          style: Theme.of(context).textTheme.titleMedium
+              ?.copyWith(fontSize: 18),
+        ),
+      ),
+      Text(
+        '$count ${count == 1 ? 'trip' : 'trips'}',
+        style: const TextStyle(
+          color: AppTheme.muted,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    ],
+  );
+}
+
+class _DutyCard extends StatelessWidget {
+  const _DutyCard({required this.duty, required this.onTap});
+  final DriverAssignment duty;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: AppTheme.surface,
+    borderRadius: BorderRadius.circular(20),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppTheme.borderStrong),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _formatTime(duty.scheduledTime),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.4,
+                    ),
+                  ),
+                ),
+                _StatusPill(status: duty.status),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.brandLight,
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Text(
+                    duty.routeNumber,
+                    style: const TextStyle(
+                      color: AppTheme.brandPrimary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    duty.routeName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: AppTheme.muted, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 15),
+            _RoutePoint(icon: Icons.trip_origin_rounded, label: duty.origin),
+            const SizedBox(height: 9),
+            _RoutePoint(
+              icon: Icons.location_on_rounded,
+              label: duty.destination,
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Divider(height: 1),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: _DutyMeta(
+                    icon: Icons.directions_bus_outlined,
+                    label: duty.vehiclePlate,
+                  ),
+                ),
+                Expanded(
+                  child: _DutyMeta(
+                    icon: Icons.signpost_outlined,
+                    label: 'Bay ${duty.bayCode}',
+                  ),
+                ),
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.surfaceMuted,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 17,
+                    color: AppTheme.brandPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _RoutePoint extends StatelessWidget {
+  const _RoutePoint({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(icon, size: 15, color: AppTheme.brandPrimary),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        ),
+      ),
+    ],
+  );
+}
+
+class _DutyMeta extends StatelessWidget {
+  const _DutyMeta({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(icon, size: 16, color: AppTheme.muted),
+      const SizedBox(width: 6),
+      Expanded(
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: AppTheme.muted, fontSize: 12),
+        ),
+      ),
+    ],
+  );
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.status});
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (status) {
+      'Completed' => AppTheme.success,
+      'Delayed' => AppTheme.warning,
+      'Cancelled' => AppTheme.danger,
+      'Ready' || 'Boarding' || 'Dispatched' => AppTheme.brandPrimary,
+      _ => AppTheme.muted,
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Text(
+        _displayStatus(status),
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
+
+class _EmptyDuties extends StatelessWidget {
+  const _EmptyDuties();
+
+  @override
+  Widget build(BuildContext context) => const Padding(
+    padding: EdgeInsets.symmetric(vertical: 70, horizontal: 24),
+    child: Column(
+      children: [
+        Icon(Icons.event_available_outlined, size: 40, color: AppTheme.muted),
+        SizedBox(height: 14),
+        Text(
+          'No duties assigned today',
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+        ),
+        SizedBox(height: 6),
+        Text(
+          'New assignments from Centre Ops will appear here.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: AppTheme.muted),
+        ),
+      ],
+    ),
+  );
+}
+
+class _DriverError extends StatelessWidget {
+  const _DriverError({required this.message, required this.onRetry});
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.cloud_off_outlined, size: 38, color: AppTheme.muted),
+          const SizedBox(height: 14),
+          Text(message, textAlign: TextAlign.center),
+          const SizedBox(height: 14),
+          OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
+        ],
+      ),
+    ),
+  );
+}
+
+String _formatTime(DateTime value) {
+  final time = value.toLocal();
+  final hour = time.hour == 0
+      ? 12
+      : (time.hour > 12 ? time.hour - 12 : time.hour);
+  return '${hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} ${time.hour >= 12 ? 'PM' : 'AM'}';
+}
+
+String _displayStatus(String status) =>
+    status == 'Dispatched' ? 'Departed' : status;

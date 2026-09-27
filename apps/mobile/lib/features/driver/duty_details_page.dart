@@ -1,206 +1,360 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../../main.dart';
+import '../../models/driver_assignment.dart';
+import '../../services/auth_api_service.dart';
+import '../../services/driver_api_service.dart';
+import '../../state/auth_store.dart';
 
-String formatTime(DateTime d) {
-  final hr = d.hour == 0 ? 12 : (d.hour > 12 ? d.hour - 12 : d.hour);
-  final hrStr = hr.toString().padLeft(2, '0');
-  final minStr = d.minute.toString().padLeft(2, '0');
-  final amPm = d.hour >= 12 ? 'PM' : 'AM';
-  return '$hrStr:$minStr $amPm';
+class DutyDetailsPage extends StatefulWidget {
+  const DutyDetailsPage({
+    super.key,
+    required this.duty,
+    required this.authStore,
+    required this.service,
+  });
+
+  final DriverAssignment duty;
+  final AuthStore authStore;
+  final DriverApiService service;
+
+  @override
+  State<DutyDetailsPage> createState() => _DutyDetailsPageState();
 }
 
-class DutyDetailsPage extends StatelessWidget {
-  final String dutyId;
+class _DutyDetailsPageState extends State<DutyDetailsPage> {
+  late DriverAssignment _duty;
+  bool _updating = false;
+  String? _error;
 
-  const DutyDetailsPage({super.key, required this.dutyId});
+  @override
+  void initState() {
+    super.initState();
+    _duty = widget.duty;
+  }
+
+  String? get _nextStatus => switch (_duty.status) {
+    'Scheduled' => 'Ready',
+    'Ready' => 'Boarding',
+    'Boarding' => 'Dispatched',
+    'Delayed' => 'Dispatched',
+    'Dispatched' => 'Completed',
+    _ => null,
+  };
+
+  Future<void> _advanceStatus() async {
+    final nextStatus = _nextStatus;
+    final token = widget.authStore.token;
+    if (nextStatus == null || token == null || token.isEmpty) return;
+
+    setState(() {
+      _updating = true;
+      _error = null;
+    });
+    try {
+      await widget.service.updateDutyStatus(
+        token: token,
+        tripId: _duty.id,
+        status: nextStatus,
+      );
+      if (!mounted) return;
+      setState(() => _duty = _duty.copyWith(status: nextStatus));
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('Duty updated to ${_displayStatus(nextStatus)}.'),
+          ),
+        );
+    } on AuthApiException catch (error) {
+      if (mounted) setState(() => _error = error.message);
+    } finally {
+      if (mounted) setState(() => _updating = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: demoStore,
-      builder: (context, child) {
-        // Find the duty by ID every time it builds, so we get the fresh status!
-        final duty = demoStore.myDuties.firstWhere((d) => d.id == dutyId);
-        final dep = duty.departure;
-
-        final statuses = [
-          'Scheduled',
-          'Ready',
-          'Boarding',
-          'Departed',
-          'Completed',
-        ];
-        final isCompleted = duty.status == 'Completed';
-        final currentIndex = statuses.indexOf(duty.status);
-
-        void nextStatus() {
-          if (currentIndex < statuses.length - 1) {
-            demoStore.updateDutyStatus(dutyId, statuses[currentIndex + 1]);
-          }
-        }
-
-        return Scaffold(
-          backgroundColor: AppTheme.background,
-          appBar: AppBar(
-            title: const Text('Duty Details', style: TextStyle(fontSize: 16)),
-            backgroundColor: AppTheme.surface,
-            foregroundColor: AppTheme.ink,
-            elevation: 0,
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(1),
-              child: Container(color: AppTheme.border, height: 1),
+    final nextStatus = _nextStatus;
+    return Scaffold(
+      backgroundColor: AppTheme.surface,
+      appBar: AppBar(
+        title: const Text('Duty details'),
+        backgroundColor: AppTheme.surface,
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(22, 10, 22, 120),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _StatusSummary(duty: _duty),
+            const SizedBox(height: 28),
+            Text(
+              'Assignment',
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontSize: 18),
             ),
-          ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                // Status Card
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: isCompleted
-                        ? AppTheme.success
-                        : AppTheme.brandPrimary,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          isCompleted ? Icons.check : Icons.directions_bus,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Current Status',
-                              style: TextStyle(
-                                color: AppTheme.brandLight,
-                                fontSize: 12,
-                              ),
-                            ),
-                            Text(
-                              duty.status,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+            const SizedBox(height: 13),
+            _AssignmentDetails(duty: _duty),
+            if (_duty.notes?.isNotEmpty ?? false) ...[
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceMuted,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  _duty.notes!,
+                  style: const TextStyle(color: AppTheme.muted, height: 1.4),
+                ),
+              ),
+            ],
+            if (_error != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF1F2),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  _error!,
+                  style: const TextStyle(
+                    color: AppTheme.danger,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-
-                const SizedBox(height: 24),
-
-                // Info Card
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.border),
+              ),
+            ],
+          ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 18),
+          decoration: const BoxDecoration(
+            color: AppTheme.surface,
+            border: Border(top: BorderSide(color: AppTheme.border)),
+          ),
+          child: FilledButton(
+            onPressed: nextStatus == null || _updating ? null : _advanceStatus,
+            child: _updating
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Text(
+                    nextStatus == null
+                        ? _duty.status == 'Cancelled'
+                              ? 'Duty cancelled'
+                              : 'Duty completed'
+                        : 'Mark as ${_displayStatus(nextStatus)}',
                   ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildInfoCol('Time', formatTime(dep.dateTime)),
-                          _buildInfoCol('Route', dep.direction.routeNumber),
-                          _buildInfoCol('Bay', dep.bayCode),
-                        ],
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        child: Divider(color: AppTheme.border),
-                      ),
-                      Row(
-                        children: [
-                          const Icon(Icons.group, color: AppTheme.muted),
-                          const SizedBox(width: 12),
-                          Text(
-                            '${duty.passengerCount} Expected Passengers',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.ink,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusSummary extends StatelessWidget {
+  const _StatusSummary({required this.duty});
+  final DriverAssignment duty;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (duty.status) {
+      'Completed' => AppTheme.success,
+      'Delayed' => AppTheme.warning,
+      'Cancelled' => AppTheme.danger,
+      _ => AppTheme.brandPrimary,
+    };
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: const BoxDecoration(
+              color: AppTheme.surface,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              duty.status == 'Completed'
+                  ? Icons.check_rounded
+                  : Icons.directions_bus_rounded,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'CURRENT STATUS',
+                  style: TextStyle(
+                    color: AppTheme.muted,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.7,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _displayStatus(duty.status),
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
-          bottomNavigationBar: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: isCompleted ? null : nextStatus,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.brandPrimary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    disabledBackgroundColor: AppTheme.border,
-                  ),
-                  child: Text(
-                    isCompleted
-                        ? 'Duty Finished'
-                        : 'Update to ${statuses[currentIndex + 1]}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          Text(
+            _formatTime(duty.scheduledTime),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildInfoCol(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: AppTheme.muted, fontSize: 12),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppTheme.ink,
-            fontSize: 16,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
+
+class _AssignmentDetails extends StatelessWidget {
+  const _AssignmentDetails({required this.duty});
+  final DriverAssignment duty;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: AppTheme.surface,
+      border: Border.all(color: AppTheme.borderStrong),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppTheme.brandLight,
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Text(
+                duty.routeNumber,
+                style: const TextStyle(
+                  color: AppTheme.brandPrimary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Text(
+                duty.routeName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: AppTheme.muted, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        _DetailRow(
+          icon: Icons.trip_origin_rounded,
+          label: 'From',
+          value: duty.origin,
+        ),
+        const Divider(height: 25),
+        _DetailRow(
+          icon: Icons.location_on_rounded,
+          label: 'To',
+          value: duty.destination,
+        ),
+        const Divider(height: 25),
+        _DetailRow(
+          icon: Icons.directions_bus_outlined,
+          label: 'Vehicle',
+          value: '${duty.vehiclePlate} · ${duty.vehicleModel}',
+        ),
+        const Divider(height: 25),
+        _DetailRow(
+          icon: Icons.signpost_outlined,
+          label: 'Departure bay',
+          value: duty.bayName.isEmpty
+              ? duty.bayCode
+              : '${duty.bayCode} · ${duty.bayName}',
+        ),
+        const Divider(height: 25),
+        _DetailRow(
+          icon: Icons.people_outline_rounded,
+          label: 'Booked passengers',
+          value: '${duty.passengerCount} of ${duty.capacity}',
+        ),
+      ],
+    ),
+  );
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      SizedBox(
+        width: 30,
+        child: Icon(icon, size: 20, color: AppTheme.brandPrimary),
+      ),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(color: AppTheme.muted, fontSize: 12),
+            ),
+            const SizedBox(height: 3),
+            Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+String _formatTime(DateTime value) {
+  final time = value.toLocal();
+  final hour = time.hour == 0
+      ? 12
+      : (time.hour > 12 ? time.hour - 12 : time.hour);
+  return '${hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} ${time.hour >= 12 ? 'PM' : 'AM'}';
+}
+
+String _displayStatus(String status) =>
+    status == 'Dispatched' ? 'Departed' : status;

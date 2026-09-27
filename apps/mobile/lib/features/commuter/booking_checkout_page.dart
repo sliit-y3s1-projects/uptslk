@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../../core/widgets/app_ui.dart';
 import '../../models/booking_checkout.dart';
 import '../../models/trip_search_result.dart';
 import '../../services/booking_api_service.dart';
@@ -141,13 +140,11 @@ class _BookingCheckoutPageState extends State<BookingCheckoutPage>
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AppTheme.background,
+    backgroundColor: AppTheme.surface,
     appBar: AppBar(
       title: const Text('Confirm booking'),
-      backgroundColor: AppTheme.background,
-      foregroundColor: AppTheme.ink,
-      elevation: 0,
-      scrolledUnderElevation: 0,
+      backgroundColor: AppTheme.surface,
+      centerTitle: true,
     ),
     body: FutureBuilder<FareQuote>(
       future: _quoteFuture,
@@ -178,98 +175,149 @@ class _BookingCheckoutPageState extends State<BookingCheckoutPage>
     final maxPassengers = widget.trip.available.clamp(1, 10);
     final payment = _payment;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+      padding: const EdgeInsets.fromLTRB(22, 10, 22, 36),
       children: [
-        AppSurface(
-          padding: const EdgeInsets.all(18),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppTheme.brandLight,
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: AppTheme.brandLight,
-                      borderRadius: BorderRadius.circular(11),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
                     ),
-                    child: const Icon(
-                      Icons.directions_bus_outlined,
-                      color: AppTheme.brandPrimary,
-                      size: 20,
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Text(
+                      widget.trip.routeNumber,
+                      style: const TextStyle(
+                        color: AppTheme.brandPrimary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 11),
-                  Text(
-                    widget.trip.routeNumber,
-                    style: const TextStyle(
-                      color: AppTheme.brandPrimary,
-                      fontWeight: FontWeight.w800,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      widget.trip.routeName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppTheme.muted,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                '${widget.trip.origin}  →  ${widget.trip.destination}',
-                style: const TextStyle(
-                  color: AppTheme.ink,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
+              const SizedBox(height: 18),
+              _JourneyPoint(
+                icon: Icons.trip_origin_rounded,
+                label: widget.trip.origin,
+              ),
+              const SizedBox(height: 10),
+              _JourneyPoint(
+                icon: Icons.location_on_rounded,
+                label: widget.trip.destination,
+              ),
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _JourneyMeta(
+                    icon: Icons.calendar_month_outlined,
+                    label: _formatDate(widget.trip.scheduledTime),
+                  ),
+                  _JourneyMeta(
+                    icon: Icons.schedule_rounded,
+                    label: _formatTime(widget.trip.scheduledTime),
+                  ),
+                  if (widget.trip.bay.isNotEmpty)
+                    _JourneyMeta(
+                      icon: Icons.directions_bus_outlined,
+                      label: 'Bay ${widget.trip.bay}',
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 28),
+        Text(
+          'Booking details',
+          style: Theme.of(context).textTheme.titleMedium
+              ?.copyWith(fontSize: 18),
+        ),
+        const SizedBox(height: 13),
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            border: Border.all(color: AppTheme.borderStrong),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Passengers',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 13),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '$_passengerCount ${_passengerCount == 1 ? 'seat' : 'seats'}',
+                      style: const TextStyle(
+                        color: AppTheme.ink,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  _CountButton(
+                    icon: Icons.remove_rounded,
+                    onPressed: _checkout == null && _passengerCount > 1
+                        ? () => setState(() => _passengerCount--)
+                        : null,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 13),
+                    child: Text(
+                      '$_passengerCount',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  _CountButton(
+                    icon: Icons.add_rounded,
+                    onPressed:
+                        _checkout == null && _passengerCount < maxPassengers
+                        ? () => setState(() => _passengerCount++)
+                        : null,
+                  ),
+                ],
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 18),
+                child: Divider(height: 1),
+              ),
+              const Text(
+                'Fare summary',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 14),
-              Text(
-                '${_formatDate(widget.trip.scheduledTime)} · ${_formatTime(widget.trip.scheduledTime)}'
-                '${widget.trip.bay.isEmpty ? '' : ' · Bay ${widget.trip.bay}'}',
-                style: const TextStyle(color: AppTheme.muted),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        _Section(
-          title: 'Passengers',
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '$_passengerCount ${_passengerCount == 1 ? 'passenger' : 'passengers'}',
-                  style: const TextStyle(
-                    color: AppTheme.ink,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              _CountButton(
-                icon: Icons.remove,
-                onPressed: _checkout == null && _passengerCount > 1
-                    ? () => setState(() => _passengerCount--)
-                    : null,
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Text(
-                  '$_passengerCount',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-              ),
-              _CountButton(
-                icon: Icons.add,
-                onPressed: _checkout == null && _passengerCount < maxPassengers
-                    ? () => setState(() => _passengerCount++)
-                    : null,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        _Section(
-          title: 'Fare summary',
-          child: Column(
-            children: [
               _PriceRow(
                 label: '${quote.category} fare × $_passengerCount',
                 value: _currency(quote.fare * _passengerCount),
@@ -332,27 +380,49 @@ class _BookingCheckoutPageState extends State<BookingCheckoutPage>
   }
 }
 
-class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.child});
-  final String title;
-  final Widget child;
+class _JourneyPoint extends StatelessWidget {
+  const _JourneyPoint({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
 
   @override
-  Widget build(BuildContext context) => AppSurface(
-    padding: const EdgeInsets.all(18),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            color: AppTheme.ink,
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-          ),
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(icon, size: 16, color: AppTheme.brandPrimary),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: 16),
-        child,
+      ),
+    ],
+  );
+}
+
+class _JourneyMeta extends StatelessWidget {
+  const _JourneyMeta({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+    decoration: BoxDecoration(
+      color: AppTheme.surface,
+      borderRadius: BorderRadius.circular(99),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 15, color: AppTheme.brandPrimary),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
       ],
     ),
   );
@@ -398,7 +468,7 @@ class _PriceRow extends StatelessWidget {
         style: TextStyle(
           color: AppTheme.ink,
           fontSize: emphasized ? 19 : 15,
-          fontWeight: FontWeight.w800,
+          fontWeight: emphasized ? FontWeight.w700 : FontWeight.w600,
         ),
       ),
     ],
@@ -447,7 +517,7 @@ class _PaymentReturnPanel extends StatelessWidget {
             style: const TextStyle(
               color: AppTheme.ink,
               fontSize: 18,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 6),

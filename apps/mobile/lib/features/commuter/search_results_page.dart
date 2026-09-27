@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../../core/widgets/app_ui.dart';
 import '../../models/trip_search_result.dart';
 import '../../services/trip_search_api_service.dart';
 import '../../state/auth_store.dart';
@@ -54,13 +53,11 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AppTheme.background,
+    backgroundColor: AppTheme.surface,
     appBar: AppBar(
       title: const Text('Departures'),
-      backgroundColor: AppTheme.background,
-      foregroundColor: AppTheme.ink,
-      elevation: 0,
-      scrolledUnderElevation: 0,
+      backgroundColor: AppTheme.surface,
+      centerTitle: true,
     ),
     body: FutureBuilder<List<TripSearchResult>>(
       future: _results,
@@ -74,29 +71,44 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
           );
         }
         final trips = snapshot.data ?? const <TripSearchResult>[];
-        return Column(
-          children: [
-            _SearchSummary(
-              origin: widget.origin,
-              destination: widget.destination,
-              date: widget.date,
-              passengerCount: widget.passengerCount,
+        return CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(22, 10, 22, 0),
+              sliver: SliverToBoxAdapter(
+                child: _SearchSummary(
+                  origin: widget.origin,
+                  destination: widget.destination,
+                  date: widget.date,
+                  passengerCount: widget.passengerCount,
+                ),
+              ),
             ),
-            Expanded(
-              child: trips.isEmpty
-                  ? const _NoResults()
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(20),
-                      itemCount: trips.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 12),
-                      itemBuilder: (_, index) => _TripCard(
-                        trip: trips[index],
-                        passengerCount: widget.passengerCount,
-                        authStore: widget.authStore,
-                        onOpenTickets: widget.onOpenTickets,
-                      ),
-                    ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(22, 30, 22, 14),
+              sliver: SliverToBoxAdapter(
+                child: _ResultsHeading(count: trips.length),
+              ),
             ),
+            if (trips.isEmpty)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: _NoResults(),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(22, 0, 22, 36),
+                sliver: SliverList.separated(
+                  itemCount: trips.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 14),
+                  itemBuilder: (_, index) => _TripCard(
+                    trip: trips[index],
+                    passengerCount: widget.passengerCount,
+                    authStore: widget.authStore,
+                    onOpenTickets: widget.onOpenTickets,
+                  ),
+                ),
+              ),
           ],
         );
       },
@@ -117,44 +129,134 @@ class _SearchSummary extends StatelessWidget {
   final int passengerCount;
 
   @override
-  Widget build(BuildContext context) => AppSurface(
+  Widget build(BuildContext context) => Container(
     width: double.infinity,
-    margin: const EdgeInsets.fromLTRB(20, 6, 20, 0),
-    padding: const EdgeInsets.all(16),
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: AppTheme.brandLight,
+      borderRadius: BorderRadius.circular(24),
+    ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          origin ?? 'All origins',
-          style: const TextStyle(
-            color: AppTheme.ink,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 5),
-          child: Icon(
-            Icons.south_rounded,
+        const Text(
+          'YOUR JOURNEY',
+          style: TextStyle(
             color: AppTheme.brandPrimary,
-            size: 18,
-          ),
-        ),
-        Text(
-          destination ?? 'All destinations',
-          style: const TextStyle(
-            color: AppTheme.ink,
-            fontSize: 16,
+            fontSize: 11,
             fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
           ),
         ),
         const SizedBox(height: 14),
-        Text(
-          '${_formatDate(date)} · $passengerCount ${passengerCount == 1 ? 'passenger' : 'passengers'}',
-          style: const TextStyle(color: AppTheme.muted, fontSize: 13),
+        _SummaryPoint(
+          icon: Icons.trip_origin_rounded,
+          label: origin ?? 'All origins',
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: Container(
+            width: 1,
+            height: 15,
+            color: AppTheme.brandPrimary.withValues(alpha: 0.3),
+          ),
+        ),
+        _SummaryPoint(
+          icon: Icons.location_on_rounded,
+          label: destination ?? 'All destinations',
+        ),
+        const SizedBox(height: 18),
+        Wrap(
+          spacing: 9,
+          runSpacing: 9,
+          children: [
+            _SummaryMeta(
+              icon: Icons.calendar_month_outlined,
+              label: _formatDate(date),
+            ),
+            _SummaryMeta(
+              icon: Icons.people_outline_rounded,
+              label:
+                  '$passengerCount ${passengerCount == 1 ? 'seat' : 'seats'}',
+            ),
+          ],
         ),
       ],
     ),
+  );
+}
+
+class _SummaryPoint extends StatelessWidget {
+  const _SummaryPoint({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(icon, size: 17, color: AppTheme.brandPrimary),
+      const SizedBox(width: 11),
+      Expanded(
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+    ],
+  );
+}
+
+class _SummaryMeta extends StatelessWidget {
+  const _SummaryMeta({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+    decoration: BoxDecoration(
+      color: AppTheme.surface,
+      borderRadius: BorderRadius.circular(99),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 15, color: AppTheme.brandPrimary),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
+      ],
+    ),
+  );
+}
+
+class _ResultsHeading extends StatelessWidget {
+  const _ResultsHeading({required this.count});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(
+        child: Text(
+          'Available departures',
+          style: Theme.of(context).textTheme.titleMedium
+              ?.copyWith(fontSize: 18),
+        ),
+      ),
+      Text(
+        '$count ${count == 1 ? 'trip' : 'trips'}',
+        style: const TextStyle(
+          color: AppTheme.muted,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ],
   );
 }
 
@@ -173,86 +275,128 @@ class _TripCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canSelect = trip.isBookable && trip.available >= passengerCount;
-    return AppSurface(
-      padding: const EdgeInsets.all(16),
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        border: Border.all(color: AppTheme.borderStrong),
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                _formatTime(trip.scheduledTime),
-                style: const TextStyle(
-                  color: AppTheme.ink,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const Spacer(),
-              _StatusPill(label: trip.status, available: canSelect),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            trip.routeNumber,
-            style: const TextStyle(
-              color: AppTheme.brandPrimary,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            trip.routeName,
-            style: const TextStyle(color: AppTheme.muted, fontSize: 14),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${trip.origin}  →  ${trip.destination}',
-            style: const TextStyle(
-              color: AppTheme.ink,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              const Icon(
-                Icons.directions_bus_outlined,
-                color: AppTheme.muted,
-                size: 18,
-              ),
-              const SizedBox(width: 7),
-              Text(
-                trip.bay.isEmpty ? 'Bay to be confirmed' : 'Bay ${trip.bay}',
-                style: const TextStyle(color: AppTheme.muted),
-              ),
-              const Spacer(),
-              Text(
-                '${trip.available} spaces left',
-                style: TextStyle(
-                  color: canSelect ? AppTheme.success : AppTheme.danger,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: canSelect
-                ? () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => BookingCheckoutPage(
-                        trip: trip,
-                        passengerCount: passengerCount,
-                        authStore: authStore,
-                        onOpenTickets: onOpenTickets,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'DEPARTURE',
+                      style: TextStyle(
+                        color: AppTheme.muted,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.7,
                       ),
                     ),
-                  )
-                : null,
-            child: Text(canSelect ? 'Select departure' : 'Not available'),
+                    const SizedBox(height: 3),
+                    Text(
+                      _formatTime(trip.scheduledTime),
+                      style: const TextStyle(
+                        color: AppTheme.ink,
+                        fontSize: 25,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _StatusPill(label: trip.status),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.brandLight,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Text(
+                  trip.routeNumber,
+                  style: const TextStyle(
+                    color: AppTheme.brandPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  trip.routeName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppTheme.muted, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _TripPoint(icon: Icons.trip_origin_rounded, label: trip.origin),
+          const SizedBox(height: 9),
+          _TripPoint(icon: Icons.location_on_rounded, label: trip.destination),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 17),
+            child: Divider(height: 1),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: _TripMeta(
+                  icon: Icons.directions_bus_outlined,
+                  label: trip.bay.isEmpty ? 'Bay pending' : 'Bay ${trip.bay}',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _TripMeta(
+                  icon: Icons.event_seat_outlined,
+                  label: '${trip.available} seats left',
+                  color: canSelect ? AppTheme.success : AppTheme.danger,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 17),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton(
+              onPressed: canSelect
+                  ? () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => BookingCheckoutPage(
+                          trip: trip,
+                          passengerCount: passengerCount,
+                          authStore: authStore,
+                          onOpenTickets: onOpenTickets,
+                        ),
+                      ),
+                    )
+                  : null,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(168, 46),
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+              ),
+              child: Text(canSelect ? 'Choose departure' : 'Not available'),
+            ),
           ),
         ],
       ),
@@ -261,24 +405,81 @@ class _TripCard extends StatelessWidget {
 }
 
 class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.label, required this.available});
+  const _StatusPill({required this.label});
   final String label;
-  final bool available;
+
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-    decoration: BoxDecoration(
-      color: (available ? const Color(0xFFDCFCE7) : const Color(0xFFFFE4E6)),
-      borderRadius: BorderRadius.circular(99),
-    ),
-    child: Text(
-      label,
-      style: TextStyle(
-        color: available ? AppTheme.success : AppTheme.danger,
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
+  Widget build(BuildContext context) {
+    final normalized = label.toLowerCase();
+    final color = normalized == 'delayed'
+        ? AppTheme.warning
+        : {'scheduled', 'ready', 'boarding'}.contains(normalized)
+        ? AppTheme.success
+        : AppTheme.muted;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(99),
       ),
-    ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _TripPoint extends StatelessWidget {
+  const _TripPoint({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(icon, size: 15, color: AppTheme.brandPrimary),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        ),
+      ),
+    ],
+  );
+}
+
+class _TripMeta extends StatelessWidget {
+  const _TripMeta({required this.icon, required this.label, this.color});
+  final IconData icon;
+  final String label;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(icon, size: 17, color: color ?? AppTheme.muted),
+      const SizedBox(width: 7),
+      Expanded(
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: color ?? AppTheme.muted,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    ],
   );
 }
 
@@ -294,7 +495,7 @@ class _ResultError extends StatelessWidget {
         const SizedBox(height: 14),
         const Text(
           'Could not load departures.',
-          style: TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w700),
+          style: TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
@@ -319,7 +520,7 @@ class _NoResults extends StatelessWidget {
             style: TextStyle(
               color: AppTheme.ink,
               fontSize: 17,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
             ),
           ),
           SizedBox(height: 6),

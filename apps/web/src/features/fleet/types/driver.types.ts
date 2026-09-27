@@ -9,6 +9,7 @@ export interface DriverListItem {
   licenseNumber: string;
   status: DriverStatus;
   userId?: string | null;
+  email?: string | null;
 }
 
 export interface DriverDetail {
@@ -24,11 +25,14 @@ export interface DriverDetail {
   licenseNumber: string;
   status: DriverStatus;
   userId?: string | null;
+  email?: string | null;
 }
 
 export interface CreateDriverRequest {
   centreId: string;
   fullName: string;
+  email: string;
+  password: string;
   phoneNumber?: string | null;
   licenseNumber: string;
   status: DriverStatus;

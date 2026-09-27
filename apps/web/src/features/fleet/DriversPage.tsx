@@ -234,6 +234,7 @@ export function DriverDetailPage() {
 
         <div className="mt-6 grid gap-5 border-t pt-5 sm:grid-cols-2">
           <Fact label="Full name" value={driver.fullName} />
+          <Fact label="Sign-in email" value={driver.email ?? "Not linked"} />
           <Fact
             label="Phone number"
             value={driver.phoneNumber || "Not provided"}
@@ -303,6 +304,8 @@ function DriverFormInner({
 
   const [fullName, setFullName] = useState(existing?.fullName ?? "");
   const [phoneNumber, setPhoneNumber] = useState(existing?.phoneNumber ?? "");
+  const [email, setEmail] = useState(existing?.email ?? "");
+  const [password, setPassword] = useState("");
   const [centreId, setCentreId] = useState(
     existing?.centreId ?? defaultCentreId,
   );
@@ -330,6 +333,14 @@ function DriverFormInner({
       setFormError("Licence number is required.");
       return;
     }
+    if (!editing && !email.trim()) {
+      setFormError("A sign-in email is required.");
+      return;
+    }
+    if (!editing && password.length < 8) {
+      setFormError("The temporary password must contain at least 8 characters.");
+      return;
+    }
 
     try {
       if (editing && driverId) {
@@ -348,6 +359,8 @@ function DriverFormInner({
         const created = await createMutation.mutateAsync({
           centreId,
           fullName: fullName.trim(),
+          email: email.trim().toLowerCase(),
+          password,
           phoneNumber: phoneNumber.trim() || null,
           licenseNumber: licenseNumber.trim().toUpperCase(),
           status,
@@ -369,8 +382,8 @@ function DriverFormInner({
         }
         description={
           editing
-            ? "Update fields map directly to UpdateDriverRequest (licence is immutable)."
-            : "Fields map directly to CreateDriverRequest."
+            ? "Update the driver’s operational details and duty eligibility."
+            : "Create the driver record and their mobile sign-in account together."
         }
       />
 
@@ -404,6 +417,35 @@ function DriverFormInner({
               placeholder="077 123 4567"
             />
           </label>
+
+          {!editing && (
+            <>
+              <label className="grid gap-1.5 text-sm font-medium">
+                Sign-in email
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="driver@upts.lk"
+                  autoComplete="email"
+                  required
+                />
+              </label>
+
+              <label className="grid gap-1.5 text-sm font-medium">
+                Temporary password
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                />
+              </label>
+            </>
+          )}
 
           <label className="grid gap-1.5 text-sm font-medium">
             Assigned centre
