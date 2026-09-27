@@ -145,7 +145,11 @@ export function CheckoutPage() {
               : "Continue to secure payment"}
           </Button>
         </>
-        <Button render={<Link to="/" />} variant="link" className="mt-3 w-full">
+        <Button
+          render={<Link to="/reservation" />}
+          variant="link"
+          className="mt-3 w-full"
+        >
           Back to search
         </Button>
       </section>
@@ -193,7 +197,7 @@ export function BookingPaymentStatusPage({
             Unable to retrieve payment status.
           </p>
         )}
-        <Link to="/">
+        <Link to="/reservation">
           <Button className="mt-7 w-full rounded-full bg-primary">
             Return to journey search
           </Button>
