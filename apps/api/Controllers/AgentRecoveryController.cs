@@ -6,6 +6,7 @@ using api.Enums;
 using api.Services.AgentRecovery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Controllers;
@@ -18,8 +19,12 @@ public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService re
     [HttpGet("workflows")]
     public async Task<IActionResult> List([FromQuery] Guid? centreId, [FromQuery] WorkflowStatus? status, CancellationToken cancellationToken)
     {
+        if (!RecoveryAccessScope.TryCreate(User, out var accessScope)) return Forbid();
+        if (!accessScope.IsAdmin && centreId.HasValue && centreId != accessScope.CentreId) return Forbid();
+
         var query = db.AgentWorkflows.AsNoTracking().Include(workflow => workflow.Incident).Include(workflow => workflow.Trip).ThenInclude(trip => trip.Route).Include(workflow => workflow.ApprovalRequests).AsQueryable();
-        if (centreId.HasValue) query = query.Where(workflow => workflow.CentreId == centreId.Value);
+        var effectiveCentreId = accessScope.IsAdmin ? centreId : accessScope.CentreId;
+        if (effectiveCentreId.HasValue) query = query.Where(workflow => workflow.CentreId == effectiveCentreId.Value);
         if (status.HasValue) query = query.Where(workflow => workflow.Status == status.Value);
         var workflows = await query.OrderByDescending(workflow => workflow.CreatedAt).ToListAsync(cancellationToken);
         return Ok(workflows.Select(ToListItem));
@@ -28,7 +33,9 @@ public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService re
     [HttpGet("workflows/{workflowId:guid}")]
     public async Task<IActionResult> Get(Guid workflowId, CancellationToken cancellationToken)
     {
-        var workflow = await db.AgentWorkflows.AsNoTracking()
+        if (!RecoveryAccessScope.TryCreate(User, out var accessScope)) return Forbid();
+
+        var query = db.AgentWorkflows.AsNoTracking()
             .Include(item => item.Incident)
             .Include(item => item.Trip).ThenInclude(trip => trip.Route)
             .Include(item => item.Trip).ThenInclude(trip => trip.Vehicle)
@@ -37,7 +44,10 @@ public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService re
             .Include(item => item.Steps)
             .Include(item => item.ApprovalRequests).ThenInclude(approval => approval.ReviewedBy)
             .Include(item => item.PassengerNotifications)
-            .SingleOrDefaultAsync(item => item.Id == workflowId, cancellationToken);
+            .AsQueryable();
+        if (!accessScope.IsAdmin)
+            query = query.Where(workflow => workflow.CentreId == accessScope.CentreId!.Value);
+        var workflow = await query.SingleOrDefaultAsync(item => item.Id == workflowId, cancellationToken);
         if (workflow is null) return NotFound();
         return Ok(new
         {
@@ -83,21 +93,48 @@ public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService re
     }
 
     [HttpPost("workflows")]
+    [EnableRateLimiting("AgentRecoveryStart")]
     public async Task<IActionResult> Start(StartRecoveryWorkflowRequest request, CancellationToken cancellationToken)
     {
-        var (workflow, error) = await recoveryWorkflows.StartAsync(request.IncidentId, request.Objective, cancellationToken);
+        if (!RecoveryAccessScope.TryCreate(User, out var accessScope)) return Forbid();
+        if (!RecoveryTextValidator.TryNormalizeObjective(request.Objective, out var objective, out var validationError))
+            return BadRequest(new { error = validationError });
+        if (!accessScope.IsAdmin && !await db.Incidents.AsNoTracking().AnyAsync(
+                incident => incident.Id == request.IncidentId && incident.CentreId == accessScope.CentreId!.Value,
+                cancellationToken))
+            return NotFound();
+
+        var (workflow, error) = await recoveryWorkflows.StartAsync(
+            request.IncidentId,
+            objective,
+            accessScope.CentreId,
+            cancellationToken);
         if (workflow is null) return BadRequest(new { error });
         return CreatedAtAction(nameof(Get), new { workflowId = workflow.Id }, new { workflow.Id, workflow.Status, workflow.FailureReason });
     }
 
     [HttpPost("workflows/{workflowId:guid}/approval")]
     [Authorize(Roles = "Admin,CentreManager")]
+    [EnableRateLimiting("AgentRecoveryApproval")]
     public async Task<IActionResult> Decide(Guid workflowId, DecideRecoveryApprovalRequest request, CancellationToken cancellationToken)
     {
+        if (!RecoveryAccessScope.TryCreate(User, out var accessScope)) return Forbid();
         if (request.Decision == ApprovalDecision.Pending) return BadRequest(new { error = "Choose Approve or Reject." });
+        if (!RecoveryTextValidator.TryNormalizeDecisionNote(request.Note, out var note, out var validationError))
+            return BadRequest(new { error = validationError });
+        if (!accessScope.IsAdmin && !await db.AgentWorkflows.AsNoTracking().AnyAsync(
+                workflow => workflow.Id == workflowId && workflow.CentreId == accessScope.CentreId!.Value,
+                cancellationToken))
+            return NotFound();
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var reviewerId = Guid.TryParse(userId, out var parsedUserId) ? parsedUserId : (Guid?)null;
-        var (workflow, error) = await recoveryWorkflows.DecideAsync(workflowId, request.Decision, reviewerId, request.Note, cancellationToken);
+        var (workflow, error) = await recoveryWorkflows.DecideAsync(
+            workflowId,
+            request.Decision,
+            reviewerId,
+            note,
+            accessScope.CentreId,
+            cancellationToken);
         if (workflow is null) return BadRequest(new { error });
         return Ok(new { workflow.Id, workflow.Status, workflow.FailureReason });
     }

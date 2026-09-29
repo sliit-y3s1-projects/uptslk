@@ -57,6 +57,19 @@ public sealed class RecoveryPlanningServiceTests
         Assert.Equal(4, result.Plan.Steps.Count);
     }
 
+    [Fact]
+    public async Task CreatePlanAsync_DoesNotPersistProviderExceptionDetails()
+    {
+        const string sensitiveProviderDetail = "provider-secret-detail";
+        var service = CreateService(new ThrowingPlanner(sensitiveProviderDetail));
+
+        var result = await service.CreatePlanAsync(CreatePlanningInput(), CancellationToken.None);
+
+        Assert.Equal("Fallback", result.Mode);
+        Assert.NotNull(result.FallbackReason);
+        Assert.DoesNotContain(sensitiveProviderDetail, result.FallbackReason);
+    }
+
     private static RecoveryPlanningService CreateService(IRecoveryPlanner planner)
     {
         IRecoveryAgent[] agents =
@@ -103,6 +116,15 @@ public sealed class RecoveryPlanningServiceTests
             LastFeedback = validationFeedback.ToArray();
             return Task.FromResult(new RecoveryPlannerResponse(plan, "test-model", 10, 5, 15));
         }
+    }
+
+    private sealed class ThrowingPlanner(string message) : IRecoveryPlanner
+    {
+        public Task<RecoveryPlannerResponse> CreatePlanAsync(
+            RecoveryPlanningInput input,
+            IReadOnlyCollection<string> validationFeedback,
+            CancellationToken cancellationToken) =>
+            throw new InvalidOperationException(message);
     }
 
     private sealed class StubAgent(RecoveryAgentId id) : IRecoveryAgent

@@ -1,5 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Security.Claims;
+using System.Threading.RateLimiting;
 using api.Data;
 using api.Enums;
 using api.Models;
@@ -102,6 +104,30 @@ builder.Services.AddAuthentication(options =>
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("AgentRecoveryStart", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetRateLimitPartitionKey(context),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 3,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    options.AddPolicy("AgentRecoveryApproval", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetRateLimitPartitionKey(context),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+});
 
 builder.Services.AddCors(options =>
 {
@@ -157,7 +183,13 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("AllowWebApp");
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+static string GetRateLimitPartitionKey(HttpContext context) =>
+    context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+    ?? context.Connection.RemoteIpAddress?.ToString()
+    ?? "unknown";

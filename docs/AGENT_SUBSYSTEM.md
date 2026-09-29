@@ -792,9 +792,10 @@ The workflow UI will show:
 
 ### 18.1 Prompt security
 
-- Treat incident titles, descriptions, and objectives as untrusted text.
-- Apply length limits and required-field validation.
-- Delimit user-provided content in the planner request.
+- Incident titles, descriptions, objectives, and decision notes are treated as untrusted text.
+- Objectives and notes are trimmed, length-limited, line-limited, and rejected when they contain unsupported control characters.
+- Persisted incident and route text is sanitized and bounded again before it enters the planner snapshot.
+- User-provided content is serialized as domain data and kept separate from system constraints.
 - Keep system constraints separate from domain content.
 - Reject planner output that references unknown agents, tools, or actions.
 - Do not place secrets or personal passenger data in prompts.
@@ -804,9 +805,13 @@ The workflow UI will show:
 - Require authentication for all recovery endpoints.
 - Restrict start and view operations to approved operational roles.
 - Restrict approval to Admin and Centre Manager roles.
-- Enforce centre ownership where applicable.
-- Apply request validation and rate limits.
+- Admin users may access all centres. Centre Manager, Dispatcher, and Fleet Officer users must have a valid `centre_id` claim.
+- Workflow lists, details, creation, and approval are scoped to the authenticated user's centre at both controller and service layers.
+- Cross-centre workflow and incident identifiers return no resource details.
+- Workflow creation is limited to three requests per authenticated user per minute.
+- Approval decisions are limited to ten requests per authenticated user per minute.
 - Protect the Gemini API key through secret configuration.
+- Persist only safe provider and tool failure messages while retaining technical exception details in correlated server logs.
 
 ### 18.3 Runtime limits
 
@@ -1025,13 +1030,13 @@ The assessed demonstration will use a breakdown incident linked to an active sch
 | 2 | Agents | Network Continuity Agent with a distinct responsibility | Done | Agent uses a controlled network tool and produces a structured bay and time recommendation | Add alternative-route search |
 | 3 | Agents | Fleet Readiness Agent with a distinct responsibility | Done | Agent uses a controlled fleet tool and produces a maintenance-safe structured vehicle recommendation | Add accessibility matching |
 | 4 | Agents | Dispatch Recovery Agent with a distinct responsibility | Done | Agent consumes the exact network and fleet outputs and uses a controlled conflict-free driver tool | Add driver qualification rules when licence classes are available |
-| 5 | Agents | Passenger and Fare Impact Agent with a distinct responsibility | Done | Agent produces structured passenger-impact guidance | Add fare-rule checks and notification preparation tools |
+| 5 | Agents | Passenger and Fare Impact Agent with a distinct responsibility | Done | Agent uses a controlled passenger-impact tool and produces structured notification guidance | Add fare-rule checks if recovery fare adjustments enter scope |
 | 6 | State | Durable workflow, step, proposal, and validation state | Done | Workflow, plan, agent steps, planner input and output, validation, and approval records are stored in PostgreSQL | Add a dedicated final-summary field after the execution result format is finalized |
 | 7 | Reliability | Agent timeouts, retry limits, and safe failure | Done | Agent and planner policies enforce timeouts, bounded retries, cancellation cleanup, and recorded safe failure | Add integration coverage for cancellation during live database operations |
 | 8 | Safety | Pre-approval deterministic validation | Done | Capacity, availability, maintenance, centre, and conflict checks are recorded | Add route, time-window, and accessibility checks |
-| 9 | Approval | Role-protected manager approval gate | Done | Workflow pauses and only authorized roles can decide | Add centre-scope enforcement and revision requests |
+| 9 | Approval | Role-protected manager approval gate | Done | Workflow pauses, only Admin or Centre Manager can decide, and non-admin decisions are restricted to the assigned centre | Add manager-requested revision only if required by the final workflow |
 | 10 | Execution | Approval-time revalidation and trip update | Done | Approved proposals are rechecked before trip mutation | Move writes into a dedicated transactional action executor |
-| 11 | Observability | Workflow list, detail, plan, tool, validation, and approval views | In progress | API workflow details expose Gemini mode, model, prompt version, duration, token usage, and fallback reason | Present the new planning evidence and future notification evidence in the React audit view |
+| 11 | Observability | Workflow list, detail, plan, tool, validation, and approval views | In progress | API workflow details expose Gemini metadata, replan history, tool evidence, validation, approval, and notification delivery evidence | Present the new planning and notification evidence in the React audit view |
 | 12 | Design | LLM orchestrator architecture and Gemini model decision | Done | This architecture document and pinned model decision exist | Record the model decision in an ADR |
 | 13 | Gemini | Add the official `Google.GenAI` package and options configuration | Done | `Google.GenAI`, validated `AgentAiOptions`, environment-key loading, timeout, and bounded retry settings are implemented | Configure `GEMINI_API_KEY` locally and run the provider integration check |
 | 14 | Contracts | Add typed planner input, plan, step, capability, and metadata contracts | Done | Typed incident snapshot, capability, plan, step, response, and audit contracts are implemented | Add serialization snapshot coverage when the schema is versioned |
@@ -1043,8 +1048,8 @@ The assessed demonstration will use a breakdown incident linked to an active sch
 | 20 | Composition | Strengthen deterministic proposal compatibility rules | Done | A dedicated proposal composer requires complete evidence, capacity, a supported recovery window, and proof that dispatch checked the exact vehicle, bay, and time combination | Extend composition when alternative-route and accessibility recommendations are added |
 | 21 | Notifications | Create approved passenger notifications | Done | Approval creates an idempotent in-app notification record for each active booking, exposes delivery evidence in the workflow audit, and lets the authenticated commuter list and mark notifications as read | Add external SMS, email, or push providers only if required by the final deployment scope |
 | 22 | Audit | Persist provider, model, prompt version, usage, and planning latency | Done | The migration, workflow entity, database mapping, and workflow API response include planning audit metadata | Display these fields in the workflow audit UI |
-| 23 | Security | Add prompt validation, redaction, rate limits, and centre-scope checks | To do | Security tests reject unsupported input and cross-centre actions | Implement filters and authorization policies |
-| 24 | Tests | Add unit tests for plan, tools, validation, approval, and execution | In progress | Twenty focused plan-policy, dependency-output, replanning, proposal-composition, and notification tests pass in `apps/api.Tests` | Add tool integration, approval, and action-execution tests, then run them in CI |
+| 23 | Security | Add prompt validation, redaction, rate limits, and centre-scope checks | Done | Access scopes restrict non-admin workflows to one centre, mutation endpoints are rate-limited, prompt text is bounded and sanitized, and persisted failures exclude raw exception details | Add authenticated API integration tests for cross-centre requests and HTTP 429 responses |
+| 24 | Tests | Add unit tests for plan, tools, validation, approval, and execution | In progress | Twenty-eight focused planning, dependency, composition, notification, access-scope, input-validation, and redaction tests pass in `apps/api.Tests` | Add database tool, approval, action-execution, and authenticated HTTP integration tests, then run them in CI |
 | 25 | Evaluation | Build the incident evaluation dataset and record measurements | To do | Evaluation report contains accuracy, safety, latency, and cost results | Define fixtures and evaluation runner |
 | 26 | Demonstration | Verify one complete Gemini-planned assessed workflow | To do | Recorded run shows objective through final outcome with all evidence | Prepare stable seed data and demonstration script |
 | 27 | Documentation | Add ADR, API examples, test results, screenshots, and final report evidence | To do | Submission report links to verified implementation evidence | Update documentation after implementation and testing |

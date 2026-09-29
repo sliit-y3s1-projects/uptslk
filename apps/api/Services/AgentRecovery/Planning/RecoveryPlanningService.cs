@@ -97,7 +97,7 @@ public sealed class RecoveryPlanningService(
                 }
                 catch (Exception exception)
                 {
-                    fallbackReason = $"Gemini planning failed: {exception.Message}";
+                    fallbackReason = "Gemini planning failed. Review the correlated server log for technical details.";
                     logger.LogWarning(
                         exception,
                         "Gemini recovery planning failed for workflow {WorkflowId} on attempt {Attempt}",

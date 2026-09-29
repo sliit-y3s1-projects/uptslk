@@ -16,7 +16,8 @@ public sealed class RecoveryWorkflowService(
     RecoveryProposalComposer proposalComposer,
     PassengerNotificationService passengerNotifications,
     TripConflictService conflictService,
-    Microsoft.Extensions.Options.IOptions<AgentAiOptions> agentAiOptions)
+    Microsoft.Extensions.Options.IOptions<AgentAiOptions> agentAiOptions,
+    ILogger<RecoveryWorkflowService> logger)
 {
     private const int AgentTimeoutSeconds = 5;
     private const int MaxAgentRetries = 1;
@@ -26,7 +27,11 @@ public sealed class RecoveryWorkflowService(
     };
     private readonly AgentAiOptions _agentAiOptions = agentAiOptions.Value;
 
-    public async Task<(AgentWorkflow? Workflow, string? Error)> StartAsync(Guid incidentId, string? objective, CancellationToken cancellationToken)
+    public async Task<(AgentWorkflow? Workflow, string? Error)> StartAsync(
+        Guid incidentId,
+        string? objective,
+        Guid? scopedCentreId,
+        CancellationToken cancellationToken)
     {
         var incident = await db.Incidents
             .Include(item => item.Trip).ThenInclude(trip => trip!.Route)
@@ -35,6 +40,8 @@ public sealed class RecoveryWorkflowService(
             .Include(item => item.Trip).ThenInclude(trip => trip!.RouteDirection).ThenInclude(direction => direction!.EndCentre)
             .SingleOrDefaultAsync(item => item.Id == incidentId, cancellationToken);
         if (incident is null) return (null, "The incident does not exist.");
+        if (scopedCentreId.HasValue && incident.CentreId != scopedCentreId.Value)
+            return (null, "The incident does not exist.");
         if (incident.Trip is null) return (null, "Recovery requires an incident linked to a scheduled trip.");
         if (incident.Trip.Status is TripStatus.Completed or TripStatus.Cancelled) return (null, "Completed or cancelled trips cannot enter recovery.");
         if (await db.AgentWorkflows.AnyAsync(workflow => workflow.IncidentId == incidentId && (workflow.Status == WorkflowStatus.Running || workflow.Status == WorkflowStatus.PausedForApproval), cancellationToken))
@@ -186,7 +193,13 @@ public sealed class RecoveryWorkflowService(
         return (workflow, null);
     }
 
-    public async Task<(AgentWorkflow? Workflow, string? Error)> DecideAsync(Guid workflowId, ApprovalDecision decision, Guid? reviewerId, string? note, CancellationToken cancellationToken)
+    public async Task<(AgentWorkflow? Workflow, string? Error)> DecideAsync(
+        Guid workflowId,
+        ApprovalDecision decision,
+        Guid? reviewerId,
+        string? note,
+        Guid? scopedCentreId,
+        CancellationToken cancellationToken)
     {
         var workflow = await db.AgentWorkflows.Include(item => item.ApprovalRequests)
             .Include(item => item.Trip).ThenInclude(trip => trip.Route)
@@ -194,6 +207,8 @@ public sealed class RecoveryWorkflowService(
             .Include(item => item.Incident)
             .SingleOrDefaultAsync(item => item.Id == workflowId, cancellationToken);
         if (workflow is null) return (null, "The recovery workflow does not exist.");
+        if (scopedCentreId.HasValue && workflow.CentreId != scopedCentreId.Value)
+            return (null, "The recovery workflow does not exist.");
         var approval = workflow.ApprovalRequests.OrderByDescending(item => item.CreatedAt).FirstOrDefault(item => item.Decision == ApprovalDecision.Pending);
         if (approval is null || workflow.Status != WorkflowStatus.PausedForApproval) return (null, "This workflow is not waiting for an approval decision.");
 
@@ -421,14 +436,18 @@ public sealed class RecoveryWorkflowService(
 
         return new RecoveryPlanningInput(
             workflow.Id,
-            workflow.Objective,
-            new IncidentPlanningSnapshot(incident.Type, incident.Severity, incident.Title, incident.Description),
+            RecoveryTextValidator.SanitizeForPrompt(workflow.Objective, 1000),
+            new IncidentPlanningSnapshot(
+                incident.Type,
+                incident.Severity,
+                RecoveryTextValidator.SanitizeForPrompt(incident.Title, 200),
+                RecoveryTextValidator.SanitizeForPrompt(incident.Description, 2000)),
             new TripPlanningSnapshot(
                 trip.Id,
                 trip.CentreId,
-                trip.Route.RouteNumber,
-                trip.Route.Name,
-                direction,
+                RecoveryTextValidator.SanitizeForPrompt(trip.Route.RouteNumber, 32),
+                RecoveryTextValidator.SanitizeForPrompt(trip.Route.Name, 160),
+                direction is null ? null : RecoveryTextValidator.SanitizeForPrompt(direction, 340),
                 trip.ScheduledTime,
                 trip.RouteDirection?.EstimatedDurationMin ?? trip.Route.EstimatedDurationMin),
             affectedPassengers,
@@ -571,7 +590,7 @@ public sealed class RecoveryWorkflowService(
             throw new InvalidOperationException($"{agent.Name} attempted a tool outside its allow-list.");
     }
 
-    private static async Task<(AgentExecutionResult? Execution, string? Error, int RetryCount, int DurationMs)> RunAgentWithPolicyAsync(IRecoveryAgent agent, RecoveryContext context, CancellationToken cancellationToken)
+    private async Task<(AgentExecutionResult? Execution, string? Error, int RetryCount, int DurationMs)> RunAgentWithPolicyAsync(IRecoveryAgent agent, RecoveryContext context, CancellationToken cancellationToken)
     {
         var timer = Stopwatch.StartNew();
         Exception? lastError = null;
@@ -596,9 +615,18 @@ public sealed class RecoveryWorkflowService(
             catch (Exception exception)
             {
                 lastError = exception;
+                logger.LogWarning(
+                    exception,
+                    "Recovery agent {AgentId} failed for workflow {WorkflowId} on attempt {Attempt}",
+                    agent.Id,
+                    context.Workflow.Id,
+                    attempt + 1);
             }
         }
-        return (null, lastError?.Message ?? "Agent execution failed.", MaxAgentRetries, (int)timer.ElapsedMilliseconds);
+        var safeError = lastError is TimeoutException
+            ? lastError.Message
+            : $"{agent.Name} failed while executing an allow-listed recovery tool.";
+        return (null, safeError, MaxAgentRetries, (int)timer.ElapsedMilliseconds);
     }
 
     private sealed record PlanExecutionResult(
