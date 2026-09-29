@@ -6,7 +6,9 @@ namespace api.Services.AgentRecovery.Agents;
 
 public sealed class NetworkContinuityAgent(AppDbContext db) : IRecoveryAgent
 {
+    public RecoveryAgentId Id => RecoveryAgentId.NetworkContinuity;
     public string Name => "Network Continuity Agent";
+    public string Responsibility => "Assess service continuity, departure resources, and a safe revised departure time.";
     public IReadOnlySet<RecoveryToolName> AllowedTools { get; } = new HashSet<RecoveryToolName>
     {
         RecoveryToolName.FindDepartureBay

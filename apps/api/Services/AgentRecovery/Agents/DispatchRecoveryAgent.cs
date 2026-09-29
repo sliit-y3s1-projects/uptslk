@@ -6,7 +6,9 @@ namespace api.Services.AgentRecovery.Agents;
 
 public sealed class DispatchRecoveryAgent(AppDbContext db, TripConflictService conflictService) : IRecoveryAgent
 {
+    public RecoveryAgentId Id => RecoveryAgentId.DispatchRecovery;
     public string Name => "Dispatch Recovery Agent";
+    public string Responsibility => "Find an active and conflict-free replacement driver for the recovery proposal.";
     public IReadOnlySet<RecoveryToolName> AllowedTools { get; } = new HashSet<RecoveryToolName>
     {
         RecoveryToolName.FindConflictFreeDriver

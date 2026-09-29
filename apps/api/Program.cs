@@ -7,6 +7,7 @@ using api.Services;
 using api.Services.Payments;
 using api.Services.AgentRecovery;
 using api.Services.AgentRecovery.Agents;
+using api.Services.AgentRecovery.Planning;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -44,7 +45,25 @@ builder.Services.AddScoped<IRecoveryAgent, NetworkContinuityAgent>();
 builder.Services.AddScoped<IRecoveryAgent, FleetReadinessAgent>();
 builder.Services.AddScoped<IRecoveryAgent, DispatchRecoveryAgent>();
 builder.Services.AddScoped<IRecoveryAgent, PassengerFareImpactAgent>();
+builder.Services.AddScoped<RecoveryAgentRegistry>();
+builder.Services.AddScoped<RecoveryPlanValidator>();
+builder.Services.AddScoped<IRecoveryPlanner, GeminiRecoveryPlanner>();
+builder.Services.AddScoped<RecoveryPlanningService>();
 builder.Services.AddScoped<RecoveryWorkflowService>();
+builder.Services.AddOptions<AgentAiOptions>()
+    .Bind(builder.Configuration.GetSection(AgentAiOptions.SectionName))
+    .PostConfigure(options =>
+    {
+        if (string.IsNullOrWhiteSpace(options.ApiKey))
+            options.ApiKey = builder.Configuration["GEMINI_API_KEY"];
+    })
+    .Validate(options => !string.IsNullOrWhiteSpace(options.Provider), "AgentAi:Provider is required.")
+    .Validate(options => !string.IsNullOrWhiteSpace(options.Model), "AgentAi:Model is required.")
+    .Validate(options => !string.IsNullOrWhiteSpace(options.PromptVersion), "AgentAi:PromptVersion is required.")
+    .Validate(options => options.TimeoutSeconds is >= 1 and <= 60, "AgentAi:TimeoutSeconds must be between 1 and 60.")
+    .Validate(options => options.MaxPlanningRetries is >= 0 and <= 2, "AgentAi:MaxPlanningRetries must be between 0 and 2.")
+    .Validate(options => options.MaximumPlanSteps is >= 2 and <= 12, "AgentAi:MaximumPlanSteps must be between 2 and 12.")
+    .ValidateOnStart();
 
 builder.Services.AddAuthentication(options =>
     {

@@ -82,7 +82,14 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<PaymentRefund>().Property(refund => refund.Reason).HasMaxLength(1000);
         modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.Objective).HasMaxLength(1000);
         modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.FailureReason).HasMaxLength(2000);
+        modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.PlanningMode).HasMaxLength(32);
+        modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.ModelProvider).HasMaxLength(64);
+        modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.ModelName).HasMaxLength(120);
+        modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.PromptVersion).HasMaxLength(80);
+        modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.PlanningFallbackReason).HasMaxLength(2000);
         modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.PlanJson).HasColumnType("jsonb");
+        modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.PlannerInputJson).HasColumnType("jsonb");
+        modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.PlannerOutputJson).HasColumnType("jsonb");
         modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.ValidationJson).HasColumnType("jsonb");
         modelBuilder.Entity<AgentStep>().Property(step => step.AgentName).HasMaxLength(120);
         modelBuilder.Entity<AgentStep>().Property(step => step.Status).HasMaxLength(32);

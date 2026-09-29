@@ -2,7 +2,9 @@ namespace api.Services.AgentRecovery.Agents;
 
 public sealed class PassengerFareImpactAgent : IRecoveryAgent
 {
+    public RecoveryAgentId Id => RecoveryAgentId.PassengerFareImpact;
     public string Name => "Passenger & Fare Impact Agent";
+    public string Responsibility => "Assess affected passengers, notification requirements, and fare impact.";
     public IReadOnlySet<RecoveryToolName> AllowedTools { get; } = new HashSet<RecoveryToolName>
     {
         RecoveryToolName.AssessPassengerImpact

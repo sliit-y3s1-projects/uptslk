@@ -6,7 +6,9 @@ namespace api.Services.AgentRecovery.Agents;
 
 public sealed class FleetReadinessAgent(AppDbContext db) : IRecoveryAgent
 {
+    public RecoveryAgentId Id => RecoveryAgentId.FleetReadiness;
     public string Name => "Fleet Readiness Agent";
+    public string Responsibility => "Find an active, maintenance-safe replacement vehicle with sufficient capacity.";
     public IReadOnlySet<RecoveryToolName> AllowedTools { get; } = new HashSet<RecoveryToolName>
     {
         RecoveryToolName.FindReplacementVehicle

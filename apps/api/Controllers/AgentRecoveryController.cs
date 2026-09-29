@@ -42,6 +42,18 @@ public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService re
         {
             Summary = ToListItem(workflow),
             Trip = new { workflow.Trip.Id, workflow.Trip.ScheduledTime, workflow.Trip.Status, Route = workflow.Trip.Route.RouteNumber, workflow.Trip.Route.Name, Vehicle = workflow.Trip.Vehicle.PlateNumber, Driver = workflow.Trip.Driver.FullName, Bay = workflow.Trip.Bay.Code },
+            Planning = new
+            {
+                workflow.PlanningMode,
+                workflow.ModelProvider,
+                workflow.ModelName,
+                workflow.PromptVersion,
+                workflow.PlanningDurationMs,
+                workflow.PromptTokenCount,
+                workflow.OutputTokenCount,
+                workflow.TotalTokenCount,
+                workflow.PlanningFallbackReason
+            },
             Plan = ReadJson(workflow.PlanJson),
             ValidationResults = ReadJson(workflow.ValidationJson),
             Steps = workflow.Steps.OrderBy(step => step.CreatedAt).Select(step => new { step.Id, step.AgentName, step.Status, Input = ReadJson(step.InputJson), Output = ReadJson(step.OutputJson), ToolCalls = ReadJson(step.ToolCallsJson), step.Error, step.RetryCount, step.DurationMs, step.CreatedAt }),
@@ -77,6 +89,8 @@ public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService re
         workflow.TripId,
         workflow.Objective,
         workflow.Status,
+        workflow.PlanningMode,
+        workflow.ModelName,
         workflow.FailureReason,
         Incident = new { workflow.Incident.Title, workflow.Incident.Type, workflow.Incident.Severity },
         Trip = new { Route = workflow.Trip.Route.RouteNumber, workflow.Trip.ScheduledTime },

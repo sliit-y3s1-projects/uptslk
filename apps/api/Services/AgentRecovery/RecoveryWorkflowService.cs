@@ -4,11 +4,16 @@ using System.Text.Json.Serialization;
 using api.Data;
 using api.Enums;
 using api.Models;
+using api.Services.AgentRecovery.Planning;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Services.AgentRecovery;
 
-public sealed class RecoveryWorkflowService(AppDbContext db, IEnumerable<IRecoveryAgent> agents, TripConflictService conflictService)
+public sealed class RecoveryWorkflowService(
+    AppDbContext db,
+    RecoveryPlanningService planningService,
+    RecoveryAgentRegistry agentRegistry,
+    TripConflictService conflictService)
 {
     private const int AgentTimeoutSeconds = 5;
     private const int MaxAgentRetries = 1;
@@ -21,6 +26,7 @@ public sealed class RecoveryWorkflowService(AppDbContext db, IEnumerable<IRecove
     {
         var incident = await db.Incidents
             .Include(item => item.Trip).ThenInclude(trip => trip!.Route)
+            .Include(item => item.Trip).ThenInclude(trip => trip!.Vehicle)
             .Include(item => item.Trip).ThenInclude(trip => trip!.RouteDirection).ThenInclude(direction => direction!.StartCentre)
             .Include(item => item.Trip).ThenInclude(trip => trip!.RouteDirection).ThenInclude(direction => direction!.EndCentre)
             .SingleOrDefaultAsync(item => item.Id == incidentId, cancellationToken);
@@ -39,16 +45,24 @@ public sealed class RecoveryWorkflowService(AppDbContext db, IEnumerable<IRecove
             IncidentId = incident.Id,
             TripId = incident.TripId!.Value,
             Objective = string.IsNullOrWhiteSpace(objective) ? $"Recover {incident.Trip.Route.RouteNumber} after {incident.Type.ToString().ToLowerInvariant()} incident: {incident.Title}" : objective.Trim(),
-            PlanJson = JsonSerializer.Serialize(CreatePlan(), JsonOptions)
+            PlanJson = "[]"
         };
         db.AgentWorkflows.Add(workflow);
         await db.SaveChangesAsync(cancellationToken);
 
+        var planningInput = CreatePlanningInput(workflow, incident, affectedPassengers, agentRegistry.Capabilities);
+        var planningResult = await planningService.CreatePlanAsync(planningInput, cancellationToken);
+        ApplyPlanningResult(workflow, planningResult);
+        var plan = CreateExecutionPlan(planningResult.Plan, agentRegistry);
+        workflow.PlanJson = JsonSerializer.Serialize(plan, JsonOptions);
+        workflow.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
         var context = new RecoveryContext(workflow, incident.Trip, affectedPassengers);
-        var plan = CreatePlan();
         var recommendations = new List<AgentRecommendation>();
-        foreach (var agent in agents)
+        foreach (var plannedStep in planningResult.Plan.Steps.OrderBy(step => step.Order))
         {
+            var agent = agentRegistry.GetRequired(plannedStep.AgentId);
             MarkPlanStep(plan, agent.Name, "Running");
             var result = await RunAgentWithPolicyAsync(agent, context, cancellationToken);
             if (result.Execution is not null)
@@ -92,17 +106,25 @@ public sealed class RecoveryWorkflowService(AppDbContext db, IEnumerable<IRecove
         var fleet = recommendations.SingleOrDefault(item => item.AgentName == "Fleet Readiness Agent");
         var dispatch = recommendations.SingleOrDefault(item => item.AgentName == "Dispatch Recovery Agent");
         var warnings = recommendations.SelectMany(item => item.Warnings).ToList();
-        if (fleet?.VehicleId is null || dispatch?.DriverId is null || network?.BayId is null || network.ScheduledTime is null || fleet.Capacity < affectedPassengers)
+        var selectedAgents = planningResult.Plan.Steps.Select(step => step.AgentId).ToHashSet();
+        var fleetRequired = selectedAgents.Contains(RecoveryAgentId.FleetReadiness);
+        var dispatchRequired = selectedAgents.Contains(RecoveryAgentId.DispatchRecovery);
+        var proposedCapacity = fleet?.Capacity ?? incident.Trip.Vehicle.Capacity;
+        if ((fleetRequired && fleet?.VehicleId is null) ||
+            (dispatchRequired && dispatch?.DriverId is null) ||
+            network?.BayId is null ||
+            network.ScheduledTime is null ||
+            proposedCapacity < affectedPassengers)
         {
             MarkPlanStep(plan, "Safety Validation", "Skipped");
             MarkPlanStep(plan, "Manager Approval", "Blocked");
             workflow.PlanJson = JsonSerializer.Serialize(plan, JsonOptions);
             workflow.Status = WorkflowStatus.Failed;
-            workflow.FailureReason = fleet?.Capacity < affectedPassengers
+            workflow.FailureReason = proposedCapacity < affectedPassengers
                 ? "No proposed replacement vehicle can carry all affected passengers."
-                : dispatch?.DriverId is null
+                : dispatchRequired && dispatch?.DriverId is null
                     ? "No conflict-free alternate driver is available for the proposed recovery time."
-                    : fleet?.VehicleId is null
+                    : fleetRequired && fleet?.VehicleId is null
                         ? "No active replacement vehicle is available at this centre."
                         : network?.BayId is null
                             ? "No available replacement bay is available at the departure centre."
@@ -113,7 +135,13 @@ public sealed class RecoveryWorkflowService(AppDbContext db, IEnumerable<IRecove
             return (workflow, null);
         }
 
-        var proposal = new RecoveryProposal(fleet.VehicleId.Value, dispatch.DriverId.Value, network.BayId.Value, network.ScheduledTime.Value, affectedPassengers, warnings);
+        var proposal = new RecoveryProposal(
+            fleet?.VehicleId ?? incident.Trip.VehicleId,
+            dispatch?.DriverId ?? incident.Trip.DriverId,
+            network.BayId.Value,
+            network.ScheduledTime.Value,
+            affectedPassengers,
+            warnings);
         MarkPlanStep(plan, "Safety Validation", "Running");
         var validationResults = await ValidateProposalAsync(incident.Trip, proposal, "Pre-approval", cancellationToken);
         workflow.ValidationJson = JsonSerializer.Serialize(validationResults, JsonOptions);
@@ -228,15 +256,80 @@ public sealed class RecoveryWorkflowService(AppDbContext db, IEnumerable<IRecove
     private static ValidationResult Check(string phase, string check, bool passed, string failedDetail, DateTime checkedAt) =>
         new(phase, check, passed, passed ? $"{check} passed." : failedDetail, checkedAt);
 
-    private static List<RecoveryPlanStep> CreatePlan() =>
-    [
-        new(1, "Assess service continuity", "Network Continuity Agent", "Select a departure-centre bay and a safe revised time.", "Pending"),
-        new(2, "Assess fleet readiness", "Fleet Readiness Agent", "Select an active, maintenance-safe replacement vehicle.", "Pending"),
-        new(3, "Assess dispatch availability", "Dispatch Recovery Agent", "Select a conflict-free alternate driver.", "Pending"),
-        new(4, "Assess passenger impact", "Passenger & Fare Impact Agent", "Determine active passenger impact and fare action.", "Pending"),
-        new(5, "Run deterministic safety checks", "Safety Validation", "Validate capacity, resource status and operational conflicts.", "Pending"),
-        new(6, "Request manager decision", "Manager Approval", "Pause the high-impact trip update for authorized approval.", "Pending")
-    ];
+    private static RecoveryPlanningInput CreatePlanningInput(
+        AgentWorkflow workflow,
+        Incident incident,
+        int affectedPassengers,
+        IReadOnlyCollection<AgentCapability> capabilities)
+    {
+        var trip = incident.Trip!;
+        var direction = trip.RouteDirection is null
+            ? null
+            : $"{trip.RouteDirection.StartCentre.Name} to {trip.RouteDirection.EndCentre.Name}";
+
+        return new RecoveryPlanningInput(
+            workflow.Id,
+            workflow.Objective,
+            new IncidentPlanningSnapshot(incident.Type, incident.Severity, incident.Title, incident.Description),
+            new TripPlanningSnapshot(
+                trip.Id,
+                trip.CentreId,
+                trip.Route.RouteNumber,
+                trip.Route.Name,
+                direction,
+                trip.ScheduledTime,
+                trip.RouteDirection?.EstimatedDurationMin ?? trip.Route.EstimatedDurationMin),
+            affectedPassengers,
+            capabilities);
+    }
+
+    private static void ApplyPlanningResult(AgentWorkflow workflow, RecoveryPlanningResult result)
+    {
+        workflow.PlanningMode = result.Mode;
+        workflow.ModelProvider = result.Provider;
+        workflow.ModelName = result.Model;
+        workflow.PromptVersion = result.PromptVersion;
+        workflow.PlannerInputJson = result.InputJson;
+        workflow.PlannerOutputJson = result.OutputJson;
+        workflow.PlanningDurationMs = result.DurationMs;
+        workflow.PromptTokenCount = result.PromptTokenCount;
+        workflow.OutputTokenCount = result.OutputTokenCount;
+        workflow.TotalTokenCount = result.TotalTokenCount;
+        workflow.PlanningFallbackReason = result.FallbackReason;
+    }
+
+    private static List<RecoveryPlanStep> CreateExecutionPlan(
+        RecoveryPlanDraft generatedPlan,
+        RecoveryAgentRegistry registry)
+    {
+        var plan = generatedPlan.Steps
+            .OrderBy(step => step.Order)
+            .Select(step =>
+            {
+                var agent = registry.GetRequired(step.AgentId);
+                return new RecoveryPlanStep(
+                    step.Order,
+                    GetStepTitle(step.AgentId),
+                    agent.Name,
+                    step.Objective,
+                    "Pending");
+            })
+            .ToList();
+
+        var nextOrder = plan.Count == 0 ? 1 : plan.Max(step => step.Order) + 1;
+        plan.Add(new RecoveryPlanStep(nextOrder, "Run deterministic safety checks", "Safety Validation", "Validate capacity, resource status and operational conflicts.", "Pending"));
+        plan.Add(new RecoveryPlanStep(nextOrder + 1, "Request manager decision", "Manager Approval", "Pause the high-impact trip update for authorized approval.", "Pending"));
+        return plan;
+    }
+
+    private static string GetStepTitle(RecoveryAgentId agentId) => agentId switch
+    {
+        RecoveryAgentId.NetworkContinuity => "Assess service continuity",
+        RecoveryAgentId.FleetReadiness => "Assess fleet readiness",
+        RecoveryAgentId.DispatchRecovery => "Assess dispatch availability",
+        RecoveryAgentId.PassengerFareImpact => "Assess passenger impact",
+        _ => throw new ArgumentOutOfRangeException(nameof(agentId), agentId, "Unsupported recovery agent.")
+    };
 
     private static void MarkPlanStep(List<RecoveryPlanStep> plan, string owner, string status)
     {
@@ -259,8 +352,8 @@ public sealed class RecoveryWorkflowService(AppDbContext db, IEnumerable<IRecove
 
     private static List<RecoveryPlanStep> DeserializePlan(string? json)
     {
-        try { return JsonSerializer.Deserialize<List<RecoveryPlanStep>>(json ?? "[]", JsonOptions) ?? CreatePlan(); }
-        catch (JsonException) { return CreatePlan(); }
+        try { return JsonSerializer.Deserialize<List<RecoveryPlanStep>>(json ?? "[]", JsonOptions) ?? []; }
+        catch (JsonException) { return []; }
     }
 
     private static void AppendValidationResults(AgentWorkflow workflow, IReadOnlyList<ValidationResult> validationResults)
