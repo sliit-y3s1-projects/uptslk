@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using api.Data;
@@ -11,13 +12,15 @@ using api.Data;
 namespace api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260929131616_AddAgentPlanningMetadata")]
+    partial class AddAgentPlanningMetadata
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.29")
+                .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -277,13 +280,6 @@ namespace api.Migrations
 
                     b.Property<string>("ProposalJson")
                         .HasColumnType("text");
-
-                    b.Property<int>("ReplanCount")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ReplanHistoryJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -719,65 +715,6 @@ namespace api.Migrations
                         .IsUnique();
 
                     b.ToTable("Passengers");
-                });
-
-            modelBuilder.Entity("api.Models.PassengerNotification", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BookingId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Channel")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeliveredAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("DeliveryAttemptCount")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("DeliveryError")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<Guid>("PassengerId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("ReadAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<Guid>("WorkflowId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BookingId");
-
-                    b.HasIndex("PassengerId");
-
-                    b.HasIndex("WorkflowId", "BookingId", "Channel")
-                        .IsUnique();
-
-                    b.ToTable("PassengerNotifications");
                 });
 
             modelBuilder.Entity("api.Models.Payment", b =>
@@ -1642,33 +1579,6 @@ namespace api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("api.Models.PassengerNotification", b =>
-                {
-                    b.HasOne("api.Models.Booking", "Booking")
-                        .WithMany("PassengerNotifications")
-                        .HasForeignKey("BookingId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("api.Models.Passenger", "Passenger")
-                        .WithMany("Notifications")
-                        .HasForeignKey("PassengerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("api.Models.AgentWorkflow", "Workflow")
-                        .WithMany("PassengerNotifications")
-                        .HasForeignKey("WorkflowId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Booking");
-
-                    b.Navigation("Passenger");
-
-                    b.Navigation("Workflow");
-                });
-
             modelBuilder.Entity("api.Models.Payment", b =>
                 {
                     b.HasOne("api.Models.Booking", "Booking")
@@ -1901,8 +1811,6 @@ namespace api.Migrations
                 {
                     b.Navigation("ApprovalRequests");
 
-                    b.Navigation("PassengerNotifications");
-
                     b.Navigation("Steps");
                 });
 
@@ -1916,8 +1824,6 @@ namespace api.Migrations
             modelBuilder.Entity("api.Models.Booking", b =>
                 {
                     b.Navigation("AgentWorkflow");
-
-                    b.Navigation("PassengerNotifications");
 
                     b.Navigation("Payments");
 
@@ -1947,8 +1853,6 @@ namespace api.Migrations
             modelBuilder.Entity("api.Models.Passenger", b =>
                 {
                     b.Navigation("Bookings");
-
-                    b.Navigation("Notifications");
 
                     b.Navigation("Wallet");
                 });

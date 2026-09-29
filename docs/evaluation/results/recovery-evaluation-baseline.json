@@ -1,0 +1,331 @@
+{
+  "datasetVersion": "recovery-evaluation-v1",
+  "evaluationMode": "deterministic-baseline",
+  "planner": "safe-recovery-fallback",
+  "promptVersion": "recovery-planner-v1",
+  "generatedAtUtc": "2026-09-29T15:37:01.0476489Z",
+  "metrics": {
+    "scenarioCount": 10,
+    "validPlanRate": 1,
+    "exactAgentSelectionRate": 0.7,
+    "meanAgentPrecision": 0.85,
+    "meanAgentRecall": 1,
+    "deterministicOutcomeAccuracy": 1,
+    "unsafeActionPreventionRate": 1,
+    "approvalReadyRate": 0.5,
+    "safeFailureRate": 0.5,
+    "averagePlanningLatencyMs": 0,
+    "p95PlanningLatencyMs": 0,
+    "promptTokenCount": 0,
+    "outputTokenCount": 0,
+    "totalTokenCount": 0,
+    "estimatedCostUsd": null
+  },
+  "scenarios": [
+    {
+      "id": "breakdown-valid-replacement",
+      "name": "Breakdown with complete replacement resources",
+      "planValid": true,
+      "planErrors": [],
+      "expectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "selectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "agentPrecision": 1,
+      "agentRecall": 1,
+      "exactAgentSelection": true,
+      "expectedOutcome": "ApprovalReady",
+      "actualOutcome": "ApprovalReady",
+      "outcomeCorrect": true,
+      "safetyReasons": [],
+      "planningDurationMs": 0,
+      "promptTokenCount": 0,
+      "outputTokenCount": 0,
+      "totalTokenCount": 0,
+      "estimatedCostUsd": null
+    },
+    {
+      "id": "breakdown-insufficient-capacity",
+      "name": "Breakdown with an undersized replacement vehicle",
+      "planValid": true,
+      "planErrors": [],
+      "expectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "selectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "agentPrecision": 1,
+      "agentRecall": 1,
+      "exactAgentSelection": true,
+      "expectedOutcome": "SafeFailure",
+      "actualOutcome": "SafeFailure",
+      "outcomeCorrect": true,
+      "safetyReasons": [
+        "The proposed vehicle capacity of 30 cannot carry 44 affected passengers."
+      ],
+      "planningDurationMs": 0,
+      "promptTokenCount": 0,
+      "outputTokenCount": 0,
+      "totalTokenCount": 0,
+      "estimatedCostUsd": null
+    },
+    {
+      "id": "breakdown-no-driver",
+      "name": "Breakdown without an available replacement driver",
+      "planValid": true,
+      "planErrors": [],
+      "expectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "selectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "agentPrecision": 1,
+      "agentRecall": 1,
+      "exactAgentSelection": true,
+      "expectedOutcome": "SafeFailure",
+      "actualOutcome": "SafeFailure",
+      "outcomeCorrect": true,
+      "safetyReasons": [
+        "No conflict-free alternate driver is available for the proposed recovery combination."
+      ],
+      "planningDurationMs": 0,
+      "promptTokenCount": 0,
+      "outputTokenCount": 0,
+      "totalTokenCount": 0,
+      "estimatedCostUsd": null
+    },
+    {
+      "id": "breakdown-no-usable-bay",
+      "name": "Breakdown without a usable departure bay",
+      "planValid": true,
+      "planErrors": [],
+      "expectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "selectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "agentPrecision": 1,
+      "agentRecall": 1,
+      "exactAgentSelection": true,
+      "expectedOutcome": "SafeFailure",
+      "actualOutcome": "SafeFailure",
+      "outcomeCorrect": true,
+      "safetyReasons": [
+        "The network assessment did not produce a usable departure bay and time."
+      ],
+      "planningDurationMs": 0,
+      "promptTokenCount": 0,
+      "outputTokenCount": 0,
+      "totalTokenCount": 0,
+      "estimatedCostUsd": null
+    },
+    {
+      "id": "delay-service-continuity",
+      "name": "Delay requiring continuity and passenger assessment",
+      "planValid": true,
+      "planErrors": [],
+      "expectedAgents": [
+        "NetworkContinuity",
+        "PassengerFareImpact"
+      ],
+      "selectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "agentPrecision": 0.5,
+      "agentRecall": 1,
+      "exactAgentSelection": false,
+      "expectedOutcome": "ApprovalReady",
+      "actualOutcome": "ApprovalReady",
+      "outcomeCorrect": true,
+      "safetyReasons": [],
+      "planningDurationMs": 0,
+      "promptTokenCount": 0,
+      "outputTokenCount": 0,
+      "totalTokenCount": 0,
+      "estimatedCostUsd": null
+    },
+    {
+      "id": "delay-no-passengers",
+      "name": "Delay with no active passenger bookings",
+      "planValid": true,
+      "planErrors": [],
+      "expectedAgents": [
+        "NetworkContinuity",
+        "PassengerFareImpact"
+      ],
+      "selectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "agentPrecision": 0.5,
+      "agentRecall": 1,
+      "exactAgentSelection": false,
+      "expectedOutcome": "ApprovalReady",
+      "actualOutcome": "ApprovalReady",
+      "outcomeCorrect": true,
+      "safetyReasons": [],
+      "planningDurationMs": 0,
+      "promptTokenCount": 0,
+      "outputTokenCount": 0,
+      "totalTokenCount": 0,
+      "estimatedCostUsd": null
+    },
+    {
+      "id": "breakdown-dispatch-conflict",
+      "name": "Breakdown with replacement resource conflict",
+      "planValid": true,
+      "planErrors": [],
+      "expectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "selectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "agentPrecision": 1,
+      "agentRecall": 1,
+      "exactAgentSelection": true,
+      "expectedOutcome": "SafeFailure",
+      "actualOutcome": "SafeFailure",
+      "outcomeCorrect": true,
+      "safetyReasons": [
+        "No conflict-free alternate driver is available for the proposed recovery combination."
+      ],
+      "planningDurationMs": 0,
+      "promptTokenCount": 0,
+      "outputTokenCount": 0,
+      "totalTokenCount": 0,
+      "estimatedCostUsd": null
+    },
+    {
+      "id": "route-disruption",
+      "name": "Route disruption requiring continuity assessment",
+      "planValid": true,
+      "planErrors": [],
+      "expectedAgents": [
+        "NetworkContinuity",
+        "PassengerFareImpact"
+      ],
+      "selectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "agentPrecision": 0.5,
+      "agentRecall": 1,
+      "exactAgentSelection": false,
+      "expectedOutcome": "ApprovalReady",
+      "actualOutcome": "ApprovalReady",
+      "outcomeCorrect": true,
+      "safetyReasons": [],
+      "planningDurationMs": 0,
+      "promptTokenCount": 0,
+      "outputTokenCount": 0,
+      "totalTokenCount": 0,
+      "estimatedCostUsd": null
+    },
+    {
+      "id": "safety-valid-recovery",
+      "name": "Safety incident with verified replacement resources",
+      "planValid": true,
+      "planErrors": [],
+      "expectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "selectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "agentPrecision": 1,
+      "agentRecall": 1,
+      "exactAgentSelection": true,
+      "expectedOutcome": "ApprovalReady",
+      "actualOutcome": "ApprovalReady",
+      "outcomeCorrect": true,
+      "safetyReasons": [],
+      "planningDurationMs": 0,
+      "promptTokenCount": 0,
+      "outputTokenCount": 0,
+      "totalTokenCount": 0,
+      "estimatedCostUsd": null
+    },
+    {
+      "id": "maintenance-state-change",
+      "name": "Replacement vehicle becomes unavailable before approval",
+      "planValid": true,
+      "planErrors": [],
+      "expectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "selectedAgents": [
+        "NetworkContinuity",
+        "FleetReadiness",
+        "DispatchRecovery",
+        "PassengerFareImpact"
+      ],
+      "agentPrecision": 1,
+      "agentRecall": 1,
+      "exactAgentSelection": true,
+      "expectedOutcome": "SafeFailure",
+      "actualOutcome": "SafeFailure",
+      "outcomeCorrect": true,
+      "safetyReasons": [
+        "No active, maintenance-safe replacement vehicle is available at this centre.",
+        "The dispatch driver was not checked against the proposed vehicle."
+      ],
+      "planningDurationMs": 0,
+      "promptTokenCount": 0,
+      "outputTokenCount": 0,
+      "totalTokenCount": 0,
+      "estimatedCostUsd": null
+    }
+  ]
+}

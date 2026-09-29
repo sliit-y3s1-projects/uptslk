@@ -2,7 +2,19 @@ using api.Models;
 
 namespace api.Services.AgentRecovery;
 
-public sealed record RecoveryContext(AgentWorkflow Workflow, Trip Trip, int AffectedPassengers);
+public sealed record RecoveryContext(
+    AgentWorkflow Workflow,
+    Trip Trip,
+    int AffectedPassengers,
+    IReadOnlyDictionary<RecoveryAgentId, AgentRecommendation> Evidence);
+
+public enum RecoveryAgentId
+{
+    NetworkContinuity,
+    FleetReadiness,
+    DispatchRecovery,
+    PassengerFareImpact
+}
 
 public enum RecoveryToolName
 {
@@ -57,7 +69,9 @@ public sealed record RecoveryProposal(
 
 public interface IRecoveryAgent
 {
+    RecoveryAgentId Id { get; }
     string Name { get; }
+    string Responsibility { get; }
     IReadOnlySet<RecoveryToolName> AllowedTools { get; }
     Task<AgentExecutionResult> AnalyseAsync(RecoveryContext context, CancellationToken cancellationToken);
 }

@@ -21,6 +21,19 @@ public class AgentWorkflow
     public string Objective { get; set; } = default!;
     public WorkflowStatus Status { get; set; } = WorkflowStatus.Running;
     public string PlanJson { get; set; } = "[]";
+    public string PlanningMode { get; set; } = "Pending";
+    public string? ModelProvider { get; set; }
+    public string? ModelName { get; set; }
+    public string? PromptVersion { get; set; }
+    public string PlannerInputJson { get; set; } = "{}";
+    public string PlannerOutputJson { get; set; } = "{}";
+    public string? PlanningFallbackReason { get; set; }
+    public int PlanningDurationMs { get; set; }
+    public int PromptTokenCount { get; set; }
+    public int OutputTokenCount { get; set; }
+    public int TotalTokenCount { get; set; }
+    public int ReplanCount { get; set; }
+    public string ReplanHistoryJson { get; set; } = "[]";
     public string? ProposalJson { get; set; }
     public string ValidationJson { get; set; } = "[]";
     public string? FailureReason { get; set; }
@@ -32,4 +45,5 @@ public class AgentWorkflow
     // Navigation
     public ICollection<AgentStep> Steps { get; set; } = new List<AgentStep>();
     public ICollection<ApprovalRequest> ApprovalRequests { get; set; } = new List<ApprovalRequest>();
+    public ICollection<PassengerNotification> PassengerNotifications { get; set; } = new List<PassengerNotification>();
 }

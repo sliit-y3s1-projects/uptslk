@@ -28,5 +28,6 @@ public class Booking
     // Navigation
     public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     public ICollection<Payment> Payments { get; set; } = new List<Payment>();
+    public ICollection<PassengerNotification> PassengerNotifications { get; set; } = new List<PassengerNotification>();
     public AgentWorkflow? AgentWorkflow { get; set; }
 }

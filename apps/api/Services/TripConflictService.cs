@@ -10,14 +10,21 @@ public class TripConflictService(AppDbContext db)
     // A bay is needed while a bus boards and leaves, not for the whole journey.
     private const int BayOccupancyMinutes = 10;
 
-    public async Task<IReadOnlyList<string>> FindConflicts(Guid vehicleId, Guid driverId, Guid bayId, DateTime scheduledTime, int durationMinutes, Guid? excludedTripId = null)
+    public async Task<IReadOnlyList<string>> FindConflicts(
+        Guid vehicleId,
+        Guid driverId,
+        Guid bayId,
+        DateTime scheduledTime,
+        int durationMinutes,
+        Guid? excludedTripId = null,
+        CancellationToken cancellationToken = default)
     {
         var candidates = await db.Trips.AsNoTracking()
             .Include(trip => trip.Route)
             .Where(trip => ActiveStatuses.Contains(trip.Status)
                 && (!excludedTripId.HasValue || trip.Id != excludedTripId.Value)
                 && (trip.VehicleId == vehicleId || trip.DriverId == driverId || trip.BayId == bayId))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         var requestedEnd = scheduledTime.AddMinutes(durationMinutes);
         var conflicts = new HashSet<string>();
