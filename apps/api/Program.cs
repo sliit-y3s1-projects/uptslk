@@ -53,6 +53,7 @@ builder.Services.AddScoped<IRecoveryAgent, PassengerFareImpactAgent>();
 builder.Services.AddScoped<RecoveryAgentRegistry>();
 builder.Services.AddScoped<RecoveryPlanValidator>();
 builder.Services.AddScoped<RecoveryProposalComposer>();
+builder.Services.AddScoped<PassengerNotificationService>();
 builder.Services.AddScoped<IRecoveryPlanner, GeminiRecoveryPlanner>();
 builder.Services.AddScoped<RecoveryPlanningService>();
 builder.Services.AddScoped<RecoveryWorkflowService>();

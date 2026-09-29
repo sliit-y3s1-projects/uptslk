@@ -33,6 +33,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<AgentWorkflow> AgentWorkflows => Set<AgentWorkflow>();
     public DbSet<AgentStep> AgentSteps => Set<AgentStep>();
     public DbSet<ApprovalRequest> ApprovalRequests => Set<ApprovalRequest>();
+    public DbSet<PassengerNotification> PassengerNotifications => Set<PassengerNotification>();
     public DbSet<SupportRequest> SupportRequests => Set<SupportRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -55,6 +56,9 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .HasFilter("\"Status\" IN (0, 1)");
         modelBuilder.Entity<Payment>().HasIndex(payment => new { payment.Provider, payment.ProviderOrderId }).IsUnique();
         modelBuilder.Entity<PaymentWebhookEvent>().HasIndex(webhook => new { webhook.Provider, webhook.ProviderEventId }).IsUnique();
+        modelBuilder.Entity<PassengerNotification>()
+            .HasIndex(notification => new { notification.WorkflowId, notification.BookingId, notification.Channel })
+            .IsUnique();
 
         modelBuilder.Entity<Centre>().Property(c => c.Code).HasMaxLength(32);
         modelBuilder.Entity<Centre>().Property(c => c.Name).HasMaxLength(160);
@@ -98,9 +102,28 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<AgentStep>().Property(step => step.ToolCallsJson).HasColumnType("jsonb");
         modelBuilder.Entity<ApprovalRequest>().Property(request => request.Reason).HasMaxLength(2000);
         modelBuilder.Entity<ApprovalRequest>().Property(request => request.DecisionNote).HasMaxLength(2000);
+        modelBuilder.Entity<PassengerNotification>().Property(notification => notification.Subject).HasMaxLength(200);
+        modelBuilder.Entity<PassengerNotification>().Property(notification => notification.Message).HasMaxLength(1000);
+        modelBuilder.Entity<PassengerNotification>().Property(notification => notification.DeliveryError).HasMaxLength(1000);
         modelBuilder.Entity<SupportRequest>().Property(request => request.Subject).HasMaxLength(200);
         modelBuilder.Entity<SupportRequest>().Property(request => request.Description).HasMaxLength(2000);
         modelBuilder.Entity<SupportRequest>().Property(request => request.Resolution).HasMaxLength(2000);
+
+        modelBuilder.Entity<PassengerNotification>()
+            .HasOne(notification => notification.Workflow)
+            .WithMany(workflow => workflow.PassengerNotifications)
+            .HasForeignKey(notification => notification.WorkflowId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<PassengerNotification>()
+            .HasOne(notification => notification.Booking)
+            .WithMany(booking => booking.PassengerNotifications)
+            .HasForeignKey(notification => notification.BookingId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<PassengerNotification>()
+            .HasOne(notification => notification.Passenger)
+            .WithMany(passenger => passenger.Notifications)
+            .HasForeignKey(notification => notification.PassengerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Bay>()
             .HasOne(b => b.Centre)

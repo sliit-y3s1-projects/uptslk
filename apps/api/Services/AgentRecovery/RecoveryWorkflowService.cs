@@ -14,6 +14,7 @@ public sealed class RecoveryWorkflowService(
     RecoveryPlanningService planningService,
     RecoveryAgentRegistry agentRegistry,
     RecoveryProposalComposer proposalComposer,
+    PassengerNotificationService passengerNotifications,
     TripConflictService conflictService,
     Microsoft.Extensions.Options.IOptions<AgentAiOptions> agentAiOptions)
 {
@@ -237,6 +238,10 @@ public sealed class RecoveryWorkflowService(
         workflow.Incident.Status = IncidentStatus.Resolved;
         workflow.Incident.ResolvedAt = DateTime.UtcNow;
         workflow.Incident.UpdatedAt = DateTime.UtcNow;
+        await passengerNotifications.PrepareApprovedRecoveryNotificationsAsync(
+            workflow,
+            proposal,
+            cancellationToken);
         approval.AppliedAt = DateTime.UtcNow;
         MarkPlanStep(workflow, "Manager Approval", "Completed");
         workflow.Status = WorkflowStatus.Completed;

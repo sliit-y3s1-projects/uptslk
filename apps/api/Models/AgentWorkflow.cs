@@ -45,4 +45,5 @@ public class AgentWorkflow
     // Navigation
     public ICollection<AgentStep> Steps { get; set; } = new List<AgentStep>();
     public ICollection<ApprovalRequest> ApprovalRequests { get; set; } = new List<ApprovalRequest>();
+    public ICollection<PassengerNotification> PassengerNotifications { get; set; } = new List<PassengerNotification>();
 }

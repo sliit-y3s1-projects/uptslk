@@ -438,8 +438,12 @@ Provider retries for a malformed response remain separate from the single workfl
 3. Stop if availability, capacity, maintenance, or conflict state changed.
 4. Apply the trip changes in a transaction.
 5. Resolve the incident where appropriate.
-6. Create approved passenger notifications.
-7. Record the applied time and final outcome.
+6. Create one idempotent in-app notification record for every active booking.
+7. Mark delivery successful only when the passenger has a linked commuter account; otherwise record a safe delivery failure.
+8. Commit the operational update and notification records together.
+9. Record the applied time and final outcome.
+
+The current implementation provides persisted in-app notifications through the authenticated commuter API. SMS, email, and push providers remain future delivery-channel integrations.
 
 ### 9.10 Complete
 
@@ -764,6 +768,7 @@ The subsystem stores:
 - Approval actor and decision.
 - Applied actions.
 - Notification delivery status.
+- Notification channel, booking, delivery attempts, delivery error, delivered time, and read time.
 - Final result or safe-failure reason.
 
 ### 17.2 Application logs
@@ -1036,10 +1041,10 @@ The assessed demonstration will use a breakdown incident linked to an active sch
 | 18 | Execution | Add registry-based and dependency-aware workflow execution | Done | The executor runs validated planned agents in order, supplies typed prior evidence, and skips steps whose dependencies fail | Consider parallel execution only for future independent long-running steps |
 | 19 | Replanning | Add one bounded Gemini replan path | Done | Failed or incomplete specialist evidence can trigger one policy-validated Gemini revision, with the reasons, revised plan, usage, and outcome persisted | Verify a real no-candidate replan using the evaluation dataset |
 | 20 | Composition | Strengthen deterministic proposal compatibility rules | Done | A dedicated proposal composer requires complete evidence, capacity, a supported recovery window, and proof that dispatch checked the exact vehicle, bay, and time combination | Extend composition when alternative-route and accessibility recommendations are added |
-| 21 | Notifications | Create approved passenger notifications | To do | A completed recovery creates delivery records for affected bookings | Implement notification preparation and delivery |
+| 21 | Notifications | Create approved passenger notifications | Done | Approval creates an idempotent in-app notification record for each active booking, exposes delivery evidence in the workflow audit, and lets the authenticated commuter list and mark notifications as read | Add external SMS, email, or push providers only if required by the final deployment scope |
 | 22 | Audit | Persist provider, model, prompt version, usage, and planning latency | Done | The migration, workflow entity, database mapping, and workflow API response include planning audit metadata | Display these fields in the workflow audit UI |
 | 23 | Security | Add prompt validation, redaction, rate limits, and centre-scope checks | To do | Security tests reject unsupported input and cross-centre actions | Implement filters and authorization policies |
-| 24 | Tests | Add unit tests for plan, tools, validation, approval, and execution | In progress | Seventeen focused plan-policy, dependency-output, replanning, and proposal-composition tests pass in `apps/api.Tests` | Add tool integration, approval, and action-execution tests, then run them in CI |
+| 24 | Tests | Add unit tests for plan, tools, validation, approval, and execution | In progress | Twenty focused plan-policy, dependency-output, replanning, proposal-composition, and notification tests pass in `apps/api.Tests` | Add tool integration, approval, and action-execution tests, then run them in CI |
 | 25 | Evaluation | Build the incident evaluation dataset and record measurements | To do | Evaluation report contains accuracy, safety, latency, and cost results | Define fixtures and evaluation runner |
 | 26 | Demonstration | Verify one complete Gemini-planned assessed workflow | To do | Recorded run shows objective through final outcome with all evidence | Prepare stable seed data and demonstration script |
 | 27 | Documentation | Add ADR, API examples, test results, screenshots, and final report evidence | To do | Submission report links to verified implementation evidence | Update documentation after implementation and testing |

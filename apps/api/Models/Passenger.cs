@@ -17,4 +17,5 @@ public class Passenger
 
     public Wallet? Wallet { get; set; }
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+    public ICollection<PassengerNotification> Notifications { get; set; } = new List<PassengerNotification>();
 }

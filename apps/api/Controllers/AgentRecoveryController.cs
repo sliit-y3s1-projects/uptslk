@@ -36,6 +36,7 @@ public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService re
             .Include(item => item.Trip).ThenInclude(trip => trip.Bay)
             .Include(item => item.Steps)
             .Include(item => item.ApprovalRequests).ThenInclude(approval => approval.ReviewedBy)
+            .Include(item => item.PassengerNotifications)
             .SingleOrDefaultAsync(item => item.Id == workflowId, cancellationToken);
         if (workflow is null) return NotFound();
         return Ok(new
@@ -59,7 +60,25 @@ public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService re
             Plan = ReadJson(workflow.PlanJson),
             ValidationResults = ReadJson(workflow.ValidationJson),
             Steps = workflow.Steps.OrderBy(step => step.CreatedAt).Select(step => new { step.Id, step.AgentName, step.Status, Input = ReadJson(step.InputJson), Output = ReadJson(step.OutputJson), ToolCalls = ReadJson(step.ToolCallsJson), step.Error, step.RetryCount, step.DurationMs, step.CreatedAt }),
-            Approvals = workflow.ApprovalRequests.OrderByDescending(approval => approval.CreatedAt).Select(approval => new { approval.Id, approval.Reason, approval.Decision, approval.DecisionNote, ReviewedBy = approval.ReviewedBy == null ? null : approval.ReviewedBy.Name, approval.DecidedAt, approval.AppliedAt, approval.CreatedAt })
+            Approvals = workflow.ApprovalRequests.OrderByDescending(approval => approval.CreatedAt).Select(approval => new { approval.Id, approval.Reason, approval.Decision, approval.DecisionNote, ReviewedBy = approval.ReviewedBy == null ? null : approval.ReviewedBy.Name, approval.DecidedAt, approval.AppliedAt, approval.CreatedAt }),
+            Notifications = new
+            {
+                Total = workflow.PassengerNotifications.Count,
+                Delivered = workflow.PassengerNotifications.Count(notification => notification.Status == PassengerNotificationStatus.Delivered),
+                Failed = workflow.PassengerNotifications.Count(notification => notification.Status == PassengerNotificationStatus.Failed),
+                Records = workflow.PassengerNotifications.OrderBy(notification => notification.CreatedAt).Select(notification => new
+                {
+                    notification.Id,
+                    notification.BookingId,
+                    notification.Channel,
+                    notification.Status,
+                    notification.DeliveryAttemptCount,
+                    notification.DeliveryError,
+                    notification.DeliveredAt,
+                    notification.ReadAt,
+                    notification.CreatedAt
+                })
+            }
         });
     }
 
