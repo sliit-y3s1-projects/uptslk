@@ -51,7 +51,7 @@ public static class RecoveryTextValidator
             return false;
         }
 
-        if (normalized.Count(character => character == '\n') + 1 > MaximumLines)
+        if (CountLines(normalized) > MaximumLines)
         {
             error = $"{fieldName} cannot exceed {MaximumLines} lines.";
             return false;
@@ -64,5 +64,25 @@ public static class RecoveryTextValidator
         }
 
         return true;
+    }
+
+    private static int CountLines(string value)
+    {
+        var lineCount = 1;
+        for (var index = 0; index < value.Length; index++)
+        {
+            var character = value[index];
+            if (character == '\r')
+            {
+                lineCount++;
+                if (index + 1 < value.Length && value[index + 1] == '\n') index++;
+            }
+            else if (character is '\n' or '\u2028' or '\u2029')
+            {
+                lineCount++;
+            }
+        }
+
+        return lineCount;
     }
 }

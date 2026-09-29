@@ -78,6 +78,31 @@ public sealed class RecoverySecurityTests
         Assert.Contains("12 lines", error);
     }
 
+    [Theory]
+    [InlineData('\r')]
+    [InlineData('\u2028')]
+    [InlineData('\u2029')]
+    public void TryNormalizeDecisionNote_RejectsAlternateThirteenLineSeparators(char separator)
+    {
+        var note = string.Join(separator.ToString(), Enumerable.Range(1, 13).Select(number => $"Line {number}"));
+
+        var valid = RecoveryTextValidator.TryNormalizeDecisionNote(note, out _, out var error);
+
+        Assert.False(valid);
+        Assert.Contains("12 lines", error);
+    }
+
+    [Fact]
+    public void TryNormalizeDecisionNote_CountsCrLfAsSingleLineSeparator()
+    {
+        var note = string.Join("\r\n", Enumerable.Range(1, 12).Select(number => $"Line {number}"));
+
+        var valid = RecoveryTextValidator.TryNormalizeDecisionNote(note, out _, out var error);
+
+        Assert.True(valid);
+        Assert.Null(error);
+    }
+
     [Fact]
     public void SanitizeForPrompt_RemovesControlCharactersAndAppliesLengthLimit()
     {
