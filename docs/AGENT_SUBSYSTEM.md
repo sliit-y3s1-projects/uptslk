@@ -923,6 +923,15 @@ Separate provider integration tests will verify:
 
 ### 20.3 Integration tests
 
+- Query every controlled recovery tool against a relational SQLite test database.
+- Enforce approval before the transactional action executor can mutate operational records.
+- Apply an approved proposal and persist its trip, incident, workflow, approval, and notification changes.
+- Reject unauthenticated recovery API requests.
+- Prevent centre managers from reading or starting workflows outside their assigned centre.
+- Enforce the per-user workflow-start HTTP rate limit.
+
+The following broader end-to-end scenarios remain for the demonstration and evaluation fixtures:
+
 - Start workflow from a real incident record.
 - Persist generated plan and steps.
 - Execute all four specialists.
@@ -1048,8 +1057,8 @@ The assessed demonstration will use a breakdown incident linked to an active sch
 | 20 | Composition | Strengthen deterministic proposal compatibility rules | Done | A dedicated proposal composer requires complete evidence, capacity, a supported recovery window, and proof that dispatch checked the exact vehicle, bay, and time combination | Extend composition when alternative-route and accessibility recommendations are added |
 | 21 | Notifications | Create approved passenger notifications | Done | Approval creates an idempotent in-app notification record for each active booking, exposes delivery evidence in the workflow audit, and lets the authenticated commuter list and mark notifications as read | Add external SMS, email, or push providers only if required by the final deployment scope |
 | 22 | Audit | Persist provider, model, prompt version, usage, and planning latency | Done | The migration, workflow entity, database mapping, and workflow API response include planning audit metadata | Display these fields in the workflow audit UI |
-| 23 | Security | Add prompt validation, redaction, rate limits, and centre-scope checks | Done | Access scopes restrict non-admin workflows to one centre, mutation endpoints are rate-limited, prompt text is bounded and sanitized, and persisted failures exclude raw exception details | Add authenticated API integration tests for cross-centre requests and HTTP 429 responses |
-| 24 | Tests | Add unit tests for plan, tools, validation, approval, and execution | In progress | Thirty-four tests pass, including SQLite-backed coverage for all four recovery tools, approval enforcement, and approved action execution | Add authenticated HTTP integration tests for centre isolation and rate limiting, then run the suite in CI |
+| 23 | Security | Add prompt validation, redaction, rate limits, and centre-scope checks | Done | Access scopes restrict non-admin workflows to one centre, mutation endpoints are rate-limited, prompt text is bounded and sanitized, persisted failures exclude raw exception details, and authenticated HTTP tests verify centre isolation and HTTP 429 responses | Verify reverse-proxy forwarding configuration before deployment |
+| 24 | Tests | Add unit tests for plan, tools, validation, approval, and execution | Done | Thirty-eight tests pass, including SQLite-backed tool and action tests plus authenticated HTTP coverage for authorization, centre isolation, and rate limiting | Add the test command to CI and extend the suite with evaluation fixtures |
 | 25 | Evaluation | Build the incident evaluation dataset and record measurements | To do | Evaluation report contains accuracy, safety, latency, and cost results | Define fixtures and evaluation runner |
 | 26 | Demonstration | Verify one complete Gemini-planned assessed workflow | To do | Recorded run shows objective through final outcome with all evidence | Prepare stable seed data and demonstration script |
 | 27 | Documentation | Add ADR, API examples, test results, screenshots, and final report evidence | To do | Submission report links to verified implementation evidence | Update documentation after implementation and testing |
