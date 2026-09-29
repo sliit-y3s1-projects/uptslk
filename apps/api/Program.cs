@@ -67,6 +67,7 @@ builder.Services.AddOptions<AgentAiOptions>()
     .Validate(options => !string.IsNullOrWhiteSpace(options.PromptVersion), "AgentAi:PromptVersion is required.")
     .Validate(options => options.TimeoutSeconds is >= 1 and <= 60, "AgentAi:TimeoutSeconds must be between 1 and 60.")
     .Validate(options => options.MaxPlanningRetries is >= 0 and <= 2, "AgentAi:MaxPlanningRetries must be between 0 and 2.")
+    .Validate(options => options.MaxWorkflowReplans is >= 0 and <= 1, "AgentAi:MaxWorkflowReplans must be either 0 or 1.")
     .Validate(options => options.MaximumPlanSteps is >= 4 and <= 12, "AgentAi:MaximumPlanSteps must be between 4 and 12.")
     .ValidateOnStart();
 

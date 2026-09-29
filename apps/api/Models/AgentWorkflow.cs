@@ -32,6 +32,8 @@ public class AgentWorkflow
     public int PromptTokenCount { get; set; }
     public int OutputTokenCount { get; set; }
     public int TotalTokenCount { get; set; }
+    public int ReplanCount { get; set; }
+    public string ReplanHistoryJson { get; set; } = "[]";
     public string? ProposalJson { get; set; }
     public string ValidationJson { get; set; } = "[]";
     public string? FailureReason { get; set; }

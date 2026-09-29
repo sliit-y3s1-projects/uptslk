@@ -13,7 +13,8 @@ public sealed class RecoveryWorkflowService(
     AppDbContext db,
     RecoveryPlanningService planningService,
     RecoveryAgentRegistry agentRegistry,
-    TripConflictService conflictService)
+    TripConflictService conflictService,
+    Microsoft.Extensions.Options.IOptions<AgentAiOptions> agentAiOptions)
 {
     private const int AgentTimeoutSeconds = 5;
     private const int MaxAgentRetries = 1;
@@ -21,6 +22,7 @@ public sealed class RecoveryWorkflowService(
     {
         Converters = { new JsonStringEnumConverter() }
     };
+    private readonly AgentAiOptions _agentAiOptions = agentAiOptions.Value;
 
     public async Task<(AgentWorkflow? Workflow, string? Error)> StartAsync(Guid incidentId, string? objective, CancellationToken cancellationToken)
     {
@@ -66,113 +68,86 @@ public sealed class RecoveryWorkflowService(
             throw;
         }
         ApplyPlanningResult(workflow, planningResult);
-        var plan = CreateExecutionPlan(planningResult.Plan, agentRegistry);
-        workflow.PlanJson = JsonSerializer.Serialize(plan, JsonOptions);
-        workflow.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync(cancellationToken);
+        var execution = await ExecutePlanWithCancellationCleanupAsync(
+            workflow,
+            incident,
+            affectedPassengers,
+            planningResult.Plan,
+            0,
+            cancellationToken);
+        var failures = GetExecutionFailures(
+            planningResult.Plan,
+            execution,
+            incident.Trip.Vehicle.Capacity,
+            affectedPassengers);
 
-        var recommendations = new Dictionary<RecoveryAgentId, AgentRecommendation>();
-        var stepOutcomes = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
-        foreach (var plannedStep in planningResult.Plan.Steps.OrderBy(step => step.Order))
+        if (failures.Count > 0
+            && planningResult.Mode == "Gemini"
+            && workflow.ReplanCount < _agentAiOptions.MaxWorkflowReplans)
         {
-            var agent = agentRegistry.GetRequired(plannedStep.AgentId);
-            var failedDependencies = (plannedStep.DependsOn ?? [])
-                .Where(dependencyId => !stepOutcomes.GetValueOrDefault(dependencyId))
-                .ToArray();
-            if (failedDependencies.Length > 0)
+            RecoveryPlanningResult revisedPlanningResult;
+            try
             {
-                var error = $"Skipped because required steps did not complete: {string.Join(", ", failedDependencies)}.";
-                stepOutcomes[plannedStep.StepId] = false;
-                MarkPlanStep(plan, agent.Name, "Skipped");
-                db.AgentSteps.Add(new AgentStep
-                {
-                    WorkflowId = workflow.Id,
-                    AgentName = agent.Name,
-                    InputJson = JsonSerializer.Serialize(new { incident.Id, incident.TripId, affectedPassengers, plannedStep.DependsOn }, JsonOptions),
-                    OutputJson = "{}",
-                    ToolCallsJson = "[]",
-                    Status = "Skipped",
-                    Error = error
-                });
-                workflow.PlanJson = JsonSerializer.Serialize(plan, JsonOptions);
+                revisedPlanningResult = await planningService.CreateRevisedPlanAsync(
+                    planningInput,
+                    failures,
+                    cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                workflow.Status = WorkflowStatus.Failed;
+                workflow.FailureReason = "Recovery replanning was cancelled before a safe revised plan was created.";
                 workflow.UpdatedAt = DateTime.UtcNow;
-                await db.SaveChangesAsync(cancellationToken);
-                continue;
+                workflow.CompletedAt = DateTime.UtcNow;
+                await db.SaveChangesAsync(CancellationToken.None);
+                throw;
             }
 
-            var context = new RecoveryContext(
-                workflow,
-                incident.Trip,
-                affectedPassengers,
-                new Dictionary<RecoveryAgentId, AgentRecommendation>(recommendations));
-            MarkPlanStep(plan, agent.Name, "Running");
-            var result = await RunAgentWithPolicyAsync(agent, context, cancellationToken);
-            if (result.Execution is not null)
+            workflow.ReplanCount++;
+            AppendReplanAudit(workflow, revisedPlanningResult, failures);
+            ApplyReplanningResult(workflow, revisedPlanningResult);
+            await db.SaveChangesAsync(cancellationToken);
+
+            if (revisedPlanningResult.Mode == "Gemini")
             {
-                recommendations[agent.Id] = result.Execution.Recommendation;
-                stepOutcomes[plannedStep.StepId] = true;
-                MarkPlanStep(plan, agent.Name, "Completed");
-                db.AgentSteps.Add(new AgentStep
-                {
-                    WorkflowId = workflow.Id,
-                    AgentName = agent.Name,
-                    InputJson = JsonSerializer.Serialize(new { incident.Id, incident.TripId, affectedPassengers }, JsonOptions),
-                    OutputJson = JsonSerializer.Serialize(result.Execution.Recommendation, JsonOptions),
-                    ToolCallsJson = JsonSerializer.Serialize(result.Execution.ToolCalls, JsonOptions),
-                    RetryCount = result.RetryCount,
-                    DurationMs = result.DurationMs
-                });
+                planningResult = revisedPlanningResult;
+                execution = await ExecutePlanWithCancellationCleanupAsync(
+                    workflow,
+                    incident,
+                    affectedPassengers,
+                    revisedPlanningResult.Plan,
+                    workflow.ReplanCount,
+                    cancellationToken);
+                failures = GetExecutionFailures(
+                    revisedPlanningResult.Plan,
+                    execution,
+                    incident.Trip.Vehicle.Capacity,
+                    affectedPassengers);
             }
             else
             {
-                stepOutcomes[plannedStep.StepId] = false;
-                MarkPlanStep(plan, agent.Name, "Failed");
-                db.AgentSteps.Add(new AgentStep
-                {
-                    WorkflowId = workflow.Id,
-                    AgentName = agent.Name,
-                    InputJson = JsonSerializer.Serialize(new { incident.Id, incident.TripId, affectedPassengers }, JsonOptions),
-                    OutputJson = "{}",
-                    ToolCallsJson = "[]",
-                    Status = "Failed",
-                    Error = result.Error ?? "Agent execution failed.",
-                    RetryCount = result.RetryCount,
-                    DurationMs = result.DurationMs
-                });
+                failures =
+                [
+                    .. failures,
+                    revisedPlanningResult.FallbackReason ?? "Gemini could not produce a valid revised plan."
+                ];
             }
-            workflow.PlanJson = JsonSerializer.Serialize(plan, JsonOptions);
-            workflow.UpdatedAt = DateTime.UtcNow;
-            await db.SaveChangesAsync(cancellationToken);
         }
-        workflow.PlanJson = JsonSerializer.Serialize(plan, JsonOptions);
+
+        var plan = execution.Plan;
+        var recommendations = execution.Recommendations;
 
         recommendations.TryGetValue(RecoveryAgentId.NetworkContinuity, out var network);
         recommendations.TryGetValue(RecoveryAgentId.FleetReadiness, out var fleet);
         recommendations.TryGetValue(RecoveryAgentId.DispatchRecovery, out var dispatch);
         var warnings = recommendations.Values.SelectMany(item => item.Warnings).ToList();
-        var selectedAgents = planningResult.Plan.Steps.Select(step => step.AgentId).ToHashSet();
-        var fleetRequired = selectedAgents.Contains(RecoveryAgentId.FleetReadiness);
-        var dispatchRequired = selectedAgents.Contains(RecoveryAgentId.DispatchRecovery);
-        var proposedCapacity = fleet?.Capacity ?? incident.Trip.Vehicle.Capacity;
-        if ((fleetRequired && fleet?.VehicleId is null) ||
-            (dispatchRequired && dispatch?.DriverId is null) ||
-            network?.BayId is null ||
-            network.ScheduledTime is null ||
-            proposedCapacity < affectedPassengers)
+        if (failures.Count > 0)
         {
             MarkPlanStep(plan, "Safety Validation", "Skipped");
             MarkPlanStep(plan, "Manager Approval", "Blocked");
             workflow.PlanJson = JsonSerializer.Serialize(plan, JsonOptions);
             workflow.Status = WorkflowStatus.Failed;
-            workflow.FailureReason = proposedCapacity < affectedPassengers
-                ? "No proposed replacement vehicle can carry all affected passengers."
-                : dispatchRequired && dispatch?.DriverId is null
-                    ? "No conflict-free alternate driver is available for the proposed recovery time."
-                    : fleetRequired && fleet?.VehicleId is null
-                        ? "No active replacement vehicle is available at this centre."
-                        : network?.BayId is null
-                            ? "No available replacement bay is available at the departure centre."
-                            : "The agents could not produce a safe recovery combination.";
+            workflow.FailureReason = string.Join(" ", failures.Distinct(StringComparer.Ordinal));
             workflow.UpdatedAt = DateTime.UtcNow;
             workflow.CompletedAt = DateTime.UtcNow;
             await db.SaveChangesAsync(cancellationToken);
@@ -182,8 +157,8 @@ public sealed class RecoveryWorkflowService(
         var proposal = new RecoveryProposal(
             fleet?.VehicleId ?? incident.Trip.VehicleId,
             dispatch?.DriverId ?? incident.Trip.DriverId,
-            network.BayId.Value,
-            network.ScheduledTime.Value,
+            network!.BayId!.Value,
+            network.ScheduledTime!.Value,
             affectedPassengers,
             warnings);
         MarkPlanStep(plan, "Safety Validation", "Running");
@@ -303,6 +278,162 @@ public sealed class RecoveryWorkflowService(
     private static ValidationResult Check(string phase, string check, bool passed, string failedDetail, DateTime checkedAt) =>
         new(phase, check, passed, passed ? $"{check} passed." : failedDetail, checkedAt);
 
+    private async Task<PlanExecutionResult> ExecutePlanAsync(
+        AgentWorkflow workflow,
+        Incident incident,
+        int affectedPassengers,
+        RecoveryPlanDraft generatedPlan,
+        int planAttempt,
+        CancellationToken cancellationToken)
+    {
+        var plan = CreateExecutionPlan(generatedPlan, agentRegistry);
+        workflow.PlanJson = JsonSerializer.Serialize(plan, JsonOptions);
+        workflow.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        var recommendations = new Dictionary<RecoveryAgentId, AgentRecommendation>();
+        var stepOutcomes = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        var executionErrors = new List<string>();
+
+        foreach (var plannedStep in generatedPlan.Steps.OrderBy(step => step.Order))
+        {
+            var agent = agentRegistry.GetRequired(plannedStep.AgentId);
+            var failedDependencies = (plannedStep.DependsOn ?? [])
+                .Where(dependencyId => !stepOutcomes.GetValueOrDefault(dependencyId))
+                .ToArray();
+            if (failedDependencies.Length > 0)
+            {
+                var error = $"{agent.Name} was skipped because required steps did not complete: {string.Join(", ", failedDependencies)}.";
+                executionErrors.Add(error);
+                stepOutcomes[plannedStep.StepId] = false;
+                MarkPlanStep(plan, agent.Name, "Skipped");
+                db.AgentSteps.Add(new AgentStep
+                {
+                    WorkflowId = workflow.Id,
+                    AgentName = agent.Name,
+                    InputJson = JsonSerializer.Serialize(new { PlanAttempt = planAttempt, plannedStep.StepId, incident.Id, incident.TripId, affectedPassengers, plannedStep.DependsOn }, JsonOptions),
+                    OutputJson = "{}",
+                    ToolCallsJson = "[]",
+                    Status = "Skipped",
+                    Error = error
+                });
+                await PersistPlanProgressAsync(workflow, plan, cancellationToken);
+                continue;
+            }
+
+            var context = new RecoveryContext(
+                workflow,
+                incident.Trip!,
+                affectedPassengers,
+                new Dictionary<RecoveryAgentId, AgentRecommendation>(recommendations));
+            MarkPlanStep(plan, agent.Name, "Running");
+            var result = await RunAgentWithPolicyAsync(agent, context, cancellationToken);
+            if (result.Execution is not null)
+            {
+                recommendations[agent.Id] = result.Execution.Recommendation;
+                stepOutcomes[plannedStep.StepId] = true;
+                MarkPlanStep(plan, agent.Name, "Completed");
+                db.AgentSteps.Add(new AgentStep
+                {
+                    WorkflowId = workflow.Id,
+                    AgentName = agent.Name,
+                    InputJson = JsonSerializer.Serialize(new { PlanAttempt = planAttempt, plannedStep.StepId, incident.Id, incident.TripId, affectedPassengers }, JsonOptions),
+                    OutputJson = JsonSerializer.Serialize(result.Execution.Recommendation, JsonOptions),
+                    ToolCallsJson = JsonSerializer.Serialize(result.Execution.ToolCalls, JsonOptions),
+                    RetryCount = result.RetryCount,
+                    DurationMs = result.DurationMs
+                });
+            }
+            else
+            {
+                var error = result.Error ?? $"{agent.Name} execution failed.";
+                executionErrors.Add(error);
+                stepOutcomes[plannedStep.StepId] = false;
+                MarkPlanStep(plan, agent.Name, "Failed");
+                db.AgentSteps.Add(new AgentStep
+                {
+                    WorkflowId = workflow.Id,
+                    AgentName = agent.Name,
+                    InputJson = JsonSerializer.Serialize(new { PlanAttempt = planAttempt, plannedStep.StepId, incident.Id, incident.TripId, affectedPassengers }, JsonOptions),
+                    OutputJson = "{}",
+                    ToolCallsJson = "[]",
+                    Status = "Failed",
+                    Error = error,
+                    RetryCount = result.RetryCount,
+                    DurationMs = result.DurationMs
+                });
+            }
+
+            await PersistPlanProgressAsync(workflow, plan, cancellationToken);
+        }
+
+        return new PlanExecutionResult(plan, recommendations, executionErrors);
+    }
+
+    private async Task<PlanExecutionResult> ExecutePlanWithCancellationCleanupAsync(
+        AgentWorkflow workflow,
+        Incident incident,
+        int affectedPassengers,
+        RecoveryPlanDraft generatedPlan,
+        int planAttempt,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await ExecutePlanAsync(
+                workflow,
+                incident,
+                affectedPassengers,
+                generatedPlan,
+                planAttempt,
+                cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            workflow.Status = WorkflowStatus.Failed;
+            workflow.FailureReason = "Recovery agent execution was cancelled before the assessment completed.";
+            workflow.UpdatedAt = DateTime.UtcNow;
+            workflow.CompletedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(CancellationToken.None);
+            throw;
+        }
+    }
+
+    private async Task PersistPlanProgressAsync(
+        AgentWorkflow workflow,
+        IReadOnlyCollection<RecoveryPlanStep> plan,
+        CancellationToken cancellationToken)
+    {
+        workflow.PlanJson = JsonSerializer.Serialize(plan, JsonOptions);
+        workflow.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static List<string> GetExecutionFailures(
+        RecoveryPlanDraft generatedPlan,
+        PlanExecutionResult execution,
+        int currentVehicleCapacity,
+        int affectedPassengers)
+    {
+        var failures = execution.Errors.ToList();
+        execution.Recommendations.TryGetValue(RecoveryAgentId.NetworkContinuity, out var network);
+        execution.Recommendations.TryGetValue(RecoveryAgentId.FleetReadiness, out var fleet);
+        execution.Recommendations.TryGetValue(RecoveryAgentId.DispatchRecovery, out var dispatch);
+        var selectedAgents = generatedPlan.Steps.Select(step => step.AgentId).ToHashSet();
+        var proposedCapacity = fleet?.Capacity ?? currentVehicleCapacity;
+
+        if (selectedAgents.Contains(RecoveryAgentId.FleetReadiness) && fleet?.VehicleId is null)
+            failures.Add("No active, maintenance-safe replacement vehicle is available at this centre.");
+        if (selectedAgents.Contains(RecoveryAgentId.DispatchRecovery) && dispatch?.DriverId is null)
+            failures.Add("No conflict-free alternate driver is available for the proposed recovery combination.");
+        if (network?.BayId is null || network.ScheduledTime is null)
+            failures.Add("The network assessment did not produce a usable departure bay and time.");
+        if (proposedCapacity < affectedPassengers)
+            failures.Add($"The proposed vehicle capacity of {proposedCapacity} cannot carry {affectedPassengers} affected passengers.");
+
+        return failures.Distinct(StringComparer.Ordinal).ToList();
+    }
+
     private static RecoveryPlanningInput CreatePlanningInput(
         AgentWorkflow workflow,
         Incident incident,
@@ -343,6 +474,52 @@ public sealed class RecoveryWorkflowService(
         workflow.OutputTokenCount = result.OutputTokenCount;
         workflow.TotalTokenCount = result.TotalTokenCount;
         workflow.PlanningFallbackReason = result.FallbackReason;
+    }
+
+    private static void ApplyReplanningResult(AgentWorkflow workflow, RecoveryPlanningResult result)
+    {
+        workflow.PlanningMode = result.Mode == "Gemini" ? "GeminiReplanned" : "GeminiReplanFallback";
+        workflow.ModelProvider = result.Provider;
+        workflow.ModelName = result.Model;
+        workflow.PromptVersion = result.PromptVersion;
+        workflow.PlanningDurationMs += result.DurationMs;
+        workflow.PromptTokenCount += result.PromptTokenCount;
+        workflow.OutputTokenCount += result.OutputTokenCount;
+        workflow.TotalTokenCount += result.TotalTokenCount;
+        workflow.PlanningFallbackReason = result.FallbackReason;
+        workflow.UpdatedAt = DateTime.UtcNow;
+    }
+
+    private static void AppendReplanAudit(
+        AgentWorkflow workflow,
+        RecoveryPlanningResult result,
+        IReadOnlyCollection<string> reasons)
+    {
+        List<RecoveryReplanAudit> history;
+        try
+        {
+            history = JsonSerializer.Deserialize<List<RecoveryReplanAudit>>(
+                workflow.ReplanHistoryJson,
+                JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            history = [];
+        }
+
+        history.Add(new RecoveryReplanAudit(
+            workflow.ReplanCount,
+            reasons.ToArray(),
+            result.Mode,
+            result.Model,
+            result.Plan,
+            result.DurationMs,
+            result.PromptTokenCount,
+            result.OutputTokenCount,
+            result.TotalTokenCount,
+            result.FallbackReason,
+            DateTime.UtcNow));
+        workflow.ReplanHistoryJson = JsonSerializer.Serialize(history, JsonOptions);
     }
 
     private static List<RecoveryPlanStep> CreateExecutionPlan(
@@ -449,4 +626,9 @@ public sealed class RecoveryWorkflowService(
         }
         return (null, lastError?.Message ?? "Agent execution failed.", MaxAgentRetries, (int)timer.ElapsedMilliseconds);
     }
+
+    private sealed record PlanExecutionResult(
+        List<RecoveryPlanStep> Plan,
+        IReadOnlyDictionary<RecoveryAgentId, AgentRecommendation> Recommendations,
+        IReadOnlyCollection<string> Errors);
 }

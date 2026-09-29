@@ -11,5 +11,6 @@ public sealed class AgentAiOptions
     public string? ApiKey { get; set; }
     public int TimeoutSeconds { get; set; } = 20;
     public int MaxPlanningRetries { get; set; } = 1;
+    public int MaxWorkflowReplans { get; set; } = 1;
     public int MaximumPlanSteps { get; set; } = 8;
 }

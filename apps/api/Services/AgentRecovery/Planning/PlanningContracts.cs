@@ -62,3 +62,16 @@ public sealed record RecoveryPlanningResult(
     int OutputTokenCount,
     int TotalTokenCount,
     string? FallbackReason);
+
+public sealed record RecoveryReplanAudit(
+    int Attempt,
+    IReadOnlyCollection<string> Reasons,
+    string Mode,
+    string Model,
+    RecoveryPlanDraft Plan,
+    int DurationMs,
+    int PromptTokenCount,
+    int OutputTokenCount,
+    int TotalTokenCount,
+    string? FallbackReason,
+    DateTime CreatedAt);

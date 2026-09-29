@@ -52,7 +52,9 @@ public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService re
                 workflow.PromptTokenCount,
                 workflow.OutputTokenCount,
                 workflow.TotalTokenCount,
-                workflow.PlanningFallbackReason
+                workflow.PlanningFallbackReason,
+                workflow.ReplanCount,
+                ReplanHistory = ReadJson(workflow.ReplanHistoryJson)
             },
             Plan = ReadJson(workflow.PlanJson),
             ValidationResults = ReadJson(workflow.ValidationJson),

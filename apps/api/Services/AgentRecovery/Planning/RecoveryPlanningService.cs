@@ -20,11 +20,28 @@ public sealed class RecoveryPlanningService(
 
     public async Task<RecoveryPlanningResult> CreatePlanAsync(
         RecoveryPlanningInput input,
+        CancellationToken cancellationToken) =>
+        await CreatePlanAsync(input, [], cancellationToken);
+
+    public async Task<RecoveryPlanningResult> CreateRevisedPlanAsync(
+        RecoveryPlanningInput input,
+        IReadOnlyCollection<string> executionFeedback,
+        CancellationToken cancellationToken)
+    {
+        if (executionFeedback.Count == 0)
+            throw new ArgumentException("At least one execution failure is required for replanning.", nameof(executionFeedback));
+
+        return await CreatePlanAsync(input, executionFeedback, cancellationToken);
+    }
+
+    private async Task<RecoveryPlanningResult> CreatePlanAsync(
+        RecoveryPlanningInput input,
+        IReadOnlyCollection<string> initialFeedback,
         CancellationToken cancellationToken)
     {
         var timer = Stopwatch.StartNew();
         var inputJson = JsonSerializer.Serialize(input, JsonOptions);
-        var validationFeedback = new List<string>();
+        var validationFeedback = initialFeedback.Distinct(StringComparer.Ordinal).ToList();
         string? fallbackReason = null;
 
         if (_options.Enabled && !string.IsNullOrWhiteSpace(_options.ApiKey))
@@ -55,7 +72,10 @@ public sealed class RecoveryPlanningService(
                             null);
                     }
 
-                    validationFeedback = errors.ToList();
+                    validationFeedback = initialFeedback
+                        .Concat(errors)
+                        .Distinct(StringComparer.Ordinal)
+                        .ToList();
                     fallbackReason = $"Gemini plan validation failed: {string.Join(" ", errors)}";
                     logger.LogWarning(
                         "Gemini recovery plan for workflow {WorkflowId} failed policy validation on attempt {Attempt}: {Errors}",

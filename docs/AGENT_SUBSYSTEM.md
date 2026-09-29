@@ -233,7 +233,7 @@ Configuration will follow the ASP.NET options pattern:
     "PromptVersion": "recovery-planner-v1",
     "TimeoutSeconds": 20,
     "MaxPlanningRetries": 1,
-    "MaxReplanAttempts": 1,
+    "MaxWorkflowReplans": 1,
     "MaximumPlanSteps": 8
   }
 }
@@ -395,9 +395,24 @@ One corrective planning attempt is allowed when a plan is structurally invalid. 
 7. Persist agent inputs, outputs, tools, timings, retries, warnings, and errors.
 8. Continue until the plan completes or can no longer make safe progress.
 
-Independent steps may run concurrently. Dependent steps run only when their required evidence is available.
+The current executor runs validated steps sequentially for predictable auditing. Dependent steps run only when their required evidence is available. A dependent step is recorded as skipped when an earlier required step fails.
 
-### 9.6 Compose and validate the proposal
+### 9.6 Perform one bounded replan
+
+When the first Gemini-planned execution cannot produce a complete proposal:
+
+1. Collect agent failures, skipped dependencies, missing resources, conflict results, and capacity failures.
+2. Send only this structured execution evidence back to Gemini.
+3. Allow at most one workflow-level replan.
+4. Validate the revised plan using the same deterministic plan policy.
+5. Record the replan reason, model, revised plan, latency, token usage, fallback reason, and timestamp.
+6. Execute the revised plan with a distinct plan-attempt number.
+7. Continue to proposal validation only when the revised execution produces complete compatible evidence.
+8. End with a recorded safe failure when the revision is invalid, unavailable, cancelled, or unsuccessful.
+
+Provider retries for a malformed response remain separate from the single workflow-level replan. Cancellation during planning, replanning, or agent execution marks the workflow failed using a non-cancelled cleanup operation before cancellation is propagated.
+
+### 9.7 Compose and validate the proposal
 
 1. Combine compatible vehicle, driver, bay, time, route, and passenger results.
 2. Reject missing or contradictory results.
@@ -405,14 +420,14 @@ Independent steps may run concurrently. Dependent steps run only when their requ
 4. Persist the proposal and validation results.
 5. Fail safely when no valid combination exists.
 
-### 9.7 Request approval
+### 9.8 Request approval
 
 1. Change the workflow status to `PausedForApproval`.
 2. Create an approval request containing the proposed changes and warnings.
 3. Allow an authorized Admin or Centre Manager to approve, reject, or request revision.
 4. Record the reviewer, decision, note, and decision time.
 
-### 9.8 Apply the approved recovery
+### 9.9 Apply the approved recovery
 
 1. Reload all affected operational records.
 2. Repeat deterministic validation against current data.
@@ -422,7 +437,7 @@ Independent steps may run concurrently. Dependent steps run only when their requ
 6. Create approved passenger notifications.
 7. Record the applied time and final outcome.
 
-### 9.9 Complete
+### 9.10 Complete
 
 1. Generate a concise manager-facing execution summary.
 2. Mark the workflow `Completed` or `Failed`.
@@ -439,7 +454,7 @@ Gemini will:
 - Classify the operational needs of the incident.
 - Select relevant agents from the supplied catalog.
 - Create ordered steps and dependencies.
-- Request one bounded replan when evidence shows the plan cannot complete.
+- Create one revised plan when the application supplies recorded execution-failure evidence.
 - Summarize the validated recommendation for the approving manager.
 - Summarize the final completed or failed outcome.
 
@@ -705,7 +720,7 @@ Only users with the `Admin` or `CentreManager` role can approve or reject a reco
 
 - **Approve:** Revalidate and apply the proposal.
 - **Reject:** End the workflow with a recorded rejection.
-- **Request revision:** Return the workflow for one bounded replan using the manager's structured note.
+- **Request revision, planned:** A future approval option will return the workflow for one bounded replan using the manager's structured note. The current API supports approval and rejection only.
 
 ### 16.3 High-impact actions
 
@@ -734,6 +749,8 @@ The subsystem stores:
 - Prompt version.
 - Planning duration and token usage.
 - Structured plan.
+- Workflow replan count and complete replan history.
+- Replan trigger reasons, revised plan, model, duration, token usage, and fallback result.
 - Agent start and completion times.
 - Tool inputs and outputs.
 - Tool durations and failures.
@@ -996,13 +1013,13 @@ The assessed demonstration will use a breakdown incident linked to an active sch
 | Order | Area | Work item | Status | Completion evidence | Next action |
 | ---: | --- | --- | --- | --- | --- |
 | 1 | Domain | Incident-linked recovery objective and workflow creation | Done | Workflow can be started for an eligible trip incident and stores its planning evidence | Verify the complete objective-to-outcome path with stable demonstration data |
-| 2 | Agents | Network Continuity Agent with a distinct responsibility | Done | Agent produces a structured bay and time recommendation | Extract network queries into controlled tools and add alternative-route search |
-| 3 | Agents | Fleet Readiness Agent with a distinct responsibility | Done | Agent produces a structured vehicle recommendation | Extract vehicle and maintenance queries into fleet tools |
-| 4 | Agents | Dispatch Recovery Agent with a distinct responsibility | Done | Agent produces a structured driver recommendation | Make it consume the exact network and fleet outputs |
+| 2 | Agents | Network Continuity Agent with a distinct responsibility | Done | Agent uses a controlled network tool and produces a structured bay and time recommendation | Add alternative-route search |
+| 3 | Agents | Fleet Readiness Agent with a distinct responsibility | Done | Agent uses a controlled fleet tool and produces a maintenance-safe structured vehicle recommendation | Add accessibility matching |
+| 4 | Agents | Dispatch Recovery Agent with a distinct responsibility | Done | Agent consumes the exact network and fleet outputs and uses a controlled conflict-free driver tool | Add driver qualification rules when licence classes are available |
 | 5 | Agents | Passenger and Fare Impact Agent with a distinct responsibility | Done | Agent produces structured passenger-impact guidance | Add fare-rule checks and notification preparation tools |
 | 6 | State | Durable workflow, step, proposal, and validation state | Done | Workflow, plan, agent steps, planner input and output, validation, and approval records are stored in PostgreSQL | Add a dedicated final-summary field after the execution result format is finalized |
-| 7 | Reliability | Agent timeouts, retry limits, and safe failure | Done | Agent runner records errors, retries, and duration | Add equivalent planner and tool gateway policies |
-| 8 | Safety | Pre-approval deterministic validation | Done | Capacity, availability, centre, and conflict checks are recorded | Add maintenance, route, time-window, and accessibility checks |
+| 7 | Reliability | Agent timeouts, retry limits, and safe failure | Done | Agent and planner policies enforce timeouts, bounded retries, cancellation cleanup, and recorded safe failure | Add integration coverage for cancellation during live database operations |
+| 8 | Safety | Pre-approval deterministic validation | Done | Capacity, availability, maintenance, centre, and conflict checks are recorded | Add route, time-window, and accessibility checks |
 | 9 | Approval | Role-protected manager approval gate | Done | Workflow pauses and only authorized roles can decide | Add centre-scope enforcement and revision requests |
 | 10 | Execution | Approval-time revalidation and trip update | Done | Approved proposals are rechecked before trip mutation | Move writes into a dedicated transactional action executor |
 | 11 | Observability | Workflow list, detail, plan, tool, validation, and approval views | In progress | API workflow details expose Gemini mode, model, prompt version, duration, token usage, and fallback reason | Present the new planning evidence and future notification evidence in the React audit view |
@@ -1013,12 +1030,12 @@ The assessed demonstration will use a breakdown incident linked to an active sch
 | 16 | Policy | Implement deterministic plan-policy validation | Done | Registered agents, required roles, unique steps, order, dependencies, and maximum step count are checked before execution | Extend tests for duplicate agents and maximum-step enforcement |
 | 17 | Tools | Extract direct database queries into allow-listed tool services | Done | Each agent receives a least-privilege tool interface with validated typed inputs and structured outputs instead of direct database access | Add focused database integration tests for each tool service |
 | 18 | Execution | Add registry-based and dependency-aware workflow execution | Done | The executor runs validated planned agents in order, supplies typed prior evidence, and skips steps whose dependencies fail | Consider parallel execution only for future independent long-running steps |
-| 19 | Replanning | Add one bounded Gemini replan path | To do | Recoverable no-candidate results can produce one revised valid plan | Define replan reasons and limits |
+| 19 | Replanning | Add one bounded Gemini replan path | Done | Failed or incomplete specialist evidence can trigger one policy-validated Gemini revision, with the reasons, revised plan, usage, and outcome persisted | Verify a real no-candidate replan using the evaluation dataset |
 | 20 | Composition | Strengthen deterministic proposal compatibility rules | To do | Vehicle, driver, bay, time, and route always form one checked combination | Add proposal composer tests |
 | 21 | Notifications | Create approved passenger notifications | To do | A completed recovery creates delivery records for affected bookings | Implement notification preparation and delivery |
 | 22 | Audit | Persist provider, model, prompt version, usage, and planning latency | Done | The migration, workflow entity, database mapping, and workflow API response include planning audit metadata | Display these fields in the workflow audit UI |
 | 23 | Security | Add prompt validation, redaction, rate limits, and centre-scope checks | To do | Security tests reject unsupported input and cross-centre actions | Implement filters and authorization policies |
-| 24 | Tests | Add unit tests for plan, tools, validation, approval, and execution | In progress | Seven focused plan-policy and dependency-output tests pass in `apps/api.Tests` | Add planner fallback, tool integration, approval, and action-execution tests, then run them in CI |
+| 24 | Tests | Add unit tests for plan, tools, validation, approval, and execution | In progress | Ten focused plan-policy, dependency-output, and replanning tests pass in `apps/api.Tests` | Add tool integration, approval, and action-execution tests, then run them in CI |
 | 25 | Evaluation | Build the incident evaluation dataset and record measurements | To do | Evaluation report contains accuracy, safety, latency, and cost results | Define fixtures and evaluation runner |
 | 26 | Demonstration | Verify one complete Gemini-planned assessed workflow | To do | Recorded run shows objective through final outcome with all evidence | Prepare stable seed data and demonstration script |
 | 27 | Documentation | Add ADR, API examples, test results, screenshots, and final report evidence | To do | Submission report links to verified implementation evidence | Update documentation after implementation and testing |

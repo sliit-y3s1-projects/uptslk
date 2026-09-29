@@ -90,6 +90,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.PlanJson).HasColumnType("jsonb");
         modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.PlannerInputJson).HasColumnType("jsonb");
         modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.PlannerOutputJson).HasColumnType("jsonb");
+        modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.ReplanHistoryJson).HasColumnType("jsonb");
         modelBuilder.Entity<AgentWorkflow>().Property(workflow => workflow.ValidationJson).HasColumnType("jsonb");
         modelBuilder.Entity<AgentStep>().Property(step => step.AgentName).HasMaxLength(120);
         modelBuilder.Entity<AgentStep>().Property(step => step.Status).HasMaxLength(32);
