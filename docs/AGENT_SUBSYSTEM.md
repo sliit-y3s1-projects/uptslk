@@ -972,6 +972,24 @@ Measures will include:
 - Token usage and estimated model cost.
 - Human approval completion rate.
 
+The versioned evaluation dataset and runner are located in `apps/api.Evaluation`. The runner supports a repeatable deterministic baseline and an optional live Gemini mode. Both modes evaluate the same expected specialist set and deterministic approval-ready or safe-failure outcome. Results are written as JSON for analysis and Markdown for direct inclusion in the final report.
+
+Run the baseline from the repository root:
+
+```bash
+dotnet run --project apps/api.Evaluation -- \
+  --mode baseline \
+  --output docs/evaluation/results/recovery-evaluation-baseline
+```
+
+Run the live provider evaluation only after configuring `GEMINI_API_KEY` locally:
+
+```bash
+dotnet run --project apps/api.Evaluation -- \
+  --mode gemini \
+  --output docs/evaluation/results/recovery-evaluation-gemini
+```
+
 ## 21. Demonstration workflow
 
 The assessed demonstration will use a breakdown incident linked to an active scheduled trip with bookings.
@@ -1058,7 +1076,7 @@ The assessed demonstration will use a breakdown incident linked to an active sch
 | 21 | Notifications | Create approved passenger notifications | Done | Approval creates an idempotent in-app notification record for each active booking, exposes delivery evidence in the workflow audit, and lets the authenticated commuter list and mark notifications as read | Add external SMS, email, or push providers only if required by the final deployment scope |
 | 22 | Audit | Persist provider, model, prompt version, usage, and planning latency | Done | The migration, workflow entity, database mapping, and workflow API response include planning audit metadata | Display these fields in the workflow audit UI |
 | 23 | Security | Add prompt validation, redaction, rate limits, and centre-scope checks | Done | Access scopes restrict non-admin workflows to one centre, mutation endpoints are rate-limited, prompt text is bounded and sanitized, persisted failures exclude raw exception details, and authenticated HTTP tests verify centre isolation and HTTP 429 responses | Verify reverse-proxy forwarding configuration before deployment |
-| 24 | Tests | Add unit tests for plan, tools, validation, approval, and execution | Done | Thirty-eight tests pass, including SQLite-backed tool and action tests plus authenticated HTTP coverage for authorization, centre isolation, and rate limiting | Add the test command to CI and extend the suite with evaluation fixtures |
-| 25 | Evaluation | Build the incident evaluation dataset and record measurements | To do | Evaluation report contains accuracy, safety, latency, and cost results | Define fixtures and evaluation runner |
+| 24 | Tests | Add unit tests for plan, tools, validation, approval, and execution | Done | Thirty-nine tests pass, including SQLite-backed tool and action tests, authenticated HTTP coverage, and evaluation-runner regression coverage | Add the test command to CI and extend the suite with demonstration fixtures |
+| 25 | Evaluation | Build the incident evaluation dataset and record measurements | Done | A versioned ten-scenario dataset, deterministic baseline, optional Gemini runner, JSON and Markdown reports, safety metrics, latency, tokens, and configurable cost calculation are implemented | Run the live Gemini evaluation with the final model and preserve its report evidence |
 | 26 | Demonstration | Verify one complete Gemini-planned assessed workflow | To do | Recorded run shows objective through final outcome with all evidence | Prepare stable seed data and demonstration script |
 | 27 | Documentation | Add ADR, API examples, test results, screenshots, and final report evidence | To do | Submission report links to verified implementation evidence | Update documentation after implementation and testing |
