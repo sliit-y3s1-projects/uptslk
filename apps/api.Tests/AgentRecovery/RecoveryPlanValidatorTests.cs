@@ -106,6 +106,24 @@ public sealed class RecoveryPlanValidatorTests
         Assert.Contains("Step 'network-check' references unknown dependency 'missing-step'.", errors);
     }
 
+    [Fact]
+    public void Validate_RejectsDispatchWithoutExplicitNetworkAndFleetDependencies()
+    {
+        var plan = new RecoveryPlanDraft(
+            "Recover a breakdown.",
+            [
+                new PlannedRecoveryStep("network-check", 1, RecoveryAgentId.NetworkContinuity, "Assess continuity.", []),
+                new PlannedRecoveryStep("fleet-check", 2, RecoveryAgentId.FleetReadiness, "Assess fleet.", []),
+                new PlannedRecoveryStep("dispatch-check", 3, RecoveryAgentId.DispatchRecovery, "Assess dispatch.", []),
+                new PlannedRecoveryStep("passenger-check", 4, RecoveryAgentId.PassengerFareImpact, "Assess passengers.", ["dispatch-check"])
+            ],
+            "A validated recommendation is ready for manager review.");
+
+        var errors = _validator.Validate(plan, IncidentType.Breakdown);
+
+        Assert.Contains("Dispatch recovery must depend on both the network and fleet assessment steps.", errors);
+    }
+
     private static RecoveryPlanValidator CreateValidator()
     {
         IRecoveryAgent[] agents =
@@ -118,7 +136,7 @@ public sealed class RecoveryPlanValidatorTests
 
         return new RecoveryPlanValidator(
             new RecoveryAgentRegistry(agents),
-            Options.Create(new AgentAiOptions { MaximumPlanSteps = 8 }));
+            Options.Create(new AgentAiOptions { MaximumPlanSteps = 4 }));
     }
 
     private sealed class StubAgent(RecoveryAgentId id) : IRecoveryAgent

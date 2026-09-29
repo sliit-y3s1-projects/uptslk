@@ -70,6 +70,18 @@ public sealed partial class RecoveryPlanValidator(
         {
             Require(agentIds, RecoveryAgentId.NetworkContinuity, errors, "Dispatch recovery requires a network proposal.");
             Require(agentIds, RecoveryAgentId.FleetReadiness, errors, "Dispatch recovery requires a fleet proposal.");
+
+            var dispatchStep = steps.FirstOrDefault(step => step.AgentId == RecoveryAgentId.DispatchRecovery);
+            var networkStep = steps.FirstOrDefault(step => step.AgentId == RecoveryAgentId.NetworkContinuity);
+            var fleetStep = steps.FirstOrDefault(step => step.AgentId == RecoveryAgentId.FleetReadiness);
+            if (dispatchStep is not null && networkStep is not null && fleetStep is not null)
+            {
+                if (networkStep.Order >= dispatchStep.Order || fleetStep.Order >= dispatchStep.Order)
+                    errors.Add("Network and fleet assessments must run before dispatch recovery.");
+                if (!(dispatchStep.DependsOn ?? []).Contains(networkStep.StepId, StringComparer.OrdinalIgnoreCase)
+                    || !(dispatchStep.DependsOn ?? []).Contains(fleetStep.StepId, StringComparer.OrdinalIgnoreCase))
+                    errors.Add("Dispatch recovery must depend on both the network and fleet assessment steps.");
+            }
         }
 
         return errors.Distinct(StringComparer.Ordinal).ToArray();

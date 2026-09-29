@@ -2,7 +2,11 @@ using api.Models;
 
 namespace api.Services.AgentRecovery;
 
-public sealed record RecoveryContext(AgentWorkflow Workflow, Trip Trip, int AffectedPassengers);
+public sealed record RecoveryContext(
+    AgentWorkflow Workflow,
+    Trip Trip,
+    int AffectedPassengers,
+    IReadOnlyDictionary<RecoveryAgentId, AgentRecommendation> Evidence);
 
 public enum RecoveryAgentId
 {

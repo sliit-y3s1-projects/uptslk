@@ -51,23 +51,66 @@ public sealed class RecoveryWorkflowService(
         await db.SaveChangesAsync(cancellationToken);
 
         var planningInput = CreatePlanningInput(workflow, incident, affectedPassengers, agentRegistry.Capabilities);
-        var planningResult = await planningService.CreatePlanAsync(planningInput, cancellationToken);
+        RecoveryPlanningResult planningResult;
+        try
+        {
+            planningResult = await planningService.CreatePlanAsync(planningInput, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            workflow.Status = WorkflowStatus.Failed;
+            workflow.FailureReason = "Recovery planning was cancelled before a safe plan was created.";
+            workflow.UpdatedAt = DateTime.UtcNow;
+            workflow.CompletedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(CancellationToken.None);
+            throw;
+        }
         ApplyPlanningResult(workflow, planningResult);
         var plan = CreateExecutionPlan(planningResult.Plan, agentRegistry);
         workflow.PlanJson = JsonSerializer.Serialize(plan, JsonOptions);
         workflow.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
 
-        var context = new RecoveryContext(workflow, incident.Trip, affectedPassengers);
-        var recommendations = new List<AgentRecommendation>();
+        var recommendations = new Dictionary<RecoveryAgentId, AgentRecommendation>();
+        var stepOutcomes = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         foreach (var plannedStep in planningResult.Plan.Steps.OrderBy(step => step.Order))
         {
             var agent = agentRegistry.GetRequired(plannedStep.AgentId);
+            var failedDependencies = (plannedStep.DependsOn ?? [])
+                .Where(dependencyId => !stepOutcomes.GetValueOrDefault(dependencyId))
+                .ToArray();
+            if (failedDependencies.Length > 0)
+            {
+                var error = $"Skipped because required steps did not complete: {string.Join(", ", failedDependencies)}.";
+                stepOutcomes[plannedStep.StepId] = false;
+                MarkPlanStep(plan, agent.Name, "Skipped");
+                db.AgentSteps.Add(new AgentStep
+                {
+                    WorkflowId = workflow.Id,
+                    AgentName = agent.Name,
+                    InputJson = JsonSerializer.Serialize(new { incident.Id, incident.TripId, affectedPassengers, plannedStep.DependsOn }, JsonOptions),
+                    OutputJson = "{}",
+                    ToolCallsJson = "[]",
+                    Status = "Skipped",
+                    Error = error
+                });
+                workflow.PlanJson = JsonSerializer.Serialize(plan, JsonOptions);
+                workflow.UpdatedAt = DateTime.UtcNow;
+                await db.SaveChangesAsync(cancellationToken);
+                continue;
+            }
+
+            var context = new RecoveryContext(
+                workflow,
+                incident.Trip,
+                affectedPassengers,
+                new Dictionary<RecoveryAgentId, AgentRecommendation>(recommendations));
             MarkPlanStep(plan, agent.Name, "Running");
             var result = await RunAgentWithPolicyAsync(agent, context, cancellationToken);
             if (result.Execution is not null)
             {
-                recommendations.Add(result.Execution.Recommendation);
+                recommendations[agent.Id] = result.Execution.Recommendation;
+                stepOutcomes[plannedStep.StepId] = true;
                 MarkPlanStep(plan, agent.Name, "Completed");
                 db.AgentSteps.Add(new AgentStep
                 {
@@ -82,6 +125,7 @@ public sealed class RecoveryWorkflowService(
             }
             else
             {
+                stepOutcomes[plannedStep.StepId] = false;
                 MarkPlanStep(plan, agent.Name, "Failed");
                 db.AgentSteps.Add(new AgentStep
                 {
@@ -102,10 +146,10 @@ public sealed class RecoveryWorkflowService(
         }
         workflow.PlanJson = JsonSerializer.Serialize(plan, JsonOptions);
 
-        var network = recommendations.SingleOrDefault(item => item.AgentName == "Network Continuity Agent");
-        var fleet = recommendations.SingleOrDefault(item => item.AgentName == "Fleet Readiness Agent");
-        var dispatch = recommendations.SingleOrDefault(item => item.AgentName == "Dispatch Recovery Agent");
-        var warnings = recommendations.SelectMany(item => item.Warnings).ToList();
+        recommendations.TryGetValue(RecoveryAgentId.NetworkContinuity, out var network);
+        recommendations.TryGetValue(RecoveryAgentId.FleetReadiness, out var fleet);
+        recommendations.TryGetValue(RecoveryAgentId.DispatchRecovery, out var dispatch);
+        var warnings = recommendations.Values.SelectMany(item => item.Warnings).ToList();
         var selectedAgents = planningResult.Plan.Steps.Select(step => step.AgentId).ToHashSet();
         var fleetRequired = selectedAgents.Contains(RecoveryAgentId.FleetReadiness);
         var dispatchRequired = selectedAgents.Contains(RecoveryAgentId.DispatchRecovery);
@@ -237,16 +281,19 @@ public sealed class RecoveryWorkflowService(
     {
         var results = new List<ValidationResult>();
         var checkedAt = DateTime.UtcNow;
-        var vehicle = await db.Vehicles.AsNoTracking().SingleOrDefaultAsync(item => item.Id == proposal.VehicleId, cancellationToken);
+        var vehicle = await db.Vehicles.AsNoTracking()
+            .Include(item => item.MaintenanceRecords)
+            .SingleOrDefaultAsync(item => item.Id == proposal.VehicleId, cancellationToken);
         var driver = await db.Drivers.AsNoTracking().SingleOrDefaultAsync(item => item.Id == proposal.DriverId, cancellationToken);
         var bay = await db.Bays.AsNoTracking().SingleOrDefaultAsync(item => item.Id == proposal.BayId, cancellationToken);
         results.Add(Check(phase, "Vehicle active at centre", vehicle is not null && vehicle.Status == VehicleStatus.Active && vehicle.CentreId == trip.CentreId, "The proposed vehicle is no longer active at this centre.", checkedAt));
+        results.Add(Check(phase, "Vehicle maintenance clearance", vehicle is not null && !vehicle.MaintenanceRecords.Any(record => record.Status == MaintenanceStatus.InProgress), "The proposed vehicle has maintenance currently in progress.", checkedAt));
         results.Add(Check(phase, "Driver active at centre", driver is not null && driver.Status == DriverStatus.Active && driver.CentreId == trip.CentreId, "The proposed driver is no longer active at this centre.", checkedAt));
         results.Add(Check(phase, "Bay available", bay is not null && bay.Status == BayStatus.Available, "The proposed bay is no longer available.", checkedAt));
         results.Add(Check(phase, "Vehicle capacity", vehicle is not null && vehicle.Capacity >= proposal.AffectedPassengers, "The proposed vehicle no longer has sufficient capacity.", checkedAt));
         if (vehicle is not null && driver is not null && bay is not null)
         {
-            var conflicts = await conflictService.FindConflicts(vehicle.Id, driver.Id, bay.Id, proposal.ScheduledTime, trip.RouteDirection?.EstimatedDurationMin ?? trip.Route.EstimatedDurationMin, trip.Id);
+            var conflicts = await conflictService.FindConflicts(vehicle.Id, driver.Id, bay.Id, proposal.ScheduledTime, trip.RouteDirection?.EstimatedDurationMin ?? trip.Route.EstimatedDurationMin, trip.Id, cancellationToken);
             results.Add(Check(phase, "Vehicle, driver and bay conflicts", conflicts.Count == 0, conflicts.Count == 0 ? "No resource conflict was found." : string.Join(" ", conflicts), checkedAt));
         }
         else results.Add(Check(phase, "Vehicle, driver and bay conflicts", false, "Conflict validation could not run because a required resource is invalid.", checkedAt));
@@ -390,6 +437,10 @@ public sealed class RecoveryWorkflowService(
             catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
             {
                 lastError = new TimeoutException($"{agent.Name} exceeded the {AgentTimeoutSeconds}-second execution limit.", exception);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception exception)
             {

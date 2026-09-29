@@ -1,10 +1,8 @@
-using api.Data;
-using api.Enums;
-using Microsoft.EntityFrameworkCore;
+using api.Services.AgentRecovery.Tools;
 
 namespace api.Services.AgentRecovery.Agents;
 
-public sealed class FleetReadinessAgent(AppDbContext db) : IRecoveryAgent
+public sealed class FleetReadinessAgent(IFleetRecoveryTools tools) : IRecoveryAgent
 {
     public RecoveryAgentId Id => RecoveryAgentId.FleetReadiness;
     public string Name => "Fleet Readiness Agent";
@@ -16,33 +14,29 @@ public sealed class FleetReadinessAgent(AppDbContext db) : IRecoveryAgent
 
     public async Task<AgentExecutionResult> AnalyseAsync(RecoveryContext context, CancellationToken cancellationToken)
     {
-        var vehicles = await db.Vehicles.AsNoTracking()
-            .Include(vehicle => vehicle.MaintenanceRecords)
-            .Where(vehicle => vehicle.CentreId == context.Trip.CentreId && vehicle.Id != context.Trip.VehicleId && vehicle.Status == VehicleStatus.Active)
-            .ToListAsync(cancellationToken);
-        var candidate = vehicles
-            .Where(vehicle => !vehicle.MaintenanceRecords.Any(record => record.Status == MaintenanceStatus.InProgress))
-            .OrderByDescending(vehicle => vehicle.Capacity >= context.AffectedPassengers)
-            .ThenBy(vehicle => vehicle.Capacity)
-            .FirstOrDefault();
-        if (candidate is null)
+        var toolInput = new FindReplacementVehicleInput(
+            context.Trip.CentreId,
+            context.Trip.VehicleId,
+            context.AffectedPassengers);
+        var toolOutput = await tools.FindReplacementVehicleAsync(toolInput, cancellationToken);
+        if (toolOutput.CandidateVehicleId is null || toolOutput.Capacity is null)
         {
             var unavailable = new AgentRecommendation(Name, "No roadworthy replacement bus is currently available.", [], ["The workflow cannot proceed until a Fleet Officer provides an active replacement bus."]);
             return new AgentExecutionResult(unavailable,
-            [new AgentToolCall(RecoveryToolName.FindReplacementVehicle, new { context.Trip.CentreId, ExcludedVehicleId = context.Trip.VehicleId, context.AffectedPassengers }, new { CandidateVehicleId = (Guid?)null })]);
+            [new AgentToolCall(RecoveryToolName.FindReplacementVehicle, toolInput, toolOutput)]);
         }
 
-        var capacityWarning = candidate.Capacity < context.AffectedPassengers
-            ? $"The replacement has {candidate.Capacity} spaces for {context.AffectedPassengers} affected passengers."
+        var capacityWarning = !toolOutput.MeetsRequiredCapacity
+            ? $"The replacement has {toolOutput.Capacity} spaces for {context.AffectedPassengers} affected passengers."
             : null;
         var recommendation = new AgentRecommendation(
             Name,
-            $"Use {candidate.PlateNumber} ({candidate.Capacity} passenger capacity) as the replacement bus.",
+            $"Use {toolOutput.PlateNumber} ({toolOutput.Capacity} passenger capacity) as the replacement bus.",
             ["Vehicle is active at the affected trip's centre.", "Vehicle has no maintenance record currently in progress."],
             capacityWarning is null ? [] : [capacityWarning],
-            VehicleId: candidate.Id,
-            Capacity: candidate.Capacity);
+            VehicleId: toolOutput.CandidateVehicleId,
+            Capacity: toolOutput.Capacity);
         return new AgentExecutionResult(recommendation,
-        [new AgentToolCall(RecoveryToolName.FindReplacementVehicle, new { context.Trip.CentreId, ExcludedVehicleId = context.Trip.VehicleId, context.AffectedPassengers }, new { CandidateVehicleId = candidate.Id, candidate.PlateNumber, candidate.Capacity })]);
+        [new AgentToolCall(RecoveryToolName.FindReplacementVehicle, toolInput, toolOutput)]);
     }
 }
