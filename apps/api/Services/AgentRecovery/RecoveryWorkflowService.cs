@@ -14,7 +14,7 @@ public sealed class RecoveryWorkflowService(
     RecoveryPlanningService planningService,
     RecoveryAgentRegistry agentRegistry,
     RecoveryProposalComposer proposalComposer,
-    PassengerNotificationService passengerNotifications,
+    RecoveryActionExecutor actionExecutor,
     TripConflictService conflictService,
     Microsoft.Extensions.Options.IOptions<AgentAiOptions> agentAiOptions,
     ILogger<RecoveryWorkflowService> logger)
@@ -243,26 +243,8 @@ public sealed class RecoveryWorkflowService(
             return (workflow, null);
         }
 
-        workflow.Trip.VehicleId = proposal.VehicleId;
-        workflow.Trip.DriverId = proposal.DriverId;
-        workflow.Trip.BayId = proposal.BayId;
-        workflow.Trip.ScheduledTime = proposal.ScheduledTime;
-        workflow.Trip.Status = TripStatus.Delayed;
-        workflow.Trip.Notes = $"Recovered by approved agent workflow {workflow.Id:N}.";
-        workflow.Trip.UpdatedAt = DateTime.UtcNow;
-        workflow.Incident.Status = IncidentStatus.Resolved;
-        workflow.Incident.ResolvedAt = DateTime.UtcNow;
-        workflow.Incident.UpdatedAt = DateTime.UtcNow;
-        await passengerNotifications.PrepareApprovedRecoveryNotificationsAsync(
-            workflow,
-            proposal,
-            cancellationToken);
-        approval.AppliedAt = DateTime.UtcNow;
         MarkPlanStep(workflow, "Manager Approval", "Completed");
-        workflow.Status = WorkflowStatus.Completed;
-        workflow.CompletedAt = DateTime.UtcNow;
-        workflow.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync(cancellationToken);
+        await actionExecutor.ExecuteAsync(workflow, approval, proposal, cancellationToken);
         return (workflow, null);
     }
 
