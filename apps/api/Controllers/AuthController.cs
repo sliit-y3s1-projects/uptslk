@@ -23,19 +23,22 @@ public class AuthController : ControllerBase
     private readonly AppDbContext _db;
     private readonly IImageStorageService _imageStorage;
     private readonly ILogger<AuthController> _logger;
+    private readonly IWebHostEnvironment _environment;
 
     public AuthController(
         UserManager<User> userManager,
         JwtTokenService jwtService,
         AppDbContext db,
         IImageStorageService imageStorage,
-        ILogger<AuthController> logger)
+        ILogger<AuthController> logger,
+        IWebHostEnvironment environment)
     {
         _userManager = userManager;
         _jwtService = jwtService;
         _db = db;
         _imageStorage = imageStorage;
         _logger = logger;
+        _environment = environment;
     }
 
     [HttpPost("register")]
@@ -108,8 +111,9 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        Response.Cookies.Delete("upts_access_token");
-        Response.Cookies.Delete("upts_refresh_token");
+        var cookieOptions = CreateAuthCookieOptions();
+        Response.Cookies.Delete("upts_access_token", cookieOptions);
+        Response.Cookies.Delete("upts_refresh_token", cookieOptions);
         return NoContent();
     }
 
@@ -384,7 +388,27 @@ public class AuthController : ControllerBase
     {
         var access = _jwtService.GenerateToken(user);
         var refresh = _jwtService.GenerateToken(user, TimeSpan.FromDays(30));
-        Response.Cookies.Append("upts_access_token", access, new CookieOptions { HttpOnly = true, Secure = false, SameSite = SameSiteMode.Lax, Expires = DateTimeOffset.UtcNow.AddHours(8) });
-        Response.Cookies.Append("upts_refresh_token", refresh, new CookieOptions { HttpOnly = true, Secure = false, SameSite = SameSiteMode.Lax, Expires = DateTimeOffset.UtcNow.AddDays(30) });
+        Response.Cookies.Append(
+            "upts_access_token",
+            access,
+            CreateAuthCookieOptions(DateTimeOffset.UtcNow.AddHours(8)));
+        Response.Cookies.Append(
+            "upts_refresh_token",
+            refresh,
+            CreateAuthCookieOptions(DateTimeOffset.UtcNow.AddDays(30)));
+    }
+
+    private CookieOptions CreateAuthCookieOptions(DateTimeOffset? expires = null)
+    {
+        var useCrossSiteCookie = !_environment.IsDevelopment() || Request.IsHttps;
+
+        return new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = useCrossSiteCookie,
+            SameSite = useCrossSiteCookie ? SameSiteMode.None : SameSiteMode.Lax,
+            Path = "/",
+            Expires = expires
+        };
     }
 }
