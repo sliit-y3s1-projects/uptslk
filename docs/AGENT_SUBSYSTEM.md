@@ -415,10 +415,14 @@ Provider retries for a malformed response remain separate from the single workfl
 ### 9.7 Compose and validate the proposal
 
 1. Combine compatible vehicle, driver, bay, time, route, and passenger results.
-2. Reject missing or contradictory results.
-3. Run all deterministic safety checks.
-4. Persist the proposal and validation results.
-5. Fail safely when no valid combination exists.
+2. Require passenger-impact evidence and a usable network bay and departure time.
+3. Require replacement vehicle and driver evidence whenever those agents are selected.
+4. Confirm the dispatch driver was checked against the exact proposed vehicle, bay, and departure time.
+5. Reject selection of the affected vehicle or driver as its own replacement.
+6. Reject insufficient capacity and departures outside the supported 120-minute recovery window.
+7. Run all database-backed deterministic safety checks.
+8. Persist the proposal and validation results.
+9. Fail safely when no valid combination exists.
 
 ### 9.8 Request approval
 
@@ -1031,11 +1035,11 @@ The assessed demonstration will use a breakdown incident linked to an active sch
 | 17 | Tools | Extract direct database queries into allow-listed tool services | Done | Each agent receives a least-privilege tool interface with validated typed inputs and structured outputs instead of direct database access | Add focused database integration tests for each tool service |
 | 18 | Execution | Add registry-based and dependency-aware workflow execution | Done | The executor runs validated planned agents in order, supplies typed prior evidence, and skips steps whose dependencies fail | Consider parallel execution only for future independent long-running steps |
 | 19 | Replanning | Add one bounded Gemini replan path | Done | Failed or incomplete specialist evidence can trigger one policy-validated Gemini revision, with the reasons, revised plan, usage, and outcome persisted | Verify a real no-candidate replan using the evaluation dataset |
-| 20 | Composition | Strengthen deterministic proposal compatibility rules | To do | Vehicle, driver, bay, time, and route always form one checked combination | Add proposal composer tests |
+| 20 | Composition | Strengthen deterministic proposal compatibility rules | Done | A dedicated proposal composer requires complete evidence, capacity, a supported recovery window, and proof that dispatch checked the exact vehicle, bay, and time combination | Extend composition when alternative-route and accessibility recommendations are added |
 | 21 | Notifications | Create approved passenger notifications | To do | A completed recovery creates delivery records for affected bookings | Implement notification preparation and delivery |
 | 22 | Audit | Persist provider, model, prompt version, usage, and planning latency | Done | The migration, workflow entity, database mapping, and workflow API response include planning audit metadata | Display these fields in the workflow audit UI |
 | 23 | Security | Add prompt validation, redaction, rate limits, and centre-scope checks | To do | Security tests reject unsupported input and cross-centre actions | Implement filters and authorization policies |
-| 24 | Tests | Add unit tests for plan, tools, validation, approval, and execution | In progress | Ten focused plan-policy, dependency-output, and replanning tests pass in `apps/api.Tests` | Add tool integration, approval, and action-execution tests, then run them in CI |
+| 24 | Tests | Add unit tests for plan, tools, validation, approval, and execution | In progress | Seventeen focused plan-policy, dependency-output, replanning, and proposal-composition tests pass in `apps/api.Tests` | Add tool integration, approval, and action-execution tests, then run them in CI |
 | 25 | Evaluation | Build the incident evaluation dataset and record measurements | To do | Evaluation report contains accuracy, safety, latency, and cost results | Define fixtures and evaluation runner |
 | 26 | Demonstration | Verify one complete Gemini-planned assessed workflow | To do | Recorded run shows objective through final outcome with all evidence | Prepare stable seed data and demonstration script |
 | 27 | Documentation | Add ADR, API examples, test results, screenshots, and final report evidence | To do | Submission report links to verified implementation evidence | Update documentation after implementation and testing |

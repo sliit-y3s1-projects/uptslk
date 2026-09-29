@@ -13,6 +13,7 @@ public sealed class RecoveryWorkflowService(
     AppDbContext db,
     RecoveryPlanningService planningService,
     RecoveryAgentRegistry agentRegistry,
+    RecoveryProposalComposer proposalComposer,
     TripConflictService conflictService,
     Microsoft.Extensions.Options.IOptions<AgentAiOptions> agentAiOptions)
 {
@@ -75,11 +76,13 @@ public sealed class RecoveryWorkflowService(
             planningResult.Plan,
             0,
             cancellationToken);
-        var failures = GetExecutionFailures(
+        var composition = proposalComposer.Compose(
+            incident.Trip,
+            affectedPassengers,
             planningResult.Plan,
-            execution,
-            incident.Trip.Vehicle.Capacity,
-            affectedPassengers);
+            execution.Recommendations,
+            execution.Errors);
+        var failures = composition.Errors.ToList();
 
         if (failures.Count > 0
             && planningResult.Mode == "Gemini"
@@ -118,11 +121,13 @@ public sealed class RecoveryWorkflowService(
                     revisedPlanningResult.Plan,
                     workflow.ReplanCount,
                     cancellationToken);
-                failures = GetExecutionFailures(
+                composition = proposalComposer.Compose(
+                    incident.Trip,
+                    affectedPassengers,
                     revisedPlanningResult.Plan,
-                    execution,
-                    incident.Trip.Vehicle.Capacity,
-                    affectedPassengers);
+                    execution.Recommendations,
+                    execution.Errors);
+                failures = composition.Errors.ToList();
             }
             else
             {
@@ -135,12 +140,6 @@ public sealed class RecoveryWorkflowService(
         }
 
         var plan = execution.Plan;
-        var recommendations = execution.Recommendations;
-
-        recommendations.TryGetValue(RecoveryAgentId.NetworkContinuity, out var network);
-        recommendations.TryGetValue(RecoveryAgentId.FleetReadiness, out var fleet);
-        recommendations.TryGetValue(RecoveryAgentId.DispatchRecovery, out var dispatch);
-        var warnings = recommendations.Values.SelectMany(item => item.Warnings).ToList();
         if (failures.Count > 0)
         {
             MarkPlanStep(plan, "Safety Validation", "Skipped");
@@ -154,13 +153,8 @@ public sealed class RecoveryWorkflowService(
             return (workflow, null);
         }
 
-        var proposal = new RecoveryProposal(
-            fleet?.VehicleId ?? incident.Trip.VehicleId,
-            dispatch?.DriverId ?? incident.Trip.DriverId,
-            network!.BayId!.Value,
-            network.ScheduledTime!.Value,
-            affectedPassengers,
-            warnings);
+        var proposal = composition.Proposal
+            ?? throw new InvalidOperationException("Proposal composition succeeded without producing a proposal.");
         MarkPlanStep(plan, "Safety Validation", "Running");
         var validationResults = await ValidateProposalAsync(incident.Trip, proposal, "Pre-approval", cancellationToken);
         workflow.ValidationJson = JsonSerializer.Serialize(validationResults, JsonOptions);
@@ -407,31 +401,6 @@ public sealed class RecoveryWorkflowService(
         workflow.PlanJson = JsonSerializer.Serialize(plan, JsonOptions);
         workflow.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
-    }
-
-    private static List<string> GetExecutionFailures(
-        RecoveryPlanDraft generatedPlan,
-        PlanExecutionResult execution,
-        int currentVehicleCapacity,
-        int affectedPassengers)
-    {
-        var failures = execution.Errors.ToList();
-        execution.Recommendations.TryGetValue(RecoveryAgentId.NetworkContinuity, out var network);
-        execution.Recommendations.TryGetValue(RecoveryAgentId.FleetReadiness, out var fleet);
-        execution.Recommendations.TryGetValue(RecoveryAgentId.DispatchRecovery, out var dispatch);
-        var selectedAgents = generatedPlan.Steps.Select(step => step.AgentId).ToHashSet();
-        var proposedCapacity = fleet?.Capacity ?? currentVehicleCapacity;
-
-        if (selectedAgents.Contains(RecoveryAgentId.FleetReadiness) && fleet?.VehicleId is null)
-            failures.Add("No active, maintenance-safe replacement vehicle is available at this centre.");
-        if (selectedAgents.Contains(RecoveryAgentId.DispatchRecovery) && dispatch?.DriverId is null)
-            failures.Add("No conflict-free alternate driver is available for the proposed recovery combination.");
-        if (network?.BayId is null || network.ScheduledTime is null)
-            failures.Add("The network assessment did not produce a usable departure bay and time.");
-        if (proposedCapacity < affectedPassengers)
-            failures.Add($"The proposed vehicle capacity of {proposedCapacity} cannot carry {affectedPassengers} affected passengers.");
-
-        return failures.Distinct(StringComparer.Ordinal).ToList();
     }
 
     private static RecoveryPlanningInput CreatePlanningInput(

@@ -50,7 +50,10 @@ public sealed class DispatchRecoveryAgent(IDispatchRecoveryTools tools) : IRecov
                 "Driver is conflict-free for the exact proposed vehicle, bay, and departure time."
             ],
             [],
-            DriverId: toolOutput.CandidateDriverId);
+            VehicleId: fleet.VehicleId,
+            DriverId: toolOutput.CandidateDriverId,
+            BayId: network.BayId,
+            ScheduledTime: network.ScheduledTime);
         return new AgentExecutionResult(recommendation,
         [new AgentToolCall(RecoveryToolName.FindConflictFreeDriver, toolInput, toolOutput)]);
     }
