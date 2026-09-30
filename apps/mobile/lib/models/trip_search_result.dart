@@ -45,9 +45,11 @@ class TripSearchResult {
         capacity: _asInt(json['capacity']),
       );
 
-  bool get isBookable =>
-      available > 0 &&
-      {'Scheduled', 'Ready', 'Boarding', 'Delayed'}.contains(status);
+  bool get isOpenForBooking =>
+      scheduledTime.isAfter(DateTime.now()) &&
+      {'Scheduled', 'Ready', 'Boarding'}.contains(status);
+
+  bool get isBookable => available > 0 && isOpenForBooking;
 }
 
 int _asInt(dynamic value) => switch (value) {

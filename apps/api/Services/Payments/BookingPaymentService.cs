@@ -15,7 +15,7 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
         var trip = await db.Trips.Include(item => item.Vehicle).Include(item => item.Route).SingleOrDefaultAsync(item => item.Id == request.TripId, cancellationToken);
         if (passenger is null || !passenger.IsActive) return (null, "The selected passenger is not active.", StatusCodes.Status400BadRequest);
         if (trip?.Vehicle is null || trip.Vehicle.Capacity < 1) return (null, "This trip has no valid vehicle capacity configured.", StatusCodes.Status400BadRequest);
-        if (trip.Status is not (TripStatus.Scheduled or TripStatus.Ready or TripStatus.Boarding)) return (null, "Bookings are not available for this trip.", StatusCodes.Status400BadRequest);
+        if (!BookingEligibility.IsOpenForBooking(trip, DateTime.UtcNow)) return (null, "Bookings have closed for this departure. Please choose a later trip.", StatusCodes.Status400BadRequest);
         if (request.PassengerCount is < 1 or > 10) return (null, "Passenger count must be between 1 and 10.", StatusCodes.Status400BadRequest);
 
         if (await OccupiedCapacity(trip.Id, cancellationToken) + request.PassengerCount > trip.Vehicle.Capacity) return (null, "This departure does not have enough remaining spaces for every passenger.", StatusCodes.Status409Conflict);
@@ -78,12 +78,14 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
         var payment = await db.Payments.Include(item => item.Booking)
             .SingleOrDefaultAsync(item => item.Provider == PaymentProvider.Stripe && (item.ProviderCheckoutId == checkoutId || item.ProviderOrderId == orderId), cancellationToken);
         if (payment is null || !MatchesPayment(payment, amountTotal, currency)) return;
+        if (payment.Status is PaymentStatus.Succeeded or PaymentStatus.RefundPending or PaymentStatus.Refunded) return;
 
         payment.ProviderPaymentId = paymentIntentId ?? payment.ProviderPaymentId;
         payment.PaymentMethod = "Stripe Checkout";
         payment.Status = PaymentStatus.Succeeded;
         payment.UpdatedAt = DateTime.UtcNow;
-        payment.Booking.Status = BookingStatus.Confirmed;
+        if (payment.Booking.Status == BookingStatus.Pending)
+            payment.Booking.Status = BookingStatus.Confirmed;
         payment.Booking.UpdatedAt = DateTime.UtcNow;
         db.PaymentWebhookEvents.Add(new PaymentWebhookEvent { Provider = PaymentProvider.Stripe, ProviderEventId = eventId, EventType = "checkout.session.completed" });
         await db.SaveChangesAsync(cancellationToken);
@@ -103,7 +105,8 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
         payment.PaymentMethod = "Stripe Checkout";
         payment.Status = PaymentStatus.Succeeded;
         payment.UpdatedAt = DateTime.UtcNow;
-        payment.Booking.Status = BookingStatus.Confirmed;
+        if (payment.Booking.Status == BookingStatus.Pending)
+            payment.Booking.Status = BookingStatus.Confirmed;
         payment.Booking.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
     }

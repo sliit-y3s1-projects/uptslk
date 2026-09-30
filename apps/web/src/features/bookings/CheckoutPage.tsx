@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api/api-client";
+import { departureLabel } from "./ticket";
 
 type Trip = {
   id: string;
@@ -39,16 +40,39 @@ export function CheckoutPage() {
   const [tripId, setTripId] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
   const trips = useQuery({
     queryKey: ["booking-trips", routeId, directionId, date],
     enabled: Boolean(routeId),
     queryFn: () =>
       apiClient<Trip[]>(
-        `/api/v1/trips?routeId=${routeId}${directionId ? `&directionId=${directionId}` : ""}${date ? `&date=${date}` : ""}`,
+        `/api/v1/trips?bookableOnly=true&routeId=${routeId}${directionId ? `&directionId=${directionId}` : ""}${date ? `&date=${date}` : ""}`,
       ),
+    refetchInterval: 30000,
   });
+  const departures =
+    trips.data?.filter(
+      (trip) =>
+        new Date(trip.scheduledTime).getTime() > now &&
+        ["Scheduled", "Ready", "Boarding"].includes(trip.status),
+    ) ?? [];
+  const selectedTrip = departures.find(
+    (trip) => trip.id === tripId && trip.available >= passengers,
+  );
   async function confirm() {
-    if (!tripId) return;
+    if (
+      !selectedTrip ||
+      new Date(selectedTrip.scheduledTime).getTime() <= now
+    ) {
+      setError(
+        "Bookings have closed for this departure. Please choose a later trip.",
+      );
+      return;
+    }
     setError("");
     setSubmitting(true);
     try {
@@ -90,12 +114,12 @@ export function CheckoutPage() {
                 Unable to load departures. Please try again.
               </p>
             )}
-            {!trips.isLoading && trips.data?.length === 0 && (
+            {!trips.isLoading && !trips.error && departures.length === 0 && (
               <p className="text-sm text-slate-500">
                 No departures are available for this route.
               </p>
             )}
-            {trips.data?.map((trip) => (
+            {departures.map((trip) => (
               <button
                 type="button"
                 key={trip.id}
@@ -106,7 +130,7 @@ export function CheckoutPage() {
                 className={`w-full rounded-xl border p-4 text-left ${trip.available < passengers ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400" : tripId === trip.id ? "border-primary bg-primary/5" : "border-slate-200"}`}
               >
                 <span className="font-medium">
-                  {new Date(trip.scheduledTime).toLocaleString()}
+                  {departureLabel(trip.scheduledTime)}
                 </span>
                 <span className="ml-3 text-sm text-slate-500">
                   {trip.status}
@@ -123,13 +147,12 @@ export function CheckoutPage() {
               </button>
             ))}
           </div>
-          {tripId && (
+          {selectedTrip && (
             <div className="mt-7 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
               <p className="font-semibold">Boarding capacity confirmed</p>
               <p className="mt-1">
-                This journey has{" "}
-                {trips.data?.find((trip) => trip.id === tripId)?.available ?? 0}{" "}
-                spaces remaining. Your payment covers {passengers} passenger
+                This journey has {selectedTrip.available} spaces remaining. Your
+                payment covers {passengers} passenger
                 {passengers === 1 ? "" : "s"}; seats are not assigned.
               </p>
             </div>
@@ -137,7 +160,7 @@ export function CheckoutPage() {
           {error && <p className="mt-5 text-sm text-red-600">{error}</p>}
           <Button
             className="mt-7 w-full rounded-full bg-primary"
-            disabled={!tripId || submitting}
+            disabled={!selectedTrip || submitting}
             onClick={confirm}
           >
             {submitting

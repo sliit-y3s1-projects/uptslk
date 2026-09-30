@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import '../../core/time/service_time.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -35,6 +40,7 @@ class _BookingCheckoutPageState extends State<BookingCheckoutPage>
   CheckoutSession? _checkout;
   BookingPaymentStatus? _payment;
   String? _error;
+  Timer? _departureTimer;
 
   @override
   void initState() {
@@ -42,10 +48,22 @@ class _BookingCheckoutPageState extends State<BookingCheckoutPage>
     WidgetsBinding.instance.addObserver(this);
     _passengerCount = widget.passengerCount;
     _quoteFuture = _loadQuote();
+    final remaining = widget.trip.scheduledTime.difference(DateTime.now());
+    _departureTimer = Timer(
+      remaining.isNegative ? Duration.zero : remaining,
+      () {
+        if (mounted && _checkout == null) {
+          setState(
+            () => _error = 'Bookings have closed for this departure. Please choose a later trip.',
+          );
+        }
+      },
+    );
   }
 
   @override
   void dispose() {
+    _departureTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -71,6 +89,12 @@ class _BookingCheckoutPageState extends State<BookingCheckoutPage>
   }
 
   Future<void> _startPayment() async {
+    if (!widget.trip.isOpenForBooking) {
+      setState(
+        () => _error = 'Bookings have closed for this departure. Please choose a later trip.',
+      );
+      return;
+    }
     final token = widget.authStore.token;
     if (token == null || token.isEmpty) {
       setState(() => _error = 'Your session has ended. Sign in again.');
@@ -341,7 +365,9 @@ class _BookingCheckoutPageState extends State<BookingCheckoutPage>
         if (_checkout == null) ...[
           const SizedBox(height: 20),
           FilledButton.icon(
-            onPressed: _startingCheckout ? null : _startPayment,
+            onPressed: _startingCheckout || !widget.trip.isOpenForBooking
+                ? null
+                : _startPayment,
             style: _primaryButtonStyle,
             icon: _startingCheckout
                 ? const SizedBox.square(
@@ -622,6 +648,7 @@ final ButtonStyle _primaryButtonStyle = FilledButton.styleFrom();
 String _currency(double value) => 'LKR ${value.toStringAsFixed(2)}';
 
 String _formatDate(DateTime date) {
+  date = sriLankaTime(date);
   const months = [
     'Jan',
     'Feb',
@@ -640,6 +667,7 @@ String _formatDate(DateTime date) {
 }
 
 String _formatTime(DateTime date) {
+  date = sriLankaTime(date);
   final hour = date.hour == 0
       ? 12
       : (date.hour > 12 ? date.hour - 12 : date.hour);

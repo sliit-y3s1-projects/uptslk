@@ -60,11 +60,11 @@ void main() {
           client: MockClient((request) async {
             expect(request.method, 'POST');
             expect(request.url.path, '/api/v1/payments/checkout/me');
-          expect(jsonDecode(request.body), {
-            'tripId': 'trip-1',
-            'passengerCount': 2,
-            'useMobileReturnUrl': true,
-          });
+            expect(jsonDecode(request.body), {
+              'tripId': 'trip-1',
+              'passengerCount': 2,
+              'useMobileReturnUrl': true,
+            });
             return http.Response(
               jsonEncode({
                 'url': 'https://checkout.stripe.test/session',
@@ -99,7 +99,12 @@ void main() {
                 'fare': 360,
                 'qrCode': 'BKG-BOARDING-1',
                 'createdAt': '2026-09-27T06:00:00Z',
-                'tripTime': '2026-09-28T06:30:00Z',
+                'tripTime': DateTime.now()
+                    .toUtc()
+                    .add(const Duration(days: 1))
+                    .toIso8601String(),
+                'tripStatus': 'Scheduled',
+                'canBoard': true,
                 'route': 'EX-KM-01',
                 'routeName': 'Kadawatha to Makumbura',
               },

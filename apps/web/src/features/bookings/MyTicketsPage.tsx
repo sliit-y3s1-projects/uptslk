@@ -1,14 +1,5 @@
-import { useState } from "react";
-import {
-  BusFront,
-  CalendarDays,
-  CheckCircle2,
-  ChevronRight,
-  CircleAlert,
-  MapPin,
-  QrCode,
-  Ticket as TicketIcon,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Download, Ticket as TicketIcon } from "lucide-react";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -20,298 +11,222 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { apiClient } from "@/lib/api/api-client";
+import { TicketQr } from "@/features/fares/components/TicketQr";
+import {
+  canBoard,
+  departureLabel,
+  ticketGroup,
+  ticketLabel,
+  type Ticket,
+} from "./ticket";
 
-type Ticket = {
-  id: string;
-  status: "Pending" | "Confirmed" | "Completed" | "Cancelled";
-  passengerCount: number;
-  fare: number;
-  qrCode: string;
-  createdAt: string;
-  tripTime: string;
-  route: string;
-  routeName: string;
-};
-
-const statusStyle = {
-  Confirmed: "bg-emerald-100 text-emerald-800",
-  Pending: "bg-amber-100 text-amber-800",
-  Completed: "bg-slate-100 text-slate-700",
-  Cancelled: "bg-rose-50 text-rose-700",
-};
+const groups = ["Upcoming", "Past", "Cancelled"] as const;
 
 export function MyTicketsPage() {
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [group, setGroup] = useState<(typeof groups)[number]>("Upcoming");
+  const [now, setNow] = useState(Date.now);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
   const tickets = useQuery({
     queryKey: ["my-tickets"],
     queryFn: () => apiClient<Ticket[]>("/api/v1/bookings/me"),
+    refetchInterval: 30000,
   });
-  const activeTickets =
-    tickets.data?.filter(
-      (ticket) => ticket.status === "Confirmed" || ticket.status === "Pending",
-    ) ?? [];
+  const allTickets = tickets.data ?? [];
+  const visible = allTickets
+    .filter((ticket) => ticketGroup(ticket, now) === group)
+    .sort((a, b) =>
+      group === "Upcoming"
+        ? Date.parse(a.tripTime) - Date.parse(b.tripTime)
+        : Date.parse(b.tripTime) - Date.parse(a.tripTime),
+    );
+  const selected = allTickets.find((ticket) => ticket.id === selectedId);
+
+  async function download() {
+    if (!selectedId) return;
+    setDownloading(true);
+    setDownloadError("");
+    try {
+      const result = await tickets.refetch();
+      if (result.error) throw result.error;
+      const current = result.data?.find((ticket) => ticket.id === selectedId);
+      if (!current || !canBoard(current))
+        throw new Error("This booking no longer has a valid boarding pass.");
+      const { downloadTicketPdf } = await import("./ticketPdf");
+      await downloadTicketPdf(current);
+    } catch (error) {
+      setDownloadError(
+        error instanceof Error
+          ? error.message
+          : "Could not download your ticket. Please try again.",
+      );
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-slate-50">
       <section className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
-        <div className="flex items-end justify-between gap-4">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-            My tickets
-          </h1>
-          <Link to="/reservation">
-            <Button className="hidden rounded-full sm:inline-flex">
-              Book a journey
-            </Button>
-          </Link>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-semibold tracking-tight">My tickets</h1>
+          <Button variant="outline" render={<Link to="/reservation" />}>
+            Book a journey
+          </Button>
         </div>
-        {tickets.isLoading && <TicketSkeleton />}
-        {tickets.error && (
-          <p className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-            Unable to load your tickets. Please refresh and try again.
-          </p>
-        )}
-        {!tickets.isLoading && tickets.data?.length === 0 && (
-          <div className="mt-8 rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center">
-            <TicketIcon className="mx-auto size-9 text-slate-400" />
-            <h2 className="mt-4 font-semibold">No tickets yet</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Your paid bookings will appear here.
-            </p>
-            <Link to="/reservation">
-              <Button className="mt-5 rounded-full">Find a journey</Button>
-            </Link>
-          </div>
-        )}
-        {activeTickets.length > 0 && (
-          <TicketGroup label="Active tickets">
-            {activeTickets.map((ticket) => (
-              <TicketCard
-                key={ticket.id}
-                ticket={ticket}
-                onView={() => setSelectedTicket(ticket)}
-              />
-            ))}
-          </TicketGroup>
-        )}
-        {(tickets.data?.length ?? 0) > activeTickets.length && (
-          <TicketGroup label="Past and cancelled">
-            {tickets.data
-              ?.filter((ticket) => !activeTickets.includes(ticket))
-              .map((ticket) => (
-                <TicketCard
-                  key={ticket.id}
-                  ticket={ticket}
-                  onView={() => setSelectedTicket(ticket)}
-                  muted
-                />
-              ))}
-          </TicketGroup>
-        )}
-        <Link to="/reservation" className="mt-6 block sm:hidden">
-          <Button className="w-full rounded-full">Book a journey</Button>
-        </Link>
-      </section>
-      <TicketDialog
-        ticket={selectedTicket}
-        onOpenChange={(open) => !open && setSelectedTicket(null)}
-      />
-    </main>
-  );
-}
-
-function TicketGroup({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="mt-8">
-      <p className="mb-3 text-sm font-semibold text-slate-600">{label}</p>
-      <div className="space-y-3">{children}</div>
-    </div>
-  );
-}
-
-function TicketCard({
-  ticket,
-  onView,
-  muted = false,
-}: {
-  ticket: Ticket;
-  onView: () => void;
-  muted?: boolean;
-}) {
-  const departure = new Date(ticket.tripTime);
-  return (
-    <article
-      className={`overflow-hidden rounded-2xl border-2 bg-white shadow-sm ${muted ? "border-slate-300 opacity-80" : "border-slate-300"}`}
-    >
-      <div className="flex items-start gap-3 p-4 sm:p-5">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
-          <BusFront className="size-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="font-semibold text-slate-950">
-              {ticket.route}{" "}
-              <span className="font-normal text-slate-400">·</span>{" "}
-              {ticket.routeName}
-            </p>
-            <span
-              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle[ticket.status]}`}
+        <div className="my-6 flex flex-wrap gap-2" aria-label="Filter bookings">
+          {groups.map((item) => (
+            <Button
+              key={item}
+              variant={group === item ? "default" : "outline"}
+              aria-pressed={group === item}
+              onClick={() => setGroup(item)}
             >
-              {ticket.status === "Confirmed"
-                ? "Approved to board"
-                : ticket.status}
-            </span>
-          </div>
-          <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-600">
-            <CalendarDays className="size-3.5" />
-            {departure.toLocaleDateString([], {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-            })}{" "}
-            ·{" "}
-            {departure.toLocaleTimeString([], {
-              hour: "numeric",
-              minute: "2-digit",
-            })}
-          </p>
+              {item}{" "}
+              <span className="opacity-70">
+                {
+                  allTickets.filter(
+                    (ticket) => ticketGroup(ticket, now) === item,
+                  ).length
+                }
+              </span>
+            </Button>
+          ))}
         </div>
-      </div>
-      <div className="grid grid-cols-3 border-y border-dashed border-slate-300 bg-slate-50/70 px-4 py-3 text-sm sm:px-5">
-        <TicketFact label="Passengers" value={String(ticket.passengerCount)} />
-        <TicketFact label="Fare" value={`LKR ${ticket.fare.toFixed(2)}`} />
-        <TicketFact
-          label="Boarding"
-          value={ticket.status === "Confirmed" ? "Ready" : ticket.status}
-        />
-      </div>
-      <div className="flex items-center justify-between px-4 py-3 sm:px-5">
-        <p className="text-xs text-slate-500">
-          {ticket.status === "Confirmed"
-            ? "Show this pass when boarding."
-            : "Ticket details and payment state."}
-        </p>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-1 rounded-full text-primary"
-          onClick={onView}
-        >
-          View ticket <ChevronRight className="size-4" />
-        </Button>
-      </div>
-    </article>
-  );
-}
-
-function TicketFact({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="mt-0.5 truncate font-semibold">{value}</p>
-    </div>
-  );
-}
-
-function TicketDialog({
-  ticket,
-  onOpenChange,
-}: {
-  ticket: Ticket | null;
-  onOpenChange: (open: boolean) => void;
-}) {
-  return (
-    <Dialog open={Boolean(ticket)} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl p-5 sm:p-6">
-        <DialogHeader>
-          <DialogTitle>Your boarding pass</DialogTitle>
-          <DialogDescription>
-            {ticket?.status === "Confirmed"
-              ? "Approved for boarding. Show this code to the conductor."
-              : "This ticket is not currently approved for boarding."}
-          </DialogDescription>
-        </DialogHeader>
-        {ticket && (
-          <div className="space-y-5">
-            <div className="rounded-2xl bg-indigo-950 p-5 text-white">
-              <div>
-                <p className="text-sm text-indigo-200">{ticket.route}</p>
-                <p className="mt-1 text-xl font-semibold">{ticket.routeName}</p>
-              </div>
-              <p className="mt-5 flex items-center gap-2 text-sm text-indigo-100">
-                <MapPin className="size-4" />
-                {new Date(ticket.tripTime).toLocaleString()}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 text-center">
-              <div className="mx-auto grid w-48 grid-cols-[repeat(21,minmax(0,1fr))] gap-px rounded bg-white p-2">
-                <QrPattern value={ticket.qrCode} />
-              </div>
-              <div className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-slate-800">
-                <QrCode className="size-4 text-primary" />
-                Boarding code
-              </div>
-              <p className="mt-1 break-all font-mono text-xs text-slate-500">
-                {ticket.qrCode}
-              </p>
-            </div>
-            <div className="flex items-start gap-3 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">
-              {ticket.status === "Confirmed" ? (
-                <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
-              ) : (
-                <CircleAlert className="mt-0.5 size-4 shrink-0" />
-              )}
-              <p>
-                {ticket.status === "Confirmed"
-                  ? "Payment is confirmed and this ticket is ready for boarding."
-                  : "This code is a sample boarding pass. It becomes usable when payment is confirmed."}
-              </p>
-            </div>
+        {tickets.isLoading ? (
+          <p role="status">Loading tickets...</p>
+        ) : tickets.error ? (
+          <p role="alert" className="text-destructive">
+            Unable to load your tickets. Please try again.
+          </p>
+        ) : visible.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
+            <TicketIcon className="mx-auto mb-3 size-7 text-muted-foreground" />
+            <p>No {group.toLowerCase()} bookings.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {visible.map((ticket) => (
+              <article
+                key={ticket.id}
+                className="rounded-xl border border-slate-300 bg-white p-5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm text-primary">{ticket.route}</p>
+                    <h2 className="mt-1 font-semibold">
+                      {ticket.origin} to {ticket.destination}
+                    </h2>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {departureLabel(ticket.tripTime)}
+                    </p>
+                  </div>
+                  <span
+                    className={`rounded-md px-2 py-1 text-xs ${canBoard(ticket, now) ? "bg-emerald-50 text-emerald-800" : "bg-slate-100 text-slate-600"}`}
+                  >
+                    {ticketLabel(ticket)}
+                  </span>
+                </div>
+                <div className="mt-4 flex items-center justify-between gap-3 border-t pt-3">
+                  <p className="text-sm text-muted-foreground">
+                    {ticket.passengerCount} passenger
+                    {ticket.passengerCount === 1 ? "" : "s"} · LKR{" "}
+                    {ticket.fare.toFixed(2)}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedId(ticket.id);
+                      setDownloadError("");
+                      void tickets.refetch();
+                    }}
+                  >
+                    {canBoard(ticket, now) ? "View ticket" : "View details"}
+                  </Button>
+                </div>
+              </article>
+            ))}
           </div>
         )}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function QrPattern({ value }: { value: string }) {
-  const cells = Array.from({ length: 441 }, (_, index) => {
-    const row = Math.floor(index / 21);
-    const column = index % 21;
-    const finder =
-      (row < 7 && column < 7) ||
-      (row < 7 && column > 13) ||
-      (row > 13 && column < 7);
-    const finderFill =
-      finder &&
-      (row % 6 === 0 ||
-        column % 6 === 0 ||
-        (row % 6 >= 2 && row % 6 <= 4 && column % 6 >= 2 && column % 6 <= 4));
-    const valueCode = value.charCodeAt(index % value.length) || 0;
-    return (
-      <span
-        key={index}
-        className={`aspect-square ${finder ? (finderFill ? "bg-slate-950" : "bg-white") : (valueCode * (index + 17) + row * 13 + column * 7) % 5 < 2 ? "bg-slate-950" : "bg-white"}`}
-      />
-    );
-  });
-  return <>{cells}</>;
-}
-
-function TicketSkeleton() {
-  return (
-    <div className="mt-8 space-y-3">
-      {[1, 2].map((item) => (
-        <div
-          key={item}
-          className="h-44 animate-pulse rounded-2xl border border-slate-200 bg-white"
-        />
-      ))}
-    </div>
+      </section>
+      <Dialog
+        open={!!selected}
+        onOpenChange={(open) => !open && setSelectedId(null)}
+      >
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selected && canBoard(selected, now)
+                ? "Boarding ticket"
+                : "Booking details"}
+            </DialogTitle>
+            <DialogDescription>
+              {selected && canBoard(selected, now)
+                ? "Show this QR when boarding. Times are in Sri Lanka time."
+                : "This booking is not valid for boarding."}
+            </DialogDescription>
+          </DialogHeader>
+          {selected && (
+            <>
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                <p className="text-sm text-primary">
+                  {selected.route} · {ticketLabel(selected)}
+                </p>
+                <p className="mt-1 font-semibold">
+                  {selected.origin} to {selected.destination}
+                </p>
+                <p className="mt-2 text-sm">
+                  {departureLabel(selected.tripTime)}
+                </p>
+              </div>
+              <dl className="grid grid-cols-2 gap-3 text-sm">
+                {[
+                  ["Passenger", selected.passengerName],
+                  ["Departure bay", selected.bay],
+                  ["Passengers", String(selected.passengerCount)],
+                  ["Fare", `LKR ${selected.fare.toFixed(2)}`],
+                ].map(([label, value]) => (
+                  <div key={label}>
+                    <dt className="text-muted-foreground">{label}</dt>
+                    <dd className="mt-1 font-medium">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+              {canBoard(selected, now) && selected.qrCode && (
+                <>
+                  <div className="flex flex-col items-center rounded-lg border bg-white p-5">
+                    <TicketQr value={selected.qrCode} />
+                    <p className="mt-3 break-all font-mono text-xs">
+                      {selected.qrCode}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => void download()}
+                    disabled={downloading}
+                  >
+                    <Download />
+                    {downloading ? "Preparing PDF..." : "Download ticket PDF"}
+                  </Button>
+                </>
+              )}
+              <p className="break-all text-xs text-muted-foreground">
+                Booking reference: {selected.id}
+              </p>
+              {downloadError && (
+                <p role="alert" className="text-sm text-destructive">
+                  {downloadError}
+                </p>
+              )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </main>
   );
 }

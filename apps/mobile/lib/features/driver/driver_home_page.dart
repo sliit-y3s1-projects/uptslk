@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -19,11 +21,22 @@ class DriverHomePage extends StatefulWidget {
 class _DriverHomePageState extends State<DriverHomePage> {
   final _service = DriverApiService();
   late Future<_DriverDashboard> _dashboardFuture;
+  Timer? _timer;
+  String _filter = 'Active';
 
   @override
   void initState() {
     super.initState();
     _dashboardFuture = _load();
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() => _dashboardFuture = _load());
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<_DriverDashboard> _load() async {
@@ -39,10 +52,18 @@ class _DriverHomePageState extends State<DriverHomePage> {
         fromDate: today,
         toDate: today.add(const Duration(days: 6)),
       ),
+      _service.getDuties(
+        token: token,
+        fromDate: today.subtract(const Duration(days: 6)),
+        toDate: today.subtract(const Duration(days: 1)),
+      ),
     ]);
     return _DriverDashboard(
       profile: results[0] as DriverOperationalProfile,
-      duties: results[1] as List<DriverAssignment>,
+      duties: [
+        ...results[1] as List<DriverAssignment>,
+        ...results[2] as List<DriverAssignment>,
+      ]..sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime)),
       today: today,
     );
   }
@@ -50,7 +71,11 @@ class _DriverHomePageState extends State<DriverHomePage> {
   Future<void> _refresh() async {
     final future = _load();
     setState(() => _dashboardFuture = future);
-    await future;
+    try {
+      await future;
+    } catch (_) {
+      /* FutureBuilder displays the error. */
+    }
   }
 
   Future<void> _openDuty(DriverAssignment duty) async {
@@ -77,7 +102,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
     body: FutureBuilder<_DriverDashboard>(
       future: _dashboardFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (!snapshot.hasData &&
+            snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError || snapshot.data == null) {
@@ -90,11 +116,61 @@ class _DriverHomePageState extends State<DriverHomePage> {
         }
 
         final dashboard = snapshot.data!;
+        final activeDuties = dashboard.duties
+            .where((duty) => !duty.isFinished)
+            .toList();
+        final highlighted = nextDriverDuty(activeDuties, DateTime.now());
+        if (_filter != 'Active') {
+          final history = dashboard.duties
+              .where(
+                (duty) => _filter == 'Cancelled'
+                    ? duty.status == 'Cancelled'
+                    : duty.status == 'Completed',
+              )
+              .toList()
+              .reversed
+              .toList();
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(22, 10, 22, 36),
+              children: [
+                _filters(),
+                const SizedBox(height: 16),
+                const Text(
+                  'Recent and scheduled duties',
+                  style: TextStyle(color: AppTheme.muted),
+                ),
+                if (history.isEmpty)
+                  const _EmptyDuties(message: 'No duties in this view.'),
+                for (final duty in history)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: _DutyCard(duty: duty, onTap: () => _openDuty(duty)),
+                  ),
+              ],
+            ),
+          );
+        }
         final todayDuties = dashboard.duties
-            .where((duty) => duty.serviceDate == dashboard.today)
+            .where(
+              (duty) =>
+                  duty.serviceDate == dashboard.today &&
+                  !duty.isFinished &&
+                  duty.id != highlighted?.id,
+            )
+            .toList();
+        final overdue = activeDuties
+            .where(
+              (duty) =>
+                  duty.serviceDate.isBefore(dashboard.today) &&
+                  duty.id != highlighted?.id,
+            )
             .toList();
         final upcomingByDay = <DateTime, List<DriverAssignment>>{};
-        for (final duty in dashboard.duties) {
+        for (final duty in activeDuties) {
+          if (duty.id == highlighted?.id) continue;
           if (duty.serviceDate.isAfter(dashboard.today)) {
             upcomingByDay.putIfAbsent(duty.serviceDate, () => []).add(duty);
           }
@@ -105,23 +181,40 @@ class _DriverHomePageState extends State<DriverHomePage> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(22, 10, 22, 36),
             children: [
+              _filters(),
+              const SizedBox(height: 18),
               _DriverSummary(profile: dashboard.profile),
               const SizedBox(height: 28),
-              _DutyHeading(title: 'Today', count: todayDuties.length),
+              if (highlighted != null) ...[
+                _DutyCard(
+                  duty: highlighted,
+                  highlighted: true,
+                  onTap: () => _openDuty(highlighted),
+                ),
+                const SizedBox(height: 28),
+              ],
+              _DutyHeading(title: 'Remaining today', count: todayDuties.length),
               const SizedBox(height: 13),
               if (todayDuties.isEmpty)
-                const _EmptyDuties(message: 'No duties assigned today.')
+                const _EmptyDuties(message: 'No other duties assigned today.')
               else
                 ...todayDuties.map(
                   (duty) => Padding(
                     padding: const EdgeInsets.only(bottom: 14),
-                    child: _DutyCard(duty: duty, onTap: () => _openDuty(duty)),
+                    child: _DutyCard(
+                      duty: duty,
+                      highlighted: duty.id == highlighted?.id,
+                      onTap: () => _openDuty(duty),
+                    ),
                   ),
                 ),
               const SizedBox(height: 16),
               _DutyHeading(
                 title: 'Upcoming',
-                count: dashboard.duties.length - todayDuties.length,
+                count: upcomingByDay.values.fold(
+                  0,
+                  (count, duties) => count + duties.length,
+                ),
               ),
               const SizedBox(height: 13),
               if (upcomingByDay.isEmpty)
@@ -146,15 +239,49 @@ class _DriverHomePageState extends State<DriverHomePage> {
                       padding: const EdgeInsets.only(bottom: 14),
                       child: _DutyCard(
                         duty: duty,
+                        highlighted: duty.id == highlighted?.id,
                         onTap: () => _openDuty(duty),
                       ),
                     ),
                 ],
+              if (overdue.isNotEmpty) ...[
+                const SizedBox(height: 18),
+                _DutyHeading(title: 'Needs follow-up', count: overdue.length),
+                const SizedBox(height: 8),
+                const Text(
+                  'These earlier duties are still open. Confirm their status with dispatch.',
+                  style: TextStyle(color: AppTheme.muted),
+                ),
+                for (final duty in overdue)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: _DutyCard(
+                      duty: duty,
+                      highlighted: duty.id == highlighted?.id,
+                      onTap: () => _openDuty(duty),
+                    ),
+                  ),
+              ],
             ],
           ),
         );
       },
     ),
+  );
+
+  Widget _filters() => Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: [
+      for (final filter in ['Active', 'Completed', 'Cancelled'])
+        ChoiceChip(
+          label: Text(filter),
+          selected: _filter == filter,
+          showCheckmark: false,
+          selectedColor: AppTheme.brandLight,
+          onSelected: (_) => setState(() => _filter = filter),
+        ),
+    ],
   );
 }
 
@@ -300,9 +427,14 @@ class _DutyHeading extends StatelessWidget {
 }
 
 class _DutyCard extends StatelessWidget {
-  const _DutyCard({required this.duty, required this.onTap});
+  const _DutyCard({
+    required this.duty,
+    required this.onTap,
+    this.highlighted = false,
+  });
   final DriverAssignment duty;
   final VoidCallback onTap;
+  final bool highlighted;
 
   @override
   Widget build(BuildContext context) => Material(
@@ -314,12 +446,45 @@ class _DutyCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          border: Border.all(color: AppTheme.borderStrong),
+          border: Border.all(
+            color: highlighted ? AppTheme.success : AppTheme.borderStrong,
+            width: highlighted ? 2 : 1,
+          ),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (highlighted)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(
+                  duty.status == 'Dispatched' || duty.status == 'Boarding'
+                      ? 'CURRENT DUTY'
+                      : 'NEXT DEPARTURE',
+                  style: const TextStyle(
+                    color: AppTheme.success,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            Text(
+              _formatDay(duty.serviceDate),
+              style: const TextStyle(fontSize: 12, color: AppTheme.muted),
+            ),
+            const SizedBox(height: 6),
+            if (!duty.isFinished &&
+                duty.scheduledTime.isBefore(DateTime.now()) &&
+                !{'Dispatched', 'Boarding', 'Delayed'}.contains(duty.status))
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'Overdue · confirm with dispatch',
+                  style: TextStyle(color: AppTheme.warning, fontSize: 12),
+                ),
+              ),
             Row(
               children: [
                 Expanded(

@@ -89,6 +89,7 @@ class TripSearchApiService {
       date.day.toString().padLeft(2, '0'),
     ].join('-');
     final query = <String, String>{
+      'bookableOnly': 'true',
       'date': dateValue,
       if (routeId != null && routeId.isNotEmpty) 'routeId': routeId,
       if (directionId != null && directionId.isNotEmpty)
@@ -103,6 +104,7 @@ class TripSearchApiService {
         .map((value) => TripSearchResult.fromJson(_asMap(value)))
         .where(
           (trip) =>
+              trip.isOpenForBooking &&
               (originKey.isEmpty || _key(trip.origin) == originKey) &&
               (destinationKey.isEmpty ||
                   _key(trip.destination) == destinationKey),

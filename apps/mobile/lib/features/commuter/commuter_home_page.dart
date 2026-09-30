@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/time/service_time.dart';
+
 import '../../core/theme/app_theme.dart';
 import '../../models/journey_option.dart';
 import '../../models/transit_centre.dart';
@@ -34,7 +36,7 @@ class _CommuterHomePageState extends State<CommuterHomePage> {
   late Future<List<JourneyOption>> _journeysFuture;
   TransitCentre? _origin;
   TransitCentre? _destination;
-  DateTime _date = DateTime.now();
+  DateTime _date = serviceToday();
   int _passengerCount = 1;
 
   @override
@@ -45,7 +47,7 @@ class _CommuterHomePageState extends State<CommuterHomePage> {
   }
 
   Future<void> _chooseDate() async {
-    final now = DateTime.now();
+    final now = serviceToday();
     final selected = await showDatePicker(
       context: context,
       initialDate: _date.isBefore(DateUtils.dateOnly(now)) ? now : _date,

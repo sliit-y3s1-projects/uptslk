@@ -68,10 +68,16 @@ export function BookingTicket({ id }: { id: string }) {
                 Open passenger and wallet
               </Link>
             </div>
-            <div className="space-y-2">
-              <TicketQr value={booking.qrCode} />
-              <p className="break-all font-mono text-xs">{booking.qrCode}</p>
-            </div>
+            {booking.canBoard && booking.qrCode ? (
+              <div className="space-y-2">
+                <TicketQr value={booking.qrCode} />
+                <p className="break-all font-mono text-xs">{booking.qrCode}</p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                This booking is not valid for boarding.
+              </p>
+            )}
           </div>
           <QueryState query={trip} />
           <Feedback error={cancel.error || complete.error} success={notice} />

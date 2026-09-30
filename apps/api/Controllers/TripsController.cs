@@ -16,7 +16,7 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
     private static readonly TimeZoneInfo SriLankaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Colombo");
 
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] Guid? centreId, [FromQuery] Guid? terminalId, [FromQuery] Guid? routeId, [FromQuery] Guid? directionId, [FromQuery] Guid? vehicleId, [FromQuery] Guid? driverId, [FromQuery] Guid? bayId, [FromQuery] TripStatus? status, [FromQuery] DateOnly? date)
+    public async Task<IActionResult> List([FromQuery] Guid? centreId, [FromQuery] Guid? terminalId, [FromQuery] Guid? routeId, [FromQuery] Guid? directionId, [FromQuery] Guid? vehicleId, [FromQuery] Guid? driverId, [FromQuery] Guid? bayId, [FromQuery] TripStatus? status, [FromQuery] DateOnly? date, [FromQuery] bool bookableOnly = false)
     {
         var query = db.Trips.AsNoTracking()
             .Include(trip => trip.Route)
@@ -35,6 +35,12 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         if (driverId.HasValue) query = query.Where(trip => trip.DriverId == driverId.Value);
         if (bayId.HasValue) query = query.Where(trip => trip.BayId == bayId.Value);
         if (status.HasValue) query = query.Where(trip => trip.Status == status.Value);
+        if (bookableOnly)
+        {
+            var now = DateTime.UtcNow;
+            query = query.Where(trip => trip.ScheduledTime > now &&
+                (trip.Status == TripStatus.Scheduled || trip.Status == TripStatus.Ready || trip.Status == TripStatus.Boarding));
+        }
         if (date.HasValue)
         {
             var start = ToSriLankaDayStartUtc(date.Value);

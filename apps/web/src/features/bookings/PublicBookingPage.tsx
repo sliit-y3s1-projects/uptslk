@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { format } from "date-fns";
 import { CalendarDays, ChevronRight, Minus, Plus, Search } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -303,7 +304,7 @@ function DatePicker({
             selected={selected}
             onSelect={(day) => {
               if (day) {
-                onChange(day.toISOString().slice(0, 10));
+                onChange(format(day, "yyyy-MM-dd"));
                 setOpen(false);
               }
             }}

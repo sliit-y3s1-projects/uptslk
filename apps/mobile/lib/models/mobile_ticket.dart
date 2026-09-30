@@ -9,6 +9,13 @@ class MobileTicket {
     required this.tripTime,
     required this.route,
     required this.routeName,
+    this.tripStatus = '',
+    this.boardingAllowed = false,
+    this.passengerName = '',
+    this.origin = '',
+    this.destination = '',
+    this.bay = '',
+    this.activeUntil,
   });
 
   final String id;
@@ -20,8 +27,47 @@ class MobileTicket {
   final DateTime tripTime;
   final String route;
   final String routeName;
+  final String tripStatus;
+  final bool boardingAllowed;
+  final String passengerName;
+  final String origin;
+  final String destination;
+  final String bay;
+  final DateTime? activeUntil;
 
-  bool get isActive => status == 'Confirmed' || status == 'Pending';
+  String get group {
+    if (status == 'Cancelled' || tripStatus == 'Cancelled') return 'Cancelled';
+    if (status == 'Completed' || tripStatus == 'Completed') return 'Past';
+    return tripTime.isAfter(DateTime.now()) ||
+            ({'Boarding', 'Delayed', 'Dispatched'}.contains(tripStatus) &&
+                DateTime.now().isBefore(
+                  activeUntil ?? tripTime.add(const Duration(hours: 2)),
+                ))
+        ? 'Upcoming'
+        : 'Past';
+  }
+
+  bool get isActive => group == 'Upcoming';
+  bool get canBoard =>
+      boardingAllowed &&
+      status == 'Confirmed' &&
+      qrCode.isNotEmpty &&
+      isActive &&
+      tripStatus != 'Dispatched';
+
+  String get displayStatus {
+    if (group == 'Cancelled') return 'Cancelled';
+    if (group == 'Past') {
+      if (tripStatus == 'Dispatched' && status != 'Completed') {
+        return 'Past trip';
+      }
+      return status == 'Completed' || tripStatus == 'Completed'
+          ? 'Completed'
+          : 'Expired';
+    }
+    if (status == 'Pending') return 'Awaiting payment';
+    return tripStatus == 'Dispatched' ? 'In progress' : 'Confirmed';
+  }
 
   factory MobileTicket.fromJson(Map<String, dynamic> json) => MobileTicket(
     id: json['id']?.toString() ?? '',
@@ -37,6 +83,13 @@ class MobileTicket {
         DateTime.fromMillisecondsSinceEpoch(0),
     route: json['route']?.toString() ?? '',
     routeName: json['routeName']?.toString() ?? '',
+    tripStatus: json['tripStatus']?.toString() ?? '',
+    activeUntil: DateTime.tryParse(json['activeUntil']?.toString() ?? ''),
+    boardingAllowed: json['canBoard'] == true,
+    passengerName: json['passengerName']?.toString() ?? '',
+    origin: json['origin']?.toString() ?? '',
+    destination: json['destination']?.toString() ?? '',
+    bay: json['bay']?.toString() ?? '',
   );
 }
 

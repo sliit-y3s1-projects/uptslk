@@ -129,3 +129,14 @@ int _asInt(dynamic value) => switch (value) {
   String text => int.tryParse(text) ?? 0,
   _ => 0,
 };
+
+DriverAssignment? nextDriverDuty(List<DriverAssignment> duties, DateTime now) {
+  final active = duties.where((duty) => !duty.isFinished).toList()
+    ..sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
+  for (final status in ['Dispatched', 'Boarding']) {
+    final current = active.where((duty) => duty.status == status);
+    if (current.isNotEmpty) return current.first;
+  }
+  final upcoming = active.where((duty) => !duty.scheduledTime.isBefore(now));
+  return upcoming.isEmpty ? null : upcoming.first;
+}

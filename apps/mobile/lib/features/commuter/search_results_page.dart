@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import '../../core/time/service_time.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../models/trip_search_result.dart';
@@ -36,11 +40,25 @@ class SearchResultsPage extends StatefulWidget {
 
 class _SearchResultsPageState extends State<SearchResultsPage> {
   late Future<List<TripSearchResult>> _results;
+  Timer? _clock;
 
   @override
   void initState() {
     super.initState();
     _results = _load();
+    _clock = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          if (timer.tick % 30 == 0) _results = _load();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _clock?.cancel();
+    super.dispose();
   }
 
   Future<List<TripSearchResult>> _load() => widget.service.searchTrips(
@@ -62,7 +80,8 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     body: FutureBuilder<List<TripSearchResult>>(
       future: _results,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (!snapshot.hasData &&
+            snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
@@ -70,7 +89,9 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
             onRetry: () => setState(() => _results = _load()),
           );
         }
-        final trips = snapshot.data ?? const <TripSearchResult>[];
+        final trips = (snapshot.data ?? const <TripSearchResult>[])
+            .where((trip) => trip.isOpenForBooking)
+            .toList();
         return CustomScrollView(
           slivers: [
             SliverPadding(
@@ -536,6 +557,7 @@ class _NoResults extends StatelessWidget {
 }
 
 String _formatTime(DateTime time) {
+  time = sriLankaTime(time);
   final hour = time.hour == 0
       ? 12
       : (time.hour > 12 ? time.hour - 12 : time.hour);

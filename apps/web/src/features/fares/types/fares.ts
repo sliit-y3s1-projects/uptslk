@@ -90,7 +90,8 @@ export interface BookingDetail {
   passengerCount: number;
   fare: number;
   passengerCategory: PassengerCategory;
-  qrCode: string;
+  qrCode: string | null;
+  canBoard: boolean;
   status: BookingStatus;
   cancelledAt: string | null;
   cancellationReason: string | null;

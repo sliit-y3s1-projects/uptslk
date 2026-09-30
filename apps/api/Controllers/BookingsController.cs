@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using api.Services.Payments;
+using api.Services;
 
 namespace api.Controllers;
 
@@ -23,22 +24,34 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
 
         var tickets = await db.Bookings.AsNoTracking()
             .Include(booking => booking.Trip).ThenInclude(trip => trip.Route)
+            .Include(booking => booking.Trip).ThenInclude(trip => trip.Bay)
+            .Include(booking => booking.Trip).ThenInclude(trip => trip.RouteDirection).ThenInclude(direction => direction!.StartCentre)
+            .Include(booking => booking.Trip).ThenInclude(trip => trip.RouteDirection).ThenInclude(direction => direction!.EndCentre)
+            .Include(booking => booking.Passenger)
             .Where(booking => booking.Passenger.UserId == parsedUserId)
             .OrderByDescending(booking => booking.CreatedAt)
-            .Select(booking => new
+            .ToListAsync(cancellationToken);
+        var now = DateTime.UtcNow;
+        return Ok(tickets.Select(booking => new
             {
                 booking.Id,
                 booking.Status,
                 booking.PassengerCount,
                 booking.Fare,
-                booking.QrCode,
+                QrCode = BookingEligibility.CanBoard(booking, now) ? booking.QrCode : null,
+                CanBoard = BookingEligibility.CanBoard(booking, now),
+                TicketGroup = BookingEligibility.TicketGroup(booking, now),
+                TripStatus = booking.Trip.Status,
+                ActiveUntil = BookingEligibility.ActiveUntil(booking.Trip),
+                PassengerName = booking.Passenger.FullName,
+                Bay = booking.Trip.Bay.Code,
+                Origin = booking.Trip.RouteDirection?.StartCentre.Name ?? booking.Trip.Route.Origin,
+                Destination = booking.Trip.RouteDirection?.EndCentre.Name ?? booking.Trip.Route.Destination,
                 booking.CreatedAt,
                 TripTime = booking.Trip.ScheduledTime,
                 Route = booking.Trip.Route.RouteNumber,
                 RouteName = booking.Trip.Route.Name
-            })
-            .ToListAsync(cancellationToken);
-        return Ok(tickets);
+            }));
     }
 
     [HttpGet]
@@ -72,7 +85,7 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         if (passenger is null || !passenger.IsActive) return BadRequest(new { error = "The selected passenger is not active." });
         if (trip is null) return BadRequest(new { error = "The selected trip does not exist." });
         if (trip.Vehicle is null || trip.Vehicle.Capacity < 1) return BadRequest(new { error = "This trip has no valid vehicle capacity configured." });
-        if (trip.Status is not (TripStatus.Scheduled or TripStatus.Ready or TripStatus.Boarding)) return BadRequest(new { error = "Bookings are not available for this trip." });
+        if (!BookingEligibility.IsOpenForBooking(trip, DateTime.UtcNow)) return BadRequest(new { error = "Bookings have closed for this departure. Please choose a later trip." });
         if (request.PassengerCount is < 1 or > 10) return BadRequest(new { error = "Passenger count must be between 1 and 10." });
 
         var fare = await db.FareRules.SingleOrDefaultAsync(rule => rule.RouteId == trip.RouteId && rule.PassengerCategory == passenger.Category && rule.IsActive);
@@ -208,6 +221,7 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         (noTracking ? db.Bookings.AsNoTracking() : db.Bookings)
             .Include(item => item.Passenger).ThenInclude(passenger => passenger.Wallet)
             .Include(item => item.Trip).ThenInclude(trip => trip.Route)
+            .Include(item => item.Trip).ThenInclude(trip => trip.RouteDirection)
             .Include(item => item.Trip).ThenInclude(trip => trip.Vehicle)
             .Include(item => item.Transactions)
             .SingleOrDefaultAsync(item => item.Id == bookingId);
@@ -236,7 +250,8 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         booking.PassengerCount,
         booking.Fare,
         booking.PassengerCategory,
-        booking.QrCode,
+        QrCode = BookingEligibility.CanBoard(booking, DateTime.UtcNow) ? booking.QrCode : null,
+        CanBoard = BookingEligibility.CanBoard(booking, DateTime.UtcNow),
         booking.Status,
         booking.CancelledAt,
         booking.CancellationReason,
