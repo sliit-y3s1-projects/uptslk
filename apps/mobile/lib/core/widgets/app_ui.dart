@@ -10,18 +10,12 @@ class AppWordmark extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Container(
+      Image.asset(
+        'assets/branding/upts-logo.png',
         width: compact ? 32 : 36,
         height: compact ? 32 : 36,
-        decoration: BoxDecoration(
-          color: AppTheme.brandPrimary,
-          borderRadius: BorderRadius.circular(11),
-        ),
-        child: Icon(
-          Icons.directions_bus_rounded,
-          color: Colors.white,
-          size: compact ? 18 : 20,
-        ),
+        fit: BoxFit.contain,
+        semanticLabel: 'UPTSLK logo',
       ),
       const SizedBox(width: 10),
       Text(
