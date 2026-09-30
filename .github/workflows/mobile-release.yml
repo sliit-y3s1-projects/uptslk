@@ -1,0 +1,103 @@
+name: Build & Release Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag (e.g. v0.1.0)"
+        required: false
+        default: ""
+
+      release_name:
+        description: "Release title"
+        required: false
+        default: ""
+
+      draft:
+        description: "Create as draft release"
+        type: boolean
+        default: false
+
+      prerelease:
+        description: "Mark as prerelease"
+        type: boolean
+        default: false
+
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Publish Mobile Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.2"
+          cache: true
+
+      - name: Determine Release Information
+        id: release
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.tag_name }}" ]; then
+            TAG="${{ inputs.tag_name }}"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            TAG="v0.1.${{ github.run_number }}"
+          fi
+
+          if [ -n "${{ inputs.release_name }}" ]; then
+            NAME="${{ inputs.release_name }}"
+          else
+            NAME="UPTSLK $TAG"
+          fi
+
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+
+      - name: Install Dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+
+      - name: Build Release APK
+        working-directory: apps/mobile
+        run: |
+          flutter build apk --release \
+            --dart-define=UPTSLK_API_BASE_URL="${{ secrets.UPTSLK_API_BASE_URL }}"
+
+      - name: Rename APK
+        run: |
+          cp \
+          apps/mobile/build/app/outputs/flutter-apk/app-release.apk \
+          apps/mobile/build/app/outputs/flutter-apk/uptslk-${{ steps.release.outputs.tag }}.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release.outputs.tag }}
+          name: ${{ steps.release.outputs.name }}
+          draft: ${{ inputs.draft || false }}
+          prerelease: ${{ inputs.prerelease || false }}
+          generate_release_notes: true
+          files: |
+            apps/mobile/build/app/outputs/flutter-apk/app-release.apk
+            apps/mobile/build/app/outputs/flutter-apk/uptslk-*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
