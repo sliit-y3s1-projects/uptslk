@@ -77,9 +77,11 @@ export function TimetablesPage() {
     route?.directions?.find((item) => item.id === directionId) ??
     route?.directions?.[0];
   const activeDirectionId = direction?.id ?? "";
-  const { data: bays = [] } = useBays(
-    direction?.startCentreId ?? route?.centreId ?? user?.centreId,
-  );
+  const {
+    data: bays = [],
+    isLoading: loadingBays,
+    isError: baysError,
+  } = useBays(direction?.startCentreId ?? route?.centreId ?? user?.centreId);
   const {
     data: schedules = [],
     isLoading,
@@ -440,12 +442,22 @@ export function TimetablesPage() {
             </DialogDescription>
           </DialogHeader>
           <ScheduleForm
+            key={`${activeDirectionId}-${scheduleDialog === "new" ? "new" : scheduleDialog?.id}`}
             schedule={
               scheduleDialog === "new"
                 ? undefined
                 : (scheduleDialog ?? undefined)
             }
-            bays={bays.filter((bay) => bay.status === "Available")}
+            bays={bays.filter(
+              (bay) =>
+                bay.status !== "OutOfService" ||
+                (scheduleDialog !== "new" && bay.id === scheduleDialog?.bayId),
+            )}
+            departureCentreName={
+              direction?.startCentre.name ?? "the departure centre"
+            }
+            loadingBays={loadingBays}
+            baysError={baysError}
             onSubmit={saveSchedule}
             pending={createSchedule.isPending || updateSchedule.isPending}
             onCancel={() => setScheduleDialog(null)}
@@ -636,16 +648,33 @@ function ScheduleRow({
 function ScheduleForm({
   schedule,
   bays,
+  departureCentreName,
+  loadingBays,
+  baysError,
   onSubmit,
   pending,
   onCancel,
 }: {
   schedule?: RouteSchedule;
   bays: { id: string; code: string; status: string }[];
+  departureCentreName: string;
+  loadingBays: boolean;
+  baysError: boolean;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   pending: boolean;
   onCancel: () => void;
 }) {
+  const [baySelection, setBaySelection] = useState<string | null>(null);
+  const selectedBayId =
+    (baySelection && bays.some((bay) => bay.id === baySelection)
+      ? baySelection
+      : null) ??
+    (schedule && bays.some((bay) => bay.id === schedule.bayId)
+      ? schedule.bayId
+      : null) ??
+    bays[0]?.id ??
+    null;
+
   return (
     <form className="grid gap-4" onSubmit={onSubmit}>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -653,14 +682,18 @@ function ScheduleForm({
           Departure bay
           <Select
             name="bayId"
-            defaultValue={schedule?.bayId ?? bays[0]?.id}
+            value={selectedBayId}
+            onValueChange={setBaySelection}
             required
+            disabled={loadingBays || baysError || bays.length === 0}
             itemToStringLabel={(value) =>
               bays.find((bay) => bay.id === value)?.code ?? value
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select bay" />
+              <SelectValue
+                placeholder={loadingBays ? "Loading bays..." : "Select bay"}
+              />
             </SelectTrigger>
             <SelectContent>
               {bays.map((bay) => (
@@ -670,6 +703,16 @@ function ScheduleForm({
               ))}
             </SelectContent>
           </Select>
+          {baysError ? (
+            <span className="text-xs font-normal text-destructive">
+              Could not load bays. Please try again.
+            </span>
+          ) : !loadingBays && bays.length === 0 ? (
+            <span className="text-xs font-normal text-muted-foreground">
+              No usable bays at {departureCentreName}. Add a bay there before
+              saving this timetable.
+            </span>
+          ) : null}
         </label>
         <label className="grid gap-1.5 text-sm font-medium">
           Operating days
@@ -726,7 +769,10 @@ function ScheduleForm({
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" disabled={pending}>
+        <Button
+          type="submit"
+          disabled={pending || loadingBays || baysError || !selectedBayId}
+        >
           {pending ? "Saving..." : "Save timetable"}
         </Button>
       </div>
