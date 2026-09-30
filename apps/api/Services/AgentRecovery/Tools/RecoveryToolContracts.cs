@@ -12,7 +12,9 @@ public sealed record FindDepartureBayOutput(
 public sealed record FindReplacementVehicleInput(
     Guid CentreId,
     Guid ExcludedVehicleId,
-    int RequiredCapacity);
+    int RequiredCapacity,
+    DateTime ScheduledTime,
+    int DurationMinutes);
 
 public sealed record FindReplacementVehicleOutput(
     Guid? CandidateVehicleId,

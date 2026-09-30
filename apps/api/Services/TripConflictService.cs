@@ -29,6 +29,9 @@ public class TripConflictService(AppDbContext db)
         var requestedEnd = scheduledTime.AddMinutes(durationMinutes);
         var conflicts = new HashSet<string>();
 
+        if (await VehicleMaintenanceRules.IsUnavailableAsync(db, vehicleId, scheduledTime, durationMinutes, cancellationToken))
+            conflicts.Add("Vehicle is unavailable because maintenance is scheduled for this service day or currently in progress.");
+
         foreach (var trip in candidates)
         {
             var existingEnd = trip.ScheduledTime.AddMinutes(trip.Route.EstimatedDurationMin);

@@ -17,7 +17,9 @@ public sealed class FleetReadinessAgent(IFleetRecoveryTools tools) : IRecoveryAg
         var toolInput = new FindReplacementVehicleInput(
             context.Trip.CentreId,
             context.Trip.VehicleId,
-            context.AffectedPassengers);
+            context.AffectedPassengers,
+            context.Trip.ScheduledTime,
+            context.Trip.RouteDirection?.EstimatedDurationMin ?? context.Trip.Route.EstimatedDurationMin);
         var toolOutput = await tools.FindReplacementVehicleAsync(toolInput, cancellationToken);
         if (toolOutput.CandidateVehicleId is null || toolOutput.Capacity is null)
         {
@@ -32,7 +34,7 @@ public sealed class FleetReadinessAgent(IFleetRecoveryTools tools) : IRecoveryAg
         var recommendation = new AgentRecommendation(
             Name,
             $"Use {toolOutput.PlateNumber} ({toolOutput.Capacity} passenger capacity) as the replacement bus.",
-            ["Vehicle is active at the affected trip's centre.", "Vehicle has no maintenance record currently in progress."],
+            ["Vehicle is active at the affected trip's centre.", "Vehicle is clear of scheduled and in-progress maintenance for this trip."],
             capacityWarning is null ? [] : [capacityWarning],
             VehicleId: toolOutput.CandidateVehicleId,
             Capacity: toolOutput.Capacity);

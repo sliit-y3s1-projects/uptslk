@@ -50,11 +50,40 @@ public sealed class RecoveryToolIntegrationTests
         await database.Context.SaveChangesAsync();
 
         var result = await new FleetRecoveryTools(database.Context).FindReplacementVehicleAsync(
-            new FindReplacementVehicleInput(centre.Id, excluded.Id, 48),
+            new FindReplacementVehicleInput(centre.Id, excluded.Id, 48, DateTime.UtcNow.AddHours(2), 60),
             CancellationToken.None);
 
         Assert.Equal(expected.Id, result.CandidateVehicleId);
         Assert.True(result.MeetsRequiredCapacity);
+        Assert.Equal(1, result.CandidatesChecked);
+    }
+
+    [Fact]
+    public async Task FleetTool_ExcludesVehiclesReservedForMaintenanceOnTripDate()
+    {
+        await using var database = await RecoveryTestDb.CreateAsync();
+        var centre = CreateCentre("KAD");
+        var excluded = CreateVehicle(centre, "CURRENT", 45);
+        var reserved = CreateVehicle(centre, "RESERVED", 55);
+        var available = CreateVehicle(centre, "AVAILABLE", 50);
+        reserved.MaintenanceRecords.Add(new MaintenanceRecord
+        {
+            VehicleId = reserved.Id,
+            Vehicle = reserved,
+            Type = "Brake service",
+            Description = "Reserved for the service day",
+            Status = MaintenanceStatus.Scheduled,
+            ScheduledFor = new DateTime(2026, 10, 1, 3, 30, 0, DateTimeKind.Utc)
+        });
+        database.Context.AddRange(centre, excluded, reserved, available);
+        await database.Context.SaveChangesAsync();
+
+        var result = await new FleetRecoveryTools(database.Context).FindReplacementVehicleAsync(
+            new FindReplacementVehicleInput(centre.Id, excluded.Id, 48,
+                new DateTime(2026, 10, 1, 4, 0, 0, DateTimeKind.Utc), 60),
+            CancellationToken.None);
+
+        Assert.Equal(available.Id, result.CandidateVehicleId);
         Assert.Equal(1, result.CandidatesChecked);
     }
 

@@ -427,8 +427,8 @@ function MaintenanceFormInner({
         }
         description={
           editing
-            ? "Fields map directly to UpdateMaintenanceRecordRequest."
-            : "Fields map directly to CreateMaintenanceRecordRequest."
+            ? "Update the service record and vehicle availability."
+            : "Reserve a vehicle for service and keep it out of trip assignments."
         }
       />
 
@@ -494,6 +494,9 @@ function MaintenanceFormInner({
               onChange={(e) => setScheduledFor(e.target.value)}
               required
             />
+            <span className="text-xs font-normal text-muted-foreground">
+              Scheduled service reserves the vehicle for this entire Sri Lankan service day. In-progress service blocks it until completed or cancelled. Reassign conflicting trips first.
+            </span>
           </label>
 
           {editing && (

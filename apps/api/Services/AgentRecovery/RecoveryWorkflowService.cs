@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using api.Data;
 using api.Enums;
 using api.Models;
+using api.Services;
 using api.Services.AgentRecovery.Planning;
 using Microsoft.EntityFrameworkCore;
 
@@ -258,7 +259,10 @@ public sealed class RecoveryWorkflowService(
         var driver = await db.Drivers.AsNoTracking().SingleOrDefaultAsync(item => item.Id == proposal.DriverId, cancellationToken);
         var bay = await db.Bays.AsNoTracking().SingleOrDefaultAsync(item => item.Id == proposal.BayId, cancellationToken);
         results.Add(Check(phase, "Vehicle active at centre", vehicle is not null && vehicle.Status == VehicleStatus.Active && vehicle.CentreId == trip.CentreId, "The proposed vehicle is no longer active at this centre.", checkedAt));
-        results.Add(Check(phase, "Vehicle maintenance clearance", vehicle is not null && !vehicle.MaintenanceRecords.Any(record => record.Status == MaintenanceStatus.InProgress), "The proposed vehicle has maintenance currently in progress.", checkedAt));
+        var maintenanceClear = vehicle is not null && !vehicle.MaintenanceRecords.Any(record =>
+            VehicleMaintenanceRules.BlocksTrip(record, proposal.ScheduledTime,
+                trip.RouteDirection?.EstimatedDurationMin ?? trip.Route.EstimatedDurationMin));
+        results.Add(Check(phase, "Vehicle maintenance clearance", maintenanceClear, "The proposed vehicle has scheduled or in-progress maintenance during this trip.", checkedAt));
         results.Add(Check(phase, "Driver active at centre", driver is not null && driver.Status == DriverStatus.Active && driver.CentreId == trip.CentreId, "The proposed driver is no longer active at this centre.", checkedAt));
         results.Add(Check(phase, "Bay available", bay is not null && bay.Status == BayStatus.Available, "The proposed bay is no longer available.", checkedAt));
         results.Add(Check(phase, "Vehicle capacity", vehicle is not null && vehicle.Capacity >= proposal.AffectedPassengers, "The proposed vehicle no longer has sufficient capacity.", checkedAt));

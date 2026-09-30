@@ -2,8 +2,11 @@ using api.Data;
 using api.DTOs;
 using api.Enums;
 using api.Models;
+using api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace api.Controllers;
 
@@ -56,10 +59,12 @@ public class MaintenanceRecordsController(AppDbContext db) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,CentreManager,FleetOfficer")]
     public async Task<IActionResult> Create(CreateMaintenanceRecordRequest request)
     {
         var vehicle = await db.Vehicles.FindAsync(request.VehicleId);
         if (vehicle is null) return BadRequest(new { error = "The selected vehicle does not exist." });
+        if (!CanManageCentre(vehicle.CentreId)) return Forbid();
 
         var record = new MaintenanceRecord
         {
@@ -69,17 +74,33 @@ public class MaintenanceRecordsController(AppDbContext db) : ControllerBase
             ScheduledFor = request.ScheduledFor
         };
 
+        var conflictingTrips = await VehicleMaintenanceRules.FindConflictingTripIdsAsync(db, record);
+        if (conflictingTrips.Count > 0)
+            return Conflict(new { error = "Reassign or cancel the vehicle's active trips on this maintenance day before scheduling it.", conflictingTripIds = conflictingTrips });
+
         db.MaintenanceRecords.Add(record);
         await db.SaveChangesAsync();
         return CreatedAtAction(nameof(Get), new { recordId = record.Id }, new { record.Id, record.VehicleId, record.Type, record.Status, record.ScheduledFor });
     }
 
     [HttpPut("{recordId:guid}")]
+    [Authorize(Roles = "Admin,CentreManager,FleetOfficer")]
     public async Task<IActionResult> Update(Guid recordId, UpdateMaintenanceRecordRequest request)
     {
-        var record = await db.MaintenanceRecords.FindAsync(recordId);
+        var record = await db.MaintenanceRecords.Include(item => item.Vehicle).SingleOrDefaultAsync(item => item.Id == recordId);
         if (record is null) return NotFound();
+        if (!CanManageCentre(record.Vehicle.CentreId)) return Forbid();
         if (request.Status == MaintenanceStatus.Completed && request.CompletedAt is null) return BadRequest(new { error = "Completed maintenance requires a completion time." });
+
+        var proposedRecord = new MaintenanceRecord
+        {
+            VehicleId = record.VehicleId,
+            Status = request.Status,
+            ScheduledFor = request.ScheduledFor
+        };
+        var conflictingTrips = await VehicleMaintenanceRules.FindConflictingTripIdsAsync(db, proposedRecord);
+        if (conflictingTrips.Count > 0)
+            return Conflict(new { error = "Reassign or cancel the vehicle's active trips before reserving it for maintenance.", conflictingTripIds = conflictingTrips });
 
         record.Type = request.Type.Trim();
         record.Description = request.Description.Trim();
@@ -92,14 +113,19 @@ public class MaintenanceRecordsController(AppDbContext db) : ControllerBase
     }
 
     [HttpDelete("{recordId:guid}")]
+    [Authorize(Roles = "Admin,CentreManager,FleetOfficer")]
     public async Task<IActionResult> Cancel(Guid recordId)
     {
-        var record = await db.MaintenanceRecords.FindAsync(recordId);
+        var record = await db.MaintenanceRecords.Include(item => item.Vehicle).SingleOrDefaultAsync(item => item.Id == recordId);
         if (record is null) return NotFound();
+        if (!CanManageCentre(record.Vehicle.CentreId)) return Forbid();
 
         record.Status = MaintenanceStatus.Cancelled;
         record.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
         return NoContent();
     }
+
+    private bool CanManageCentre(Guid centreId) =>
+        User.IsInRole("Admin") || Guid.TryParse(User.FindFirstValue("centre_id"), out var assignedCentreId) && assignedCentreId == centreId;
 }

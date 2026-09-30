@@ -1,5 +1,6 @@
 using api.Data;
 using api.Enums;
+using api.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Services.AgentRecovery.Tools;
@@ -14,15 +15,19 @@ public sealed class FleetRecoveryTools(AppDbContext db) : IFleetRecoveryTools
         RecoveryToolInputValidator.RequireId(input.ExcludedVehicleId, nameof(input.ExcludedVehicleId));
         RecoveryToolInputValidator.RequireNonNegative(input.RequiredCapacity, nameof(input.RequiredCapacity));
 
-        var candidates = await db.Vehicles.AsNoTracking()
+        var vehicles = await db.Vehicles.AsNoTracking()
+            .Include(vehicle => vehicle.MaintenanceRecords)
             .Where(vehicle => vehicle.CentreId == input.CentreId
                 && vehicle.Id != input.ExcludedVehicleId
-                && vehicle.Status == VehicleStatus.Active
-                && !vehicle.MaintenanceRecords.Any(record => record.Status == MaintenanceStatus.InProgress))
+                && vehicle.Status == VehicleStatus.Active)
+            .ToListAsync(cancellationToken);
+        var candidates = vehicles
+            .Where(vehicle => !vehicle.MaintenanceRecords.Any(record =>
+                VehicleMaintenanceRules.BlocksTrip(record, input.ScheduledTime, input.DurationMinutes)))
             .OrderByDescending(vehicle => vehicle.Capacity >= input.RequiredCapacity)
             .ThenBy(vehicle => vehicle.Capacity)
             .Select(vehicle => new { vehicle.Id, vehicle.PlateNumber, vehicle.Capacity })
-            .ToListAsync(cancellationToken);
+            .ToList();
         var candidate = candidates.FirstOrDefault();
 
         return new FindReplacementVehicleOutput(
