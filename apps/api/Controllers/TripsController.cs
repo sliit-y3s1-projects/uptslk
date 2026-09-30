@@ -230,7 +230,7 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
 
     private static bool CanTransition(TripStatus from, TripStatus to) => (from, to) switch
     {
-        (TripStatus.Scheduled, TripStatus.Ready or TripStatus.Cancelled) => true,
+        (TripStatus.Scheduled, TripStatus.Ready or TripStatus.Delayed or TripStatus.Cancelled) => true,
         (TripStatus.Ready, TripStatus.Boarding or TripStatus.Delayed or TripStatus.Cancelled) => true,
         (TripStatus.Boarding, TripStatus.Dispatched or TripStatus.Delayed or TripStatus.Cancelled) => true,
         (TripStatus.Delayed, TripStatus.Ready or TripStatus.Boarding or TripStatus.Dispatched or TripStatus.Cancelled) => true,

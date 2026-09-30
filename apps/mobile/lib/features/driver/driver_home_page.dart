@@ -31,13 +31,19 @@ class _DriverHomePageState extends State<DriverHomePage> {
     if (token == null || token.isEmpty) {
       throw const AuthApiException('Your session has ended. Sign in again.');
     }
+    final today = _serviceToday();
     final results = await Future.wait([
       _service.getProfile(token),
-      _service.getDuties(token: token, date: DateTime.now()),
+      _service.getDuties(
+        token: token,
+        fromDate: today,
+        toDate: today.add(const Duration(days: 6)),
+      ),
     ]);
     return _DriverDashboard(
       profile: results[0] as DriverOperationalProfile,
       duties: results[1] as List<DriverAssignment>,
+      today: today,
     );
   }
 
@@ -84,6 +90,15 @@ class _DriverHomePageState extends State<DriverHomePage> {
         }
 
         final dashboard = snapshot.data!;
+        final todayDuties = dashboard.duties
+            .where((duty) => duty.serviceDate == dashboard.today)
+            .toList();
+        final upcomingByDay = <DateTime, List<DriverAssignment>>{};
+        for (final duty in dashboard.duties) {
+          if (duty.serviceDate.isAfter(dashboard.today)) {
+            upcomingByDay.putIfAbsent(duty.serviceDate, () => []).add(duty);
+          }
+        }
         return RefreshIndicator(
           onRefresh: _refresh,
           child: ListView(
@@ -92,17 +107,49 @@ class _DriverHomePageState extends State<DriverHomePage> {
             children: [
               _DriverSummary(profile: dashboard.profile),
               const SizedBox(height: 28),
-              _DutyHeading(count: dashboard.duties.length),
+              _DutyHeading(title: 'Today', count: todayDuties.length),
               const SizedBox(height: 13),
-              if (dashboard.duties.isEmpty)
-                const _EmptyDuties()
+              if (todayDuties.isEmpty)
+                const _EmptyDuties(message: 'No duties assigned today.')
               else
-                ...dashboard.duties.map(
+                ...todayDuties.map(
                   (duty) => Padding(
                     padding: const EdgeInsets.only(bottom: 14),
                     child: _DutyCard(duty: duty, onTap: () => _openDuty(duty)),
                   ),
                 ),
+              const SizedBox(height: 16),
+              _DutyHeading(
+                title: 'Upcoming',
+                count: dashboard.duties.length - todayDuties.length,
+              ),
+              const SizedBox(height: 13),
+              if (upcomingByDay.isEmpty)
+                const _EmptyDuties(
+                  message: 'No upcoming duties in the next six days.',
+                )
+              else
+                for (final entry in upcomingByDay.entries) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      _formatDay(entry.key),
+                      style: const TextStyle(
+                        color: AppTheme.brandPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  for (final duty in entry.value)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: _DutyCard(
+                        duty: duty,
+                        onTap: () => _openDuty(duty),
+                      ),
+                    ),
+                ],
             ],
           ),
         );
@@ -112,9 +159,14 @@ class _DriverHomePageState extends State<DriverHomePage> {
 }
 
 class _DriverDashboard {
-  const _DriverDashboard({required this.profile, required this.duties});
+  const _DriverDashboard({
+    required this.profile,
+    required this.duties,
+    required this.today,
+  });
   final DriverOperationalProfile profile;
   final List<DriverAssignment> duties;
+  final DateTime today;
 }
 
 class _DriverSummary extends StatelessWidget {
@@ -221,7 +273,8 @@ class _SummaryChip extends StatelessWidget {
 }
 
 class _DutyHeading extends StatelessWidget {
-  const _DutyHeading({required this.count});
+  const _DutyHeading({required this.title, required this.count});
+  final String title;
   final int count;
 
   @override
@@ -229,7 +282,7 @@ class _DutyHeading extends StatelessWidget {
     children: [
       Expanded(
         child: Text(
-          'Today’s assignments',
+          title,
           style: Theme.of(context).textTheme.titleMedium
               ?.copyWith(fontSize: 18),
         ),
@@ -437,24 +490,24 @@ class _StatusPill extends StatelessWidget {
 }
 
 class _EmptyDuties extends StatelessWidget {
-  const _EmptyDuties();
+  const _EmptyDuties({required this.message});
+  final String message;
 
   @override
-  Widget build(BuildContext context) => const Padding(
-    padding: EdgeInsets.symmetric(vertical: 70, horizontal: 24),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
     child: Column(
       children: [
-        Icon(Icons.event_available_outlined, size: 40, color: AppTheme.muted),
-        SizedBox(height: 14),
-        Text(
-          'No duties assigned today',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+        const Icon(
+          Icons.event_available_outlined,
+          size: 32,
+          color: AppTheme.muted,
         ),
-        SizedBox(height: 6),
+        const SizedBox(height: 10),
         Text(
-          'New assignments from Centre Ops will appear here.',
+          message,
           textAlign: TextAlign.center,
-          style: TextStyle(color: AppTheme.muted),
+          style: const TextStyle(color: AppTheme.muted),
         ),
       ],
     ),
@@ -485,11 +538,43 @@ class _DriverError extends StatelessWidget {
 }
 
 String _formatTime(DateTime value) {
-  final time = value.toLocal();
+  final time = value.toUtc().add(const Duration(hours: 5, minutes: 30));
   final hour = time.hour == 0
       ? 12
       : (time.hour > 12 ? time.hour - 12 : time.hour);
   return '${hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} ${time.hour >= 12 ? 'PM' : 'AM'}';
+}
+
+DateTime _serviceToday() {
+  final now = DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30));
+  return DateTime(now.year, now.month, now.day);
+}
+
+String _formatDay(DateTime date) {
+  const weekdays = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  return '${weekdays[date.weekday - 1]}, ${date.day} ${months[date.month - 1]}';
 }
 
 String _displayStatus(String status) =>

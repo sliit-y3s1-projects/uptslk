@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_ui.dart';
 import '../../state/auth_store.dart';
 import '../profile/profile_page.dart';
@@ -43,12 +42,12 @@ class _DriverShellState extends State<DriverShell> {
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.route_outlined),
-            selectedIcon: Icon(Icons.route, color: AppTheme.brandPrimary),
+            selectedIcon: Icon(Icons.route),
             label: 'Duties',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person, color: AppTheme.brandPrimary),
+            selectedIcon: Icon(Icons.person),
             label: 'Profile',
           ),
         ],

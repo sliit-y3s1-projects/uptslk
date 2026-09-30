@@ -51,7 +51,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return AuthFrame(
-      title: 'Welcome back',
+      title: 'Sign in',
       child: AutofillGroup(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -64,7 +64,6 @@ class _LoginPageState extends State<LoginPage> {
               controller: _emailController,
               label: 'Email address',
               hint: 'you@example.com',
-              icon: Icons.alternate_email_rounded,
               keyboardType: TextInputType.emailAddress,
               autofillHints: const [
                 AutofillHints.username,
@@ -76,26 +75,32 @@ class _LoginPageState extends State<LoginPage> {
               controller: _passwordController,
               label: 'Password',
               hint: 'Enter your password',
-              icon: Icons.lock_outline_rounded,
               obscureText: _isPasswordHidden,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) {
+                if (!_isSubmitting) _submit();
+              },
               onToggleVisibility: () {
                 setState(() => _isPasswordHidden = !_isPasswordHidden);
               },
               autofillHints: const [AutofillHints.password],
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 30),
             PrimaryAuthButton(
               label: 'Sign in',
               isLoading: _isSubmitting,
               onPressed: _isSubmitting ? null : _submit,
             ),
-            const SizedBox(height: 28),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            const SizedBox(height: 32),
+            const Divider(height: 1),
+            const SizedBox(height: 18),
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 const Text(
-                  'New to UPTSLK?',
-                  style: TextStyle(color: Color(0xFF667085)),
+                  'New here?',
+                  style: TextStyle(color: Color(0xFF6F7078)),
                 ),
                 TextButton(
                   onPressed: _isSubmitting

@@ -16,6 +16,14 @@ public sealed class CreateIncidentRequest
     public DateTime? SlaDueAt { get; init; }
 }
 
+public sealed class ReportDriverIncidentRequest
+{
+    public IncidentType Type { get; init; }
+    public IncidentSeverity Severity { get; init; } = IncidentSeverity.Medium;
+    [Required, StringLength(200)] public string Title { get; init; } = default!;
+    [Required, StringLength(2000)] public string Description { get; init; } = default!;
+}
+
 public sealed class UpdateIncidentRequest
 {
     public IncidentSeverity Severity { get; init; }

@@ -111,6 +111,7 @@ export function AgentRecoveryPage() {
   });
   const incidents = useQuery({
     queryKey: ["recovery-incidents", user?.centreId],
+    refetchInterval: 30_000,
     queryFn: () =>
       apiClient<RecoveryIncident[]>(
         `/api/v1/incidents${user?.centreId ? `?centreId=${user.centreId}` : ""}`,

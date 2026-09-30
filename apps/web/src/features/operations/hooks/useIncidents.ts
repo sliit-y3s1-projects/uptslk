@@ -8,6 +8,7 @@ export function useIncidents(centreId?: string) {
   return useQuery({
     queryKey: ["incidents", centreId],
     queryFn: () => incidents.getIncidents(centreId),
+    refetchInterval: 30_000,
   });
 }
 export function useCreateIncident() {

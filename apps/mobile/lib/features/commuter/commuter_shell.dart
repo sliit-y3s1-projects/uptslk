@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_ui.dart';
 import '../../state/auth_store.dart';
 import '../profile/profile_page.dart';
@@ -65,20 +64,17 @@ class _CommuterShellState extends State<CommuterShell> {
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search, color: AppTheme.brandPrimary),
+            selectedIcon: Icon(Icons.search),
             label: 'Home',
           ),
           NavigationDestination(
             icon: Icon(Icons.confirmation_number_outlined),
-            selectedIcon: Icon(
-              Icons.confirmation_number,
-              color: AppTheme.brandPrimary,
-            ),
+            selectedIcon: Icon(Icons.confirmation_number),
             label: 'Tickets',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person, color: AppTheme.brandPrimary),
+            selectedIcon: Icon(Icons.person),
             label: 'Profile',
           ),
         ],

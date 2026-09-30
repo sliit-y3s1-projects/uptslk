@@ -185,15 +185,21 @@ public class DriversController(AppDbContext db, UserManager<User> userManager) :
 
     [HttpGet("me/trips")]
     [Authorize(Roles = "Driver")]
-    public async Task<IActionResult> MyTrips([FromQuery] DateOnly? date)
+    public async Task<IActionResult> MyTrips([FromQuery] DateOnly? date, [FromQuery] DateOnly? fromDate, [FromQuery] DateOnly? toDate)
     {
         var driver = await CurrentDriverQuery().SingleOrDefaultAsync();
         if (driver is null) return NotFound(new { error = "This account is not linked to a driver record. Contact your centre manager." });
 
         var serviceDate = date ?? DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Asia/Colombo"));
+        if (fromDate.HasValue != toDate.HasValue)
+            return BadRequest(new { error = "Provide both fromDate and toDate." });
+        var firstDate = fromDate ?? serviceDate;
+        var lastDate = toDate ?? serviceDate;
+        if (lastDate.DayNumber < firstDate.DayNumber || lastDate.DayNumber - firstDate.DayNumber > 6)
+            return BadRequest(new { error = "Duty searches can cover up to seven days." });
         var timeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Colombo");
-        var start = TimeZoneInfo.ConvertTimeToUtc(serviceDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), timeZone);
-        var end = TimeZoneInfo.ConvertTimeToUtc(serviceDate.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), timeZone);
+        var start = TimeZoneInfo.ConvertTimeToUtc(firstDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), timeZone);
+        var end = TimeZoneInfo.ConvertTimeToUtc(lastDate.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), timeZone);
 
         var trips = await db.Trips.AsNoTracking()
             .Include(trip => trip.Route)
@@ -239,6 +245,8 @@ public class DriversController(AppDbContext db, UserManager<User> userManager) :
         if (trip is null) return NotFound(new { error = "The assigned trip was not found." });
         if (!CanDriverTransition(trip.Status, request.Status))
             return BadRequest(new { error = $"Cannot change a {trip.Status} trip to {request.Status}." });
+        if (request.Status == TripStatus.Delayed && string.IsNullOrWhiteSpace(request.Note))
+            return BadRequest(new { error = "Give a reason when marking a trip delayed." });
 
         trip.Status = request.Status;
         trip.Notes = CleanOptional(request.Note) ?? trip.Notes;
@@ -249,11 +257,44 @@ public class DriversController(AppDbContext db, UserManager<User> userManager) :
         return NoContent();
     }
 
+    [HttpPost("me/trips/{tripId:guid}/incidents")]
+    [Authorize(Roles = "Driver")]
+    public async Task<IActionResult> ReportIncident(Guid tripId, ReportDriverIncidentRequest request)
+    {
+        var driver = await CurrentDriverQuery().SingleOrDefaultAsync();
+        if (driver is null) return NotFound(new { error = "This account is not linked to an active driver record." });
+        var trip = await db.Trips.AsNoTracking().SingleOrDefaultAsync(item => item.Id == tripId && item.DriverId == driver.Id);
+        if (trip is null) return NotFound(new { error = "The assigned trip was not found." });
+        if (trip.Status is TripStatus.Completed or TripStatus.Cancelled)
+            return BadRequest(new { error = "Incidents cannot be reported for completed or cancelled trips." });
+        if (!Enum.IsDefined(request.Type) || !Enum.IsDefined(request.Severity))
+            return BadRequest(new { error = "Choose a valid incident type and severity." });
+        if (string.IsNullOrWhiteSpace(request.Title) || string.IsNullOrWhiteSpace(request.Description))
+            return BadRequest(new { error = "Enter an incident title and description." });
+
+        var incident = new Incident
+        {
+            CentreId = trip.CentreId,
+            TripId = trip.Id,
+            ReportedById = driver.UserId,
+            ReportedByName = driver.FullName,
+            Type = request.Type,
+            Severity = request.Severity,
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            SlaDueAt = DateTime.UtcNow.AddHours(4)
+        };
+        db.Incidents.Add(incident);
+        await db.SaveChangesAsync();
+        return Created($"/api/v1/incidents/{incident.Id}", new { incident.Id, incident.TripId, incident.Status });
+    }
+
     private IQueryable<Driver> CurrentDriverQuery()
     {
         var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
         return Guid.TryParse(userIdValue, out var userId)
-            ? db.Drivers.AsNoTracking().Include(driver => driver.Centre).Include(driver => driver.User).Where(driver => driver.UserId == userId)
+            ? db.Drivers.AsNoTracking().Include(driver => driver.Centre).Include(driver => driver.User)
+                .Where(driver => driver.UserId == userId && driver.Status == DriverStatus.Active && driver.User != null && driver.User.IsActive)
             : db.Drivers.AsNoTracking().Where(_ => false);
     }
 
@@ -266,7 +307,7 @@ public class DriversController(AppDbContext db, UserManager<User> userManager) :
 
     private static bool CanDriverTransition(TripStatus from, TripStatus to) => (from, to) switch
     {
-        (TripStatus.Scheduled, TripStatus.Ready) => true,
+        (TripStatus.Scheduled, TripStatus.Ready or TripStatus.Delayed) => true,
         (TripStatus.Ready, TripStatus.Boarding or TripStatus.Delayed) => true,
         (TripStatus.Boarding, TripStatus.Dispatched or TripStatus.Delayed) => true,
         (TripStatus.Delayed, TripStatus.Ready or TripStatus.Boarding or TripStatus.Dispatched) => true,

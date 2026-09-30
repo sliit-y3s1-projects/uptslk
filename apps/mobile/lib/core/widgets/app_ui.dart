@@ -136,8 +136,8 @@ class AppBottomNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DecoratedBox(
     decoration: const BoxDecoration(
-      color: AppTheme.surface,
-      border: Border(top: BorderSide(color: AppTheme.border)),
+      color: Color(0xFFEDECF8),
+      border: Border(top: BorderSide(color: Color(0xFFD9D6EB))),
     ),
     child: SafeArea(
       top: false,
@@ -176,49 +176,44 @@ class _BottomNavigationItem extends StatelessWidget {
     selected: selected,
     button: true,
     label: destination.label,
-    child: InkWell(
-      onTap: onTap,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          AnimatedAlign(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOut,
-            alignment: Alignment.topCenter,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              width: selected ? 30 : 0,
-              height: 2,
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              width: 52,
+              height: 30,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: AppTheme.brandPrimary,
-                borderRadius: BorderRadius.circular(99),
+                color: selected ? AppTheme.brandPrimary : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
               ),
-            ),
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconTheme(
+              child: IconTheme(
                 data: IconThemeData(
-                  color: selected ? AppTheme.brandPrimary : AppTheme.muted,
-                  size: 22,
+                  color: selected ? Colors.white : AppTheme.muted,
+                  size: 21,
                 ),
                 child: selected
                     ? destination.selectedIcon ?? destination.icon
                     : destination.icon,
               ),
-              const SizedBox(height: 4),
-              Text(
-                destination.label,
-                style: TextStyle(
-                  color: selected ? AppTheme.brandPrimary : AppTheme.muted,
-                  fontSize: 11,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              destination.label,
+              style: TextStyle(
+                color: selected ? AppTheme.brandPrimary : AppTheme.muted,
+                fontSize: 11,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     ),
   );

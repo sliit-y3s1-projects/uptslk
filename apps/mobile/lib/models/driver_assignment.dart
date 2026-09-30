@@ -74,6 +74,13 @@ class DriverAssignment {
 
   bool get isFinished => status == 'Completed' || status == 'Cancelled';
 
+  DateTime get serviceDate {
+    final sriLankaTime = scheduledTime.toUtc().add(
+      const Duration(hours: 5, minutes: 30),
+    );
+    return DateTime(sriLankaTime.year, sriLankaTime.month, sriLankaTime.day);
+  }
+
   DriverAssignment copyWith({String? status}) => DriverAssignment(
     id: id,
     routeId: routeId,

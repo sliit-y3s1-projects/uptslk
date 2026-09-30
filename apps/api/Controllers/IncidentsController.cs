@@ -2,20 +2,26 @@ using api.Data;
 using api.DTOs;
 using api.Enums;
 using api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace api.Controllers;
 
 [ApiController]
 [Route("api/v1/incidents")]
+[Authorize(Roles = "Admin,CentreManager,Dispatcher,FleetOfficer")]
 public class IncidentsController(AppDbContext db) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] Guid? centreId, [FromQuery] Guid? tripId, [FromQuery] IncidentStatus? status, [FromQuery] IncidentType? type, [FromQuery] IncidentSeverity? severity)
     {
+        if (!TryGetScopedCentre(out var scopedCentreId)) return Forbid();
+        if (scopedCentreId.HasValue && centreId.HasValue && centreId != scopedCentreId) return Forbid();
         var query = db.Incidents.AsNoTracking().Include(incident => incident.Trip).AsQueryable();
-        if (centreId.HasValue) query = query.Where(incident => incident.CentreId == centreId.Value);
+        var effectiveCentreId = scopedCentreId ?? centreId;
+        if (effectiveCentreId.HasValue) query = query.Where(incident => incident.CentreId == effectiveCentreId.Value);
         if (tripId.HasValue) query = query.Where(incident => incident.TripId == tripId.Value);
         if (status.HasValue) query = query.Where(incident => incident.Status == status.Value);
         if (type.HasValue) query = query.Where(incident => incident.Type == type.Value);
@@ -48,7 +54,7 @@ public class IncidentsController(AppDbContext db) : ControllerBase
     public async Task<IActionResult> Get(Guid incidentId)
     {
         var incident = await db.Incidents.AsNoTracking().Include(item => item.Centre).Include(item => item.Trip).SingleOrDefaultAsync(item => item.Id == incidentId);
-        if (incident is null) return NotFound();
+        if (incident is null || !CanAccessCentre(incident.CentreId)) return NotFound();
 
         return Ok(new
         {
@@ -73,6 +79,7 @@ public class IncidentsController(AppDbContext db) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateIncidentRequest request)
     {
+        if (!CanAccessCentre(request.CentreId)) return Forbid();
         if (!await db.Centres.AnyAsync(centre => centre.Id == request.CentreId)) return BadRequest(new { error = "The selected centre does not exist." });
         if (request.TripId.HasValue && !await db.Trips.AnyAsync(trip => trip.Id == request.TripId.Value && trip.CentreId == request.CentreId)) return BadRequest(new { error = "The selected trip does not belong to this centre." });
 
@@ -98,7 +105,7 @@ public class IncidentsController(AppDbContext db) : ControllerBase
     public async Task<IActionResult> Update(Guid incidentId, UpdateIncidentRequest request)
     {
         var incident = await db.Incidents.FindAsync(incidentId);
-        if (incident is null) return NotFound();
+        if (incident is null || !CanAccessCentre(incident.CentreId)) return NotFound();
 
         incident.Severity = request.Severity;
         incident.Title = request.Title.Trim();
@@ -113,4 +120,19 @@ public class IncidentsController(AppDbContext db) : ControllerBase
     }
 
     private static string? CleanOptional(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private bool TryGetScopedCentre(out Guid? centreId)
+    {
+        if (User.IsInRole("Admin"))
+        {
+            centreId = null;
+            return true;
+        }
+        var hasCentre = Guid.TryParse(User.FindFirstValue("centre_id"), out var parsedCentreId);
+        centreId = hasCentre ? parsedCentreId : null;
+        return hasCentre;
+    }
+
+    private bool CanAccessCentre(Guid centreId) =>
+        TryGetScopedCentre(out var scopedCentreId) && (!scopedCentreId.HasValue || scopedCentreId == centreId);
 }

@@ -7,6 +7,11 @@ import '../../services/trip_search_api_service.dart';
 import '../../state/auth_store.dart';
 import 'search_results_page.dart';
 
+const _fromTint = Color(0xFFF4F2FC);
+const _toTint = Color(0xFFF0F8F8);
+const _toAccent = Color(0xFF087A78);
+const _routeTint = Color(0xFFFCFBFF);
+
 class CommuterHomePage extends StatefulWidget {
   const CommuterHomePage({
     super.key,
@@ -14,6 +19,7 @@ class CommuterHomePage extends StatefulWidget {
     required this.authStore,
     this.onOpenTickets,
   });
+
   final String firstName;
   final AuthStore authStore;
   final VoidCallback? onOpenTickets;
@@ -39,201 +45,427 @@ class _CommuterHomePageState extends State<CommuterHomePage> {
   }
 
   Future<void> _chooseDate() async {
+    final now = DateTime.now();
     final selected = await showDatePicker(
       context: context,
-      initialDate: _date,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 90)),
+      initialDate: _date.isBefore(DateUtils.dateOnly(now)) ? now : _date,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 90)),
     );
     if (selected != null && mounted) setState(() => _date = selected);
   }
 
-  void _swapLocations() {
+  Future<void> _chooseCentre({
+    required List<TransitCentre> centres,
+    required bool isOrigin,
+  }) async {
+    final selected = await showModalBottomSheet<TransitCentre>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppTheme.surface,
+      showDragHandle: false,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (_) => _CentreSheet(
+        title: isOrigin ? 'Choose departure centre' : 'Choose arrival centre',
+        centres: centres,
+        selectedId: (isOrigin ? _origin : _destination)?.id,
+      ),
+    );
+    if (selected == null || !mounted) return;
     setState(() {
-      final origin = _origin;
-      _origin = _destination;
-      _destination = origin;
+      if (isOrigin) {
+        _origin = selected;
+      } else {
+        _destination = selected;
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppTheme.surface,
-    appBar: AppBar(
-      backgroundColor: AppTheme.surface,
-      centerTitle: true,
-      title: const Text('Plan a journey'),
-    ),
-    body: FutureBuilder<List<TransitCentre>>(
-      future: _centresFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return _LoadError(
-            onRetry: () =>
-                setState(() => _centresFuture = _service.getOperatingCentres()),
-          );
-        }
-        final centres = snapshot.data ?? const <TransitCentre>[];
-        if (centres.length < 2) {
-          return const _EmptyCentres();
-        }
-        return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(22, 10, 22, 36),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const _TravelBanner(),
-                  const SizedBox(height: 30),
-                  const _SectionLabel('Details'),
-                  const SizedBox(height: 13),
-                  Stack(
-                    alignment: Alignment.centerRight,
-                    children: [
-                      Column(
-                        children: [
-                          _CentrePicker(
-                            label: 'From',
-                            icon: Icons.trip_origin_rounded,
-                            value: _origin,
-                            centres: centres,
-                            onChanged: (value) =>
-                                setState(() => _origin = value),
-                          ),
-                          const SizedBox(height: 12),
-                          _CentrePicker(
-                            label: 'To',
-                            icon: Icons.location_on_outlined,
-                            value: _destination,
-                            centres: centres,
-                            onChanged: (value) =>
-                                setState(() => _destination = value),
-                          ),
-                        ],
-                      ),
-                      Positioned(
-                        right: 16,
-                        child: _SwapButton(onTap: _swapLocations),
-                      ),
-                    ],
-                  ),
-                  if (_origin != null || _destination != null)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () => setState(() {
-                          _origin = null;
-                          _destination = null;
-                        }),
-                        child: const Text('Clear'),
+    body: SafeArea(
+      child: FutureBuilder<List<TransitCentre>>(
+        future: _centresFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return _LoadError(
+              message: 'Could not load journey locations.',
+              onRetry: () => setState(
+                () => _centresFuture = _service.getOperatingCentres(),
+              ),
+            );
+          }
+          final centres = snapshot.data ?? const <TransitCentre>[];
+          if (centres.length < 2) {
+            return const _EmptyCentres();
+          }
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(22, 28, 22, 36),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Plan a journey',
+                      style: TextStyle(
+                        color: AppTheme.brandPrimary,
+                        fontSize: 29,
+                        fontWeight: FontWeight.w700,
+                        height: 1.16,
+                        letterSpacing: -0.9,
                       ),
                     ),
-                  const SizedBox(height: 20),
-                  const _SectionLabel('Trip options'),
-                  const SizedBox(height: 13),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _DateField(date: _date, onTap: _chooseDate),
-                      ),
-                      const SizedBox(width: 12),
-                      _PassengerStepper(
-                        value: _passengerCount,
-                        onChanged: (value) =>
-                            setState(() => _passengerCount = value),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                  FutureBuilder<List<JourneyOption>>(
-                    future: _journeysFuture,
-                    builder: (context, journeysSnapshot) {
-                      if (journeysSnapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(24),
-                            child: CircularProgressIndicator(),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Find a route and choose your departure.',
+                      style: TextStyle(color: AppTheme.muted, fontSize: 14),
+                    ),
+                    const SizedBox(height: 26),
+                    Row(
+                      children: [
+                        const Expanded(child: _SectionTitle('Your journey')),
+                        if (_origin != null || _destination != null)
+                          TextButton(
+                            onPressed: () => setState(() {
+                              _origin = null;
+                              _destination = null;
+                            }),
+                            child: const Text('Clear'),
                           ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _CentreField(
+                      label: 'FROM',
+                      placeholder: 'Select departure centre',
+                      centre: _origin,
+                      onTap: () =>
+                          _chooseCentre(centres: centres, isOrigin: true),
+                    ),
+                    const SizedBox(height: 12),
+                    _CentreField(
+                      label: 'TO',
+                      placeholder: 'Select arrival centre',
+                      centre: _destination,
+                      onTap: () =>
+                          _chooseCentre(centres: centres, isOrigin: false),
+                    ),
+                    const SizedBox(height: 24),
+                    const _SectionTitle('Travel details'),
+                    const SizedBox(height: 12),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final date = _DateField(
+                          date: _date,
+                          onTap: _chooseDate,
                         );
-                      }
-                      if (journeysSnapshot.hasError) {
-                        return _JourneyError(
-                          onRetry: () => setState(
-                            () =>
-                                _journeysFuture = _service.getJourneyOptions(),
-                          ),
+                        final seats = _PassengerStepper(
+                          value: _passengerCount,
+                          onChanged: (value) =>
+                              setState(() => _passengerCount = value),
                         );
-                      }
-                      final journeys =
-                          (journeysSnapshot.data ?? const <JourneyOption>[])
-                              .where(
-                                (journey) =>
-                                    _matches(journey.origin, _origin?.name) &&
-                                    _matches(
-                                      journey.destination,
-                                      _destination?.name,
-                                    ),
-                              )
-                              .toList();
-                      return _JourneyList(
-                        journeys: journeys,
-                        origin: _origin?.name,
-                        destination: _destination?.name,
-                        date: _date,
-                        passengerCount: _passengerCount,
-                        service: _service,
-                        authStore: widget.authStore,
-                        onOpenTickets: widget.onOpenTickets,
-                      );
-                    },
-                  ),
-                ],
+                        if (constraints.maxWidth < 360) {
+                          return Column(
+                            children: [date, const SizedBox(height: 12), seats],
+                          );
+                        }
+                        return Row(
+                          children: [
+                            Expanded(child: date),
+                            const SizedBox(width: 12),
+                            SizedBox(width: 156, child: seats),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 28),
+                    FutureBuilder<List<JourneyOption>>(
+                      future: _journeysFuture,
+                      builder: (context, journeysSnapshot) {
+                        if (journeysSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(28),
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        }
+                        if (journeysSnapshot.hasError) {
+                          return _LoadError(
+                            message: 'Could not load routes.',
+                            onRetry: () => setState(
+                              () => _journeysFuture = _service
+                                  .getJourneyOptions(),
+                            ),
+                          );
+                        }
+                        final journeys =
+                            (journeysSnapshot.data ?? const <JourneyOption>[])
+                                .where(
+                                  (journey) =>
+                                      _matches(journey.origin, _origin?.name) &&
+                                      _matches(
+                                        journey.destination,
+                                        _destination?.name,
+                                      ),
+                                )
+                                .toList();
+                        return _JourneyList(
+                          journeys: journeys,
+                          hasFilters: _origin != null || _destination != null,
+                          date: _date,
+                          passengerCount: _passengerCount,
+                          service: _service,
+                          authStore: widget.authStore,
+                          onOpenTickets: widget.onOpenTickets,
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     ),
   );
 }
 
-class _CentrePicker extends StatelessWidget {
-  const _CentrePicker({
-    required this.label,
-    required this.icon,
-    required this.value,
-    required this.centres,
-    required this.onChanged,
-  });
-  final String label;
-  final IconData icon;
-  final TransitCentre? value;
-  final List<TransitCentre> centres;
-  final ValueChanged<TransitCentre?> onChanged;
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.title);
+  final String title;
 
   @override
-  Widget build(BuildContext context) => DropdownButtonFormField<TransitCentre>(
-    key: ValueKey('$label-${value?.id ?? 'empty'}'),
-    initialValue: value,
-    isExpanded: true,
-    decoration: _fieldDecoration(label, icon),
-    hint: Text('Select $label'.toLowerCase()),
-    items: centres
-        .map(
-          (centre) => DropdownMenuItem(
-            value: centre,
-            child: Text(centre.name, overflow: TextOverflow.ellipsis),
-          ),
-        )
-        .toList(),
-    onChanged: onChanged,
+  Widget build(BuildContext context) => Text(
+    title,
+    style: const TextStyle(
+      color: AppTheme.ink,
+      fontSize: 17,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.3,
+    ),
   );
+}
+
+class _CentreField extends StatelessWidget {
+  const _CentreField({
+    required this.label,
+    required this.placeholder,
+    required this.centre,
+    required this.onTap,
+  });
+
+  final String label;
+  final String placeholder;
+  final TransitCentre? centre;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isOrigin = label == 'FROM';
+    final tint = isOrigin ? _fromTint : _toTint;
+    final accent = isOrigin ? AppTheme.brandPrimary : _toAccent;
+    return Material(
+      color: tint,
+      borderRadius: BorderRadius.circular(13),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(13),
+        child: Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(minHeight: 62),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: isOrigin
+                  ? const Color(0xFFD2CBEB)
+                  : const Color(0xFFB9DFDD),
+            ),
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: accent,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.7,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      centre?.name ?? placeholder,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: centre == null ? AppTheme.muted : AppTheme.ink,
+                        fontSize: 15,
+                        fontWeight: centre == null
+                            ? FontWeight.w400
+                            : FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Icon(Icons.keyboard_arrow_down_rounded, color: accent, size: 21),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CentreSheet extends StatefulWidget {
+  const _CentreSheet({
+    required this.title,
+    required this.centres,
+    required this.selectedId,
+  });
+
+  final String title;
+  final List<TransitCentre> centres;
+  final String? selectedId;
+
+  @override
+  State<_CentreSheet> createState() => _CentreSheetState();
+}
+
+class _CentreSheetState extends State<_CentreSheet> {
+  final _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final query = _query.trim().toLowerCase();
+    final matches =
+        widget.centres
+            .where(
+              (centre) =>
+                  centre.name.toLowerCase().contains(query) ||
+                  centre.city.toLowerCase().contains(query),
+            )
+            .toList()
+          ..sort((a, b) => a.name.compareTo(b.name));
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: FractionallySizedBox(
+        heightFactor: 0.78,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 24, 22, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.title,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    onChanged: (value) => setState(() => _query = value),
+                    decoration: InputDecoration(
+                      hintText: 'Search centre or city',
+                      prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                      fillColor: AppTheme.background,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: AppTheme.borderStrong,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: AppTheme.brandPrimary,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: matches.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No centres found. Try another name.',
+                        style: TextStyle(color: AppTheme.muted),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: matches.length,
+                      separatorBuilder: (_, _) =>
+                          const Divider(height: 1, indent: 22, endIndent: 22),
+                      itemBuilder: (context, index) {
+                        final centre = matches[index];
+                        final selected = centre.id == widget.selectedId;
+                        return ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 22,
+                            vertical: 3,
+                          ),
+                          title: Text(
+                            centre.name,
+                            style: TextStyle(
+                              fontWeight: selected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                          subtitle: centre.city.isEmpty
+                              ? null
+                              : Text(centre.city),
+                          trailing: selected
+                              ? const Icon(
+                                  Icons.check_rounded,
+                                  color: AppTheme.brandPrimary,
+                                )
+                              : null,
+                          onTap: () => Navigator.of(context).pop(centre),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _DateField extends StatelessWidget {
@@ -243,32 +475,52 @@ class _DateField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: AppTheme.surface,
-    borderRadius: BorderRadius.circular(17),
+    color: _fromTint,
+    borderRadius: BorderRadius.circular(13),
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(17),
+      borderRadius: BorderRadius.circular(13),
       child: Container(
-        height: 58,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        height: 62,
+        padding: const EdgeInsets.symmetric(horizontal: 15),
         decoration: BoxDecoration(
-          border: Border.all(color: AppTheme.borderStrong),
-          borderRadius: BorderRadius.circular(17),
+          border: Border.all(color: const Color(0xFFD2CBEB)),
+          borderRadius: BorderRadius.circular(13),
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.calendar_month_outlined,
-              size: 20,
-              color: AppTheme.brandPrimary,
-            ),
-            const SizedBox(width: 11),
-            Flexible(
-              child: Text(
-                _formatDate(date),
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w700),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'TRAVEL DATE',
+                    style: TextStyle(
+                      color: AppTheme.brandPrimary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    _formatDate(date),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppTheme.ink,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
+            ),
+            const Icon(
+              Icons.calendar_today_outlined,
+              color: AppTheme.brandPrimary,
+              size: 19,
             ),
           ],
         ),
@@ -284,218 +536,57 @@ class _PassengerStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    height: 58,
+    height: 62,
     decoration: BoxDecoration(
-      color: AppTheme.surface,
-      border: Border.all(color: AppTheme.borderStrong),
-      borderRadius: BorderRadius.circular(17),
+      color: _toTint,
+      border: Border.all(color: const Color(0xFFB9DFDD)),
+      borderRadius: BorderRadius.circular(13),
     ),
     child: Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
+          tooltip: 'Remove seat',
           onPressed: value > 1 ? () => onChanged(value - 1) : null,
-          visualDensity: VisualDensity.compact,
-          icon: const Icon(Icons.remove_rounded, size: 18),
+          icon: const Icon(Icons.remove_rounded, size: 19, color: _toAccent),
         ),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('$value', style: const TextStyle(fontWeight: FontWeight.w600)),
-            const Text(
-              'seats',
-              style: TextStyle(color: AppTheme.muted, fontSize: 10),
-            ),
-          ],
-        ),
-        IconButton(
-          onPressed: value < 8 ? () => onChanged(value + 1) : null,
-          visualDensity: VisualDensity.compact,
-          icon: const Icon(Icons.add_rounded, size: 18),
-        ),
-      ],
-    ),
-  );
-}
-
-class _TravelBanner extends StatelessWidget {
-  const _TravelBanner();
-
-  @override
-  Widget build(BuildContext context) => Container(
-    height: 112,
-    padding: const EdgeInsets.fromLTRB(20, 18, 16, 18),
-    decoration: BoxDecoration(
-      color: const Color(0xFFDFF1F6),
-      borderRadius: BorderRadius.circular(24),
-    ),
-    child: Row(
-      children: [
         Expanded(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'SCHEDULED TRAVEL',
-                style: TextStyle(
-                  color: AppTheme.muted,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.8,
+              Text(
+                '$value',
+                style: const TextStyle(
+                  color: _toAccent,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 5),
-              Text(
-                'Reserve your seat',
-                style: Theme.of(context).textTheme.titleLarge
-                    ?.copyWith(fontSize: 21, letterSpacing: -0.4),
+              const Text(
+                'SEATS',
+                style: TextStyle(
+                  color: _toAccent,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
               ),
             ],
           ),
         ),
-        Container(
-          width: 72,
-          height: 72,
-          decoration: const BoxDecoration(
-            color: Color(0xFFC6E8EF),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.directions_bus_rounded,
-            size: 35,
-            color: AppTheme.brandPrimary,
-          ),
+        IconButton(
+          tooltip: 'Add seat',
+          onPressed: value < 8 ? () => onChanged(value + 1) : null,
+          icon: const Icon(Icons.add_rounded, size: 19, color: _toAccent),
         ),
       ],
     ),
   );
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.label);
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Text(
-    label,
-    style: Theme.of(context).textTheme.titleMedium
-        ?.copyWith(fontSize: 18, letterSpacing: -0.2),
-  );
-}
-
-class _SwapButton extends StatelessWidget {
-  const _SwapButton({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Material(
-    color: AppTheme.surface,
-    shape: const CircleBorder(side: BorderSide(color: AppTheme.borderStrong)),
-    child: InkWell(
-      onTap: onTap,
-      customBorder: const CircleBorder(),
-      child: const SizedBox(
-        width: 38,
-        height: 38,
-        child: Icon(
-          Icons.swap_vert_rounded,
-          size: 21,
-          color: AppTheme.brandPrimary,
-        ),
-      ),
-    ),
-  );
-}
-
-class _LoadError extends StatelessWidget {
-  const _LoadError({required this.onRetry});
-  final VoidCallback onRetry;
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.cloud_off_outlined, size: 36, color: AppTheme.muted),
-          const SizedBox(height: 14),
-          const Text(
-            'Could not load journey locations.',
-            style: TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
-        ],
-      ),
-    ),
-  );
-}
-
-class _EmptyCentres extends StatelessWidget {
-  const _EmptyCentres();
-  @override
-  Widget build(BuildContext context) => const Center(
-    child: Padding(
-      padding: EdgeInsets.all(32),
-      child: Text(
-        'There are not enough operating centres to search departures.',
-        textAlign: TextAlign.center,
-        style: TextStyle(color: AppTheme.muted),
-      ),
-    ),
-  );
-}
-
-InputDecoration _fieldDecoration(String label, IconData icon) =>
-    InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon, size: 20),
-      filled: true,
-      fillColor: AppTheme.surface,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(17),
-        borderSide: const BorderSide(color: AppTheme.borderStrong),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(17),
-        borderSide: const BorderSide(color: AppTheme.borderStrong),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(17),
-        borderSide: const BorderSide(color: AppTheme.brandPrimary, width: 1.4),
-      ),
-    );
-
-String _formatDate(DateTime date) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${date.day} ${months[date.month - 1]}';
-}
-
-bool _matches(String value, String? filter) =>
-    filter == null ||
-    filter.isEmpty ||
-    value.toLowerCase().contains(filter.toLowerCase());
-
 class _JourneyList extends StatelessWidget {
   const _JourneyList({
     required this.journeys,
-    required this.origin,
-    required this.destination,
+    required this.hasFilters,
     required this.date,
     required this.passengerCount,
     required this.service,
@@ -504,8 +595,7 @@ class _JourneyList extends StatelessWidget {
   });
 
   final List<JourneyOption> journeys;
-  final String? origin;
-  final String? destination;
+  final bool hasFilters;
   final DateTime date;
   final int passengerCount;
   final TripSearchApiService service;
@@ -518,48 +608,44 @@ class _JourneyList extends StatelessWidget {
     children: [
       Row(
         children: [
-          Expanded(
-            child: Text(
-              'Available routes',
-              style: const TextStyle(
-                color: AppTheme.ink,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+          const Expanded(child: _SectionTitle('Routes')),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
             decoration: BoxDecoration(
-              color: AppTheme.surfaceMuted,
-              borderRadius: BorderRadius.circular(99),
+              color: AppTheme.brandLight,
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              '${journeys.length}',
+              '${journeys.length} ${journeys.length == 1 ? 'route' : 'routes'}',
               style: const TextStyle(
-                color: AppTheme.muted,
+                color: AppTheme.brandPrimary,
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
         ],
       ),
-      if (origin != null || destination != null) ...[
-        const SizedBox(height: 4),
-        Text(
-          '${origin ?? 'Any origin'} to ${destination ?? 'Any destination'}',
-          style: const TextStyle(color: AppTheme.muted, fontSize: 13),
-        ),
-      ],
-      const SizedBox(height: 14),
+      const SizedBox(height: 5),
+      Text(
+        hasFilters
+            ? 'Routes matching your selected centres'
+            : 'Choose a route to see its departures',
+        style: const TextStyle(color: AppTheme.muted, fontSize: 13),
+      ),
+      const SizedBox(height: 15),
       if (journeys.isEmpty)
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 28),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppTheme.borderStrong),
+            borderRadius: BorderRadius.circular(13),
+          ),
           child: Text(
-            'No active routes found.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppTheme.muted),
+            hasFilters
+                ? 'No routes match these centres. Try another stop or clear your selection.'
+                : 'No active routes are available right now.',
+            style: const TextStyle(color: AppTheme.muted, height: 1.4),
           ),
         )
       else
@@ -589,6 +675,7 @@ class _JourneyCard extends StatelessWidget {
     required this.authStore,
     this.onOpenTickets,
   });
+
   final JourneyOption journey;
   final DateTime date;
   final int passengerCount;
@@ -614,83 +701,92 @@ class _JourneyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: AppTheme.surface,
-    borderRadius: BorderRadius.circular(19),
+    color: _routeTint,
+    borderRadius: BorderRadius.circular(13),
     child: InkWell(
       onTap: () => _openDepartures(context),
-      borderRadius: BorderRadius.circular(19),
+      borderRadius: BorderRadius.circular(13),
       child: Container(
-        padding: const EdgeInsets.all(17),
+        padding: const EdgeInsets.fromLTRB(16, 15, 16, 13),
         decoration: BoxDecoration(
-          border: Border.all(color: AppTheme.borderStrong),
-          borderRadius: BorderRadius.circular(19),
+          border: Border.all(color: const Color(0xFFD5D0E8)),
+          borderRadius: BorderRadius.circular(13),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.brandLight,
-                          borderRadius: BorderRadius.circular(9),
-                        ),
-                        child: Text(
-                          journey.routeNumber,
-                          style: const TextStyle(
-                            color: AppTheme.brandPrimary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 9),
-                      Expanded(
-                        child: Text(
-                          journey.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppTheme.muted,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 5,
                   ),
-                  const SizedBox(height: 14),
-                  _RoutePoint(
-                    label: journey.origin,
-                    icon: Icons.trip_origin_rounded,
+                  decoration: BoxDecoration(
+                    color: AppTheme.brandPrimary,
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  const SizedBox(height: 9),
-                  _RoutePoint(
-                    label: journey.destination,
-                    icon: Icons.location_on_rounded,
+                  child: Text(
+                    journey.routeNumber,
+                    style: const TextStyle(
+                      color: AppTheme.surface,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    journey.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: AppTheme.ink, fontSize: 13),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 14),
-            Container(
-              width: 42,
-              height: 42,
-              decoration: const BoxDecoration(
-                color: AppTheme.ink,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.arrow_forward_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
+            const SizedBox(height: 17),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _RouteEnd(label: 'FROM', name: journey.origin),
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(8, 18, 8, 0),
+                  child: Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 18,
+                    color: AppTheme.brandPrimary,
+                  ),
+                ),
+                Expanded(
+                  child: _RouteEnd(label: 'TO', name: journey.destination),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Divider(height: 1, color: Color(0xFFE4E0F1)),
+            const SizedBox(height: 11),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  'View departures',
+                  style: TextStyle(
+                    color: AppTheme.brandPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(width: 5),
+                Icon(
+                  Icons.arrow_forward_rounded,
+                  color: AppTheme.brandPrimary,
+                  size: 17,
+                ),
+              ],
             ),
           ],
         ),
@@ -699,39 +795,97 @@ class _JourneyCard extends StatelessWidget {
   );
 }
 
-class _RoutePoint extends StatelessWidget {
-  const _RoutePoint({required this.label, required this.icon});
+class _RouteEnd extends StatelessWidget {
+  const _RouteEnd({required this.label, required this.name});
   final String label;
-  final IconData icon;
+  final String name;
 
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Icon(icon, size: 15, color: AppTheme.brandPrimary),
-      const SizedBox(width: 10),
-      Expanded(
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+      Text(
+        label,
+        style: const TextStyle(
+          color: AppTheme.muted,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.6,
+        ),
+      ),
+      const SizedBox(height: 5),
+      Text(
+        name,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: AppTheme.ink,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          height: 1.25,
         ),
       ),
     ],
   );
 }
 
-class _JourneyError extends StatelessWidget {
-  const _JourneyError({required this.onRetry});
+class _LoadError extends StatelessWidget {
+  const _LoadError({required this.message, required this.onRetry});
+  final String message;
   final VoidCallback onRetry;
+
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      const Text(
-        'Could not load routes.',
-        style: TextStyle(color: AppTheme.muted),
+  Widget build(BuildContext context) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(message, textAlign: TextAlign.center),
+          const SizedBox(height: 10),
+          TextButton(onPressed: onRetry, child: const Text('Try again')),
+        ],
       ),
-      TextButton(onPressed: onRetry, child: const Text('Try again')),
-    ],
+    ),
   );
 }
+
+class _EmptyCentres extends StatelessWidget {
+  const _EmptyCentres();
+
+  @override
+  Widget build(BuildContext context) => const Center(
+    child: Padding(
+      padding: EdgeInsets.all(28),
+      child: Text(
+        'Journey search is unavailable until at least two centres are operating.',
+        textAlign: TextAlign.center,
+        style: TextStyle(color: AppTheme.muted),
+      ),
+    ),
+  );
+}
+
+String _formatDate(DateTime date) {
+  const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  return '${weekdays[date.weekday - 1]}, ${date.day} ${months[date.month - 1]}';
+}
+
+bool _matches(String value, String? filter) =>
+    filter == null ||
+    filter.isEmpty ||
+    value.toLowerCase().contains(filter.toLowerCase());

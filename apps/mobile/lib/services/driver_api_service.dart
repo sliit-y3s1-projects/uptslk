@@ -18,11 +18,13 @@ class DriverApiService {
 
   Future<List<DriverAssignment>> getDuties({
     required String token,
-    required DateTime date,
+    required DateTime fromDate,
+    required DateTime toDate,
   }) async {
-    final day =
-        '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    final body = await _get('/api/v1/drivers/me/trips?date=$day', token);
+    final body = await _get(
+      '/api/v1/drivers/me/trips?fromDate=${_day(fromDate)}&toDate=${_day(toDate)}',
+      token,
+    );
     if (body is! List) {
       throw const AuthApiException('UPTSLK returned an unexpected response.');
     }
@@ -33,14 +35,41 @@ class DriverApiService {
     required String token,
     required String tripId,
     required String status,
+    String? note,
   }) async {
+    final body = <String, dynamic>{'status': status};
+    if (note != null) body['note'] = note;
     await _request(
       method: 'PATCH',
       path: '/api/v1/drivers/me/trips/$tripId/status',
       token: token,
-      body: {'status': status},
+      body: body,
     );
   }
+
+  Future<void> reportIncident({
+    required String token,
+    required String tripId,
+    required String type,
+    required String severity,
+    required String title,
+    required String description,
+  }) async {
+    await _request(
+      method: 'POST',
+      path: '/api/v1/drivers/me/trips/$tripId/incidents',
+      token: token,
+      body: {
+        'type': type,
+        'severity': severity,
+        'title': title,
+        'description': description,
+      },
+    );
+  }
+
+  String _day(DateTime value) =>
+      '${value.year.toString().padLeft(4, '0')}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
 
   Future<dynamic> _get(String path, String token) =>
       _request(method: 'GET', path: path, token: token);

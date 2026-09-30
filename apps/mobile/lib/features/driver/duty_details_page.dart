@@ -5,6 +5,7 @@ import '../../models/driver_assignment.dart';
 import '../../services/auth_api_service.dart';
 import '../../services/driver_api_service.dart';
 import '../../state/auth_store.dart';
+import 'report_incident_page.dart';
 
 class DutyDetailsPage extends StatefulWidget {
   const DutyDetailsPage({
@@ -37,15 +38,68 @@ class _DutyDetailsPageState extends State<DutyDetailsPage> {
     'Scheduled' => 'Ready',
     'Ready' => 'Boarding',
     'Boarding' => 'Dispatched',
-    'Delayed' => 'Dispatched',
     'Dispatched' => 'Completed',
     _ => null,
   };
 
   Future<void> _advanceStatus() async {
     final nextStatus = _nextStatus;
+    if (_duty.status == 'Delayed') {
+      final resumeStatus = await showModalBottomSheet<String>(
+        context: context,
+        builder: (sheetContext) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const ListTile(title: Text('Resume duty as')),
+              for (final status in const ['Ready', 'Boarding', 'Dispatched'])
+                ListTile(
+                  title: Text(_displayStatus(status)),
+                  onTap: () => Navigator.of(sheetContext).pop(status),
+                ),
+            ],
+          ),
+        ),
+      );
+      if (resumeStatus != null && mounted) await _changeStatus(resumeStatus);
+      return;
+    }
+    if (nextStatus != null) await _changeStatus(nextStatus);
+  }
+
+  Future<void> _markDelayed() async {
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (_) => const _DelayReasonDialog(),
+    );
+    if (reason != null && mounted) await _changeStatus('Delayed', note: reason);
+  }
+
+  Future<void> _reportIncident() async {
+    final reported = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ReportIncidentPage(
+          duty: _duty,
+          authStore: widget.authStore,
+          service: widget.service,
+        ),
+      ),
+    );
+    if (reported == true && mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Incident sent to Centre Ops.')),
+        );
+    }
+  }
+
+  Future<void> _changeStatus(String nextStatus, {String? note}) async {
     final token = widget.authStore.token;
-    if (nextStatus == null || token == null || token.isEmpty) return;
+    if (token == null || token.isEmpty) {
+      setState(() => _error = 'Your session has ended. Sign in again.');
+      return;
+    }
 
     setState(() {
       _updating = true;
@@ -56,6 +110,7 @@ class _DutyDetailsPageState extends State<DutyDetailsPage> {
         token: token,
         tripId: _duty.id,
         status: nextStatus,
+        note: note,
       );
       if (!mounted) return;
       setState(() => _duty = _duty.copyWith(status: nextStatus));
@@ -68,6 +123,10 @@ class _DutyDetailsPageState extends State<DutyDetailsPage> {
         );
     } on AuthApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'Could not update this duty. Try again.');
+      }
     } finally {
       if (mounted) setState(() => _updating = false);
     }
@@ -76,6 +135,7 @@ class _DutyDetailsPageState extends State<DutyDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final nextStatus = _nextStatus;
+    final canDelay = !_duty.isFinished && _duty.status != 'Delayed';
     return Scaffold(
       backgroundColor: AppTheme.surface,
       appBar: AppBar(
@@ -139,28 +199,120 @@ class _DutyDetailsPageState extends State<DutyDetailsPage> {
             color: AppTheme.surface,
             border: Border(top: BorderSide(color: AppTheme.border)),
           ),
-          child: FilledButton(
-            onPressed: nextStatus == null || _updating ? null : _advanceStatus,
-            child: _updating
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (!_duty.isFinished) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _updating ? null : _reportIncident,
+                        child: const Text('Report incident'),
+                      ),
                     ),
-                  )
-                : Text(
-                    nextStatus == null
-                        ? _duty.status == 'Cancelled'
-                              ? 'Duty cancelled'
-                              : 'Duty completed'
-                        : 'Mark as ${_displayStatus(nextStatus)}',
-                  ),
+                    if (canDelay) ...[
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _updating ? null : _markDelayed,
+                          child: const Text('Mark delayed'),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 10),
+              ],
+              FilledButton(
+                onPressed:
+                    (nextStatus == null && _duty.status != 'Delayed') ||
+                        _updating
+                    ? null
+                    : _advanceStatus,
+                child: _updating
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        _duty.status == 'Delayed'
+                            ? 'Resume duty'
+                            : nextStatus == null
+                            ? _duty.status == 'Cancelled'
+                                  ? 'Duty cancelled'
+                                  : 'Duty completed'
+                            : 'Mark as ${_displayStatus(nextStatus)}',
+                      ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+}
+
+class _DelayReasonDialog extends StatefulWidget {
+  const _DelayReasonDialog();
+
+  @override
+  State<_DelayReasonDialog> createState() => _DelayReasonDialogState();
+}
+
+class _DelayReasonDialogState extends State<_DelayReasonDialog> {
+  final _controller = TextEditingController();
+  bool _showError = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Mark trip delayed'),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Give Centre Ops a reason for the delay.'),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _controller,
+          autofocus: true,
+          maxLength: 1000,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: 'Reason for delay',
+            errorText: _showError ? 'Enter a reason.' : null,
+          ),
+        ),
+      ],
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(
+        onPressed: () {
+          final reason = _controller.text.trim();
+          if (reason.isEmpty) {
+            setState(() => _showError = true);
+            return;
+          }
+          Navigator.of(context).pop(reason);
+        },
+        child: const Text('Confirm delay'),
+      ),
+    ],
+  );
 }
 
 class _StatusSummary extends StatelessWidget {
@@ -349,7 +501,7 @@ class _DetailRow extends StatelessWidget {
 }
 
 String _formatTime(DateTime value) {
-  final time = value.toLocal();
+  final time = value.toUtc().add(const Duration(hours: 5, minutes: 30));
   final hour = time.hour == 0
       ? 12
       : (time.hour > 12 ? time.hour - 12 : time.hour);

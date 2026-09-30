@@ -75,7 +75,10 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return AuthFrame(
-      title: 'Create your account',
+      title: 'Create account',
+      onBack: () {
+        if (!_isSubmitting) Navigator.of(context).pop();
+      },
       child: AutofillGroup(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -88,7 +91,7 @@ class _RegisterPageState extends State<RegisterPage> {
               controller: _nameController,
               label: 'Full name',
               hint: 'Your name',
-              icon: Icons.person_outline_rounded,
+              textCapitalization: TextCapitalization.words,
               autofillHints: const [AutofillHints.name],
             ),
             const SizedBox(height: 18),
@@ -96,7 +99,6 @@ class _RegisterPageState extends State<RegisterPage> {
               controller: _emailController,
               label: 'Email address',
               hint: 'you@example.com',
-              icon: Icons.alternate_email_rounded,
               keyboardType: TextInputType.emailAddress,
               autofillHints: const [
                 AutofillHints.username,
@@ -108,7 +110,6 @@ class _RegisterPageState extends State<RegisterPage> {
               controller: _passwordController,
               label: 'Password',
               hint: 'At least 8 characters',
-              icon: Icons.lock_outline_rounded,
               obscureText: _isPasswordHidden,
               onToggleVisibility: () {
                 setState(() => _isPasswordHidden = !_isPasswordHidden);
@@ -120,26 +121,41 @@ class _RegisterPageState extends State<RegisterPage> {
               controller: _confirmPasswordController,
               label: 'Confirm password',
               hint: 'Re-enter your password',
-              icon: Icons.verified_user_outlined,
               obscureText: _isConfirmPasswordHidden,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) {
+                if (!_isSubmitting) _submit();
+              },
               onToggleVisibility: () {
                 setState(
                   () => _isConfirmPasswordHidden = !_isConfirmPasswordHidden,
                 );
               },
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 30),
             PrimaryAuthButton(
-              label: 'Create commuter account',
+              label: 'Create account',
               isLoading: _isSubmitting,
               onPressed: _isSubmitting ? null : _submit,
             ),
-            const SizedBox(height: 22),
-            TextButton(
-              onPressed: _isSubmitting
-                  ? null
-                  : () => Navigator.of(context).pop(),
-              child: const Text('I already have an account'),
+            const SizedBox(height: 24),
+            const Divider(height: 1),
+            const SizedBox(height: 18),
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                const Text(
+                  'Already have an account?',
+                  style: TextStyle(color: Color(0xFF6F7078)),
+                ),
+                TextButton(
+                  onPressed: _isSubmitting
+                      ? null
+                      : () => Navigator.of(context).pop(),
+                  child: const Text('Sign in'),
+                ),
+              ],
             ),
           ],
         ),
