@@ -343,7 +343,7 @@ class _BookingCheckoutPageState extends State<BookingCheckoutPage>
               ),
               const SizedBox(height: 14),
               _PriceRow(
-                label: '${quote.category} fare × $_passengerCount',
+                label: 'Standard fare × $_passengerCount',
                 value: _currency(quote.fare * _passengerCount),
               ),
               const Padding(

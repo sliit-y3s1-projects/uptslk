@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { useOperationalScope } from "@/context/OperationalScopeContext";
 import { useAuth } from "@/hooks/useAuth";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 
 const labels: Record<string, string> = {
   operations: "Operations",
@@ -48,10 +48,13 @@ const labels: Record<string, string> = {
   revenue: "Revenue",
   settings: "Settings",
   team: "Team",
+  profile: "My profile",
+  password: "Change password",
   integrations: "Integrations",
 };
 
 export function DashboardHeader() {
+  const navigate = useNavigate();
   const { pathname } = useLocation();
   const { logout } = useAuth();
   const { dateRange, setDateRange } = useOperationalScope();
@@ -103,6 +106,13 @@ export function DashboardHeader() {
             <SelectItem value="Month">This month</SelectItem>
           </SelectContent>
         </Select>
+        <Button
+          type="button"
+          className="h-10 rounded-full px-5 text-sm"
+          onClick={() => navigate("/profile")}
+        >
+          My profile
+        </Button>
         <Button
           type="button"
           className="h-10 rounded-full bg-red-500 px-5 text-sm text-white hover:bg-red-600"

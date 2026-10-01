@@ -7,25 +7,21 @@ export interface FareRule {
   id: string;
   routeId: string;
   route: { routeNumber: string; name: string; centreId: string };
-  passengerCategory: PassengerCategory;
   amount: number;
   isActive: boolean;
   updatedAt: string;
 }
 export interface CreateFareRuleRequest {
   routeId: string;
-  passengerCategory: PassengerCategory;
   amount: number;
 }
 export interface UpdateFareRuleRequest {
-  passengerCategory: PassengerCategory;
   amount: number;
   isActive: boolean;
 }
 export interface FareFilters {
   routeId?: string;
   centreId?: string;
-  passengerCategory?: string;
   active?: string;
 }
 export interface BookingFilters {

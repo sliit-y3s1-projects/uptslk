@@ -1,8 +1,6 @@
 import { useCentreSelection } from "../hooks/useCentreSelection";
-import {
-  SelectField,
-  QueryState,
-} from "@/features/riders/components/FeatureUi";
+import { QueryState } from "@/features/riders/components/FeatureUi";
+import { LabeledSelect } from "@/components/shared/LabeledSelect";
 export function CentrePicker({
   selected,
   onChange,
@@ -13,18 +11,16 @@ export function CentrePicker({
   const { query, centreId } = useCentreSelection(selected);
   return (
     <div className="max-w-lg space-y-2">
-      <SelectField
+      <LabeledSelect
         label="Centre"
         value={centreId}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        <option value="">Select a centre</option>
-        {query.data?.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name} ({c.code})
-          </option>
-        ))}
-      </SelectField>
+        onChange={onChange}
+        placeholder="Select a centre"
+        options={(query.data ?? []).map((c) => ({
+          value: c.id,
+          label: `${c.name} (${c.code})`,
+        }))}
+      />
       <QueryState query={query} empty={!query.data?.length} />
     </div>
   );

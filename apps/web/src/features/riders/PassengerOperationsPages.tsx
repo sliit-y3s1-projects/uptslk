@@ -3,13 +3,11 @@ import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { PageHeading } from "@/components/shared/PageHeading";
 import { Button } from "@/components/ui/button";
-import {
-  Panel,
-  SelectField,
-  QueryState,
-  DataTable,
-  Field,
-} from "./components/FeatureUi";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { LabeledSelect } from "@/components/shared/LabeledSelect";
+import { useAuth } from "@/hooks/useAuth";
+import { Panel, QueryState, DataTable } from "./components/FeatureUi";
 import { dateTime } from "./components/format";
 import { useTrips, useManifest } from "@/features/fares/hooks/useBookings";
 import { CentrePicker } from "@/features/fares/components/CentrePicker";
@@ -17,6 +15,7 @@ import { CentrePicker } from "@/features/fares/components/CentrePicker";
 const PAGE_SIZE = 50;
 
 export function PassengerFlowPage() {
+  const { user } = useAuth();
   const [params, setParams] = useSearchParams();
   const tripId = params.get("tripId") ?? "";
   const [selectedCentre, setCentre] = useState("");
@@ -39,9 +38,10 @@ export function PassengerFlowPage() {
       );
   }, [manifest.data?.bookings, search, status]);
   const pageCount = Math.max(1, Math.ceil(bookings.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount - 1);
   const visibleBookings = bookings.slice(
-    page * PAGE_SIZE,
-    (page + 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+    (currentPage + 1) * PAGE_SIZE,
   );
   const confirmedCount =
     manifest.data?.bookings.filter((booking) => booking.status === "Confirmed")
@@ -59,35 +59,45 @@ export function PassengerFlowPage() {
       <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-5">
         <PageHeading
           title="Passenger flow"
-          description="Find a trip, review its manifest and prepare boarding without loading a long unfiltered list."
+          description="Review passenger lists and boarding details for each departure."
         />
-        <Panel title="Choose a departure">
-          <div className="grid gap-4 lg:grid-cols-2">
-            <CentrePicker
-              selected={selectedCentre}
-              onChange={(id) => {
-                setCentre(id);
-                selectTrip("");
-              }}
-            />
-            <SelectField
+        <section
+          aria-label="Departure selection"
+          className="rounded-xl border bg-card p-4"
+        >
+          <div
+            className={`grid gap-3 ${user?.centreId ? "" : "lg:grid-cols-[240px_minmax(0,1fr)]"}`}
+          >
+            {!user?.centreId && (
+              <CentrePicker
+                selected={selectedCentre}
+                onChange={(id) => {
+                  setCentre(id);
+                  selectTrip("");
+                }}
+              />
+            )}
+            <LabeledSelect
               label="Scheduled trip"
               value={
                 trips.data?.some((trip) => trip.id === tripId) ? tripId : ""
               }
-              onChange={(event) => selectTrip(event.target.value)}
-            >
-              <option value="">Select a trip to view its manifest</option>
-              {trips.data?.map((trip) => (
-                <option key={trip.id} value={trip.id}>
-                  {trip.routeNumber} · {trip.routeName} ·{" "}
-                  {dateTime(trip.scheduledTime)} · {trip.status}
-                </option>
-              ))}
-            </SelectField>
+              onChange={selectTrip}
+              disabled={!centreId || trips.isPending}
+              placeholder="Choose a departure"
+              options={(trips.data ?? []).map((trip) => ({
+                value: trip.id,
+                label: `${trip.routeNumber} · ${trip.routeName} · ${dateTime(trip.scheduledTime)} · ${trip.status}`,
+              }))}
+            />
           </div>
           {centreId && <QueryState query={trips} empty={!trips.data?.length} />}
-        </Panel>
+        </section>
+        {!tripId && (
+          <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+            Choose a departure to view its passenger manifest.
+          </p>
+        )}
 
         {tripId && (
           <>
@@ -119,8 +129,7 @@ export function PassengerFlowPage() {
                         {manifest.data.trip.route} · {manifest.data.trip.name}
                       </h3>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        Search or filter before issuing a ticket action. The
-                        live manifest refreshes every 15 seconds.
+                        Updates every 15 seconds.
                       </p>
                     </div>
                     <Button
@@ -134,30 +143,35 @@ export function PassengerFlowPage() {
                     </Button>
                   </div>
                   <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px_auto]">
-                    <Field
-                      label="Search passenger, phone or QR reference"
-                      value={search}
-                      onChange={(event) => {
-                        setSearch(event.target.value);
-                        setPage(0);
-                      }}
-                      placeholder="Search manifest"
-                    />
-                    <SelectField
+                    <div className="space-y-1.5">
+                      <Label htmlFor="manifest-search">Search passengers</Label>
+                      <Input
+                        id="manifest-search"
+                        value={search}
+                        onChange={(event) => {
+                          setSearch(event.target.value);
+                          setPage(0);
+                        }}
+                        placeholder="Name, phone or booking reference"
+                      />
+                    </div>
+                    <LabeledSelect
                       label="Booking status"
-                      value={status}
-                      onChange={(event) => {
-                        setStatus(event.target.value);
+                      value={status || "all"}
+                      onChange={(value) => {
+                        setStatus(value === "all" ? "" : value);
                         setPage(0);
                       }}
-                    >
-                      <option value="">All statuses</option>
-                      {["Pending", "Confirmed", "Completed", "Cancelled"].map(
-                        (value) => (
-                          <option key={value}>{value}</option>
-                        ),
-                      )}
-                    </SelectField>
+                      options={[
+                        { value: "all", label: "All statuses" },
+                        ...[
+                          "Pending",
+                          "Confirmed",
+                          "Completed",
+                          "Cancelled",
+                        ].map((value) => ({ value, label: value })),
+                      ]}
+                    />
                     <Button
                       className="self-end"
                       variant="ghost"
@@ -179,7 +193,7 @@ export function PassengerFlowPage() {
                     <p>
                       Showing{" "}
                       {bookings.length
-                        ? `${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, bookings.length)}`
+                        ? `${currentPage * PAGE_SIZE + 1}–${Math.min((currentPage + 1) * PAGE_SIZE, bookings.length)}`
                         : "0"}
                     </p>
                   </div>
@@ -232,21 +246,21 @@ export function PassengerFlowPage() {
                   {bookings.length > PAGE_SIZE && (
                     <div className="flex items-center justify-end gap-3">
                       <span className="text-sm text-muted-foreground">
-                        Page {page + 1} of {pageCount}
+                        Page {currentPage + 1} of {pageCount}
                       </span>
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={page === 0}
-                        onClick={() => setPage((current) => current - 1)}
+                        disabled={currentPage === 0}
+                        onClick={() => setPage(currentPage - 1)}
                       >
                         Previous
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={page >= pageCount - 1}
-                        onClick={() => setPage((current) => current + 1)}
+                        disabled={currentPage >= pageCount - 1}
+                        onClick={() => setPage(currentPage + 1)}
                       >
                         Next
                       </Button>

@@ -85,9 +85,7 @@ import {
   AccessRequestsPage,
   RolesPage,
 } from "@/features/super-admin/AccessPages";
-import {
-  AuditLogPage,
-} from "@/features/super-admin/GovernancePages";
+import { AuditLogPage } from "@/features/super-admin/GovernancePages";
 
 function App() {
   const { user, loading } = useAuth();
@@ -139,16 +137,32 @@ function App() {
       </CommuterLayout>
     );
   if (location.pathname === "/profile")
-    return (
+    return user.role === "Admin" || user.role === "SuperAdmin" ? (
+      <SuperAdminShell>
+        <ProfilePage embedded />
+      </SuperAdminShell>
+    ) : user.role === "Commuter" ? (
       <CommuterLayout>
         <ProfilePage />
       </CommuterLayout>
+    ) : (
+      <AdminShell>
+        <ProfilePage embedded />
+      </AdminShell>
     );
   if (location.pathname === "/profile/password")
-    return (
+    return user.role === "Admin" || user.role === "SuperAdmin" ? (
+      <SuperAdminShell>
+        <PasswordChangePage embedded />
+      </SuperAdminShell>
+    ) : user.role === "Commuter" ? (
       <CommuterLayout>
         <PasswordChangePage />
       </CommuterLayout>
+    ) : (
+      <AdminShell>
+        <PasswordChangePage embedded />
+      </AdminShell>
     );
   if (location.pathname === "/booking/checkout")
     return (

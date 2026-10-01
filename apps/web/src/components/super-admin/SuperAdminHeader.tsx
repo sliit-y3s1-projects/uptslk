@@ -1,4 +1,4 @@
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -6,6 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 
 const labels: Record<string, string> = {
   admin: "Overview",
+  profile: "My profile",
+  password: "Change password",
   centres: "Multimodal Centres",
   new: "Create",
   employees: "Employees",
@@ -18,6 +20,7 @@ const labels: Record<string, string> = {
 };
 
 export function SuperAdminHeader() {
+  const navigate = useNavigate();
   const { logout } = useAuth();
   const segments = useLocation().pathname.split("/").filter(Boolean);
   const last = segments.at(-1) ?? "admin";
@@ -40,13 +43,22 @@ export function SuperAdminHeader() {
           <p className="text-xs text-muted-foreground">{page}</p>
         </div>
       </div>
-      <Button
-        type="button"
-        className="h-10 rounded-full bg-red-500 px-5 text-sm text-white hover:bg-red-600"
-        onClick={logout}
-      >
-        Log out
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          className="h-10 rounded-full px-5 text-sm"
+          onClick={() => navigate("/profile")}
+        >
+          My profile
+        </Button>
+        <Button
+          type="button"
+          className="h-10 rounded-full bg-red-500 px-5 text-sm text-white hover:bg-red-600"
+          onClick={logout}
+        >
+          Log out
+        </Button>
+      </div>
     </header>
   );
 }

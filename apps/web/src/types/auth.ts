@@ -22,6 +22,9 @@ export interface AuthContextType {
     profilePhoto?: File,
   ) => Promise<string | null>;
   setProfilePhotoUrl: (url: string) => void;
+  setProfile: (
+    profile: Pick<User, "name" | "homeLocation" | "nicNumber" | "gender">,
+  ) => void;
   logout: () => void;
   loading: boolean;
 }

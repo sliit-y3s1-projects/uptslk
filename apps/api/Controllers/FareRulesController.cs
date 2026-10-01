@@ -21,8 +21,8 @@ public class FareRulesController(AppDbContext db) : ControllerBase
         if (trip is null) return BadRequest(new { error = "The selected trip does not exist." });
         if (passenger is null) return BadRequest(new { error = "The selected passenger is not active." });
 
-        var rule = await db.FareRules.AsNoTracking().SingleOrDefaultAsync(item => item.RouteId == trip.RouteId && item.PassengerCategory == passenger.Category && item.IsActive);
-        if (rule is null) return NotFound(new { error = "No active fare rule exists for this passenger category and route." });
+        var rule = await db.FareRules.AsNoTracking().SingleOrDefaultAsync(item => item.RouteId == trip.RouteId && item.PassengerCategory == PassengerCategory.Adult && item.IsActive);
+        if (rule is null) return NotFound(new { error = "No active standard fare exists for this route." });
 
         return Ok(new
         {
@@ -51,12 +51,13 @@ public class FareRulesController(AppDbContext db) : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] Guid? routeId, [FromQuery] Guid? centreId, [FromQuery] PassengerCategory? passengerCategory, [FromQuery] bool? active)
+    public async Task<IActionResult> List([FromQuery] Guid? routeId, [FromQuery] Guid? centreId, [FromQuery] bool? active)
     {
         var query = db.FareRules.AsNoTracking().Include(rule => rule.Route).ThenInclude(route => route.Centre).AsQueryable();
         if (routeId.HasValue) query = query.Where(rule => rule.RouteId == routeId.Value);
         if (centreId.HasValue) query = query.Where(rule => rule.Route.CentreId == centreId.Value);
-        if (passengerCategory.HasValue) query = query.Where(rule => rule.PassengerCategory == passengerCategory.Value);
+        // Adult is the retained storage slot for the single standard route fare.
+        query = query.Where(rule => rule.PassengerCategory == PassengerCategory.Adult);
         if (active.HasValue) query = query.Where(rule => rule.IsActive == active.Value);
 
         var rules = await query.OrderBy(rule => rule.Route.RouteNumber).ThenBy(rule => rule.PassengerCategory).Select(rule => new
@@ -76,7 +77,7 @@ public class FareRulesController(AppDbContext db) : ControllerBase
     public async Task<IActionResult> Get(Guid fareRuleId)
     {
         var rule = await db.FareRules.AsNoTracking().Include(item => item.Route).ThenInclude(route => route.Centre).SingleOrDefaultAsync(item => item.Id == fareRuleId);
-        if (rule is null) return NotFound();
+        if (rule is null || rule.PassengerCategory != PassengerCategory.Adult) return NotFound();
         return Ok(new
         {
             rule.Id,
@@ -94,9 +95,9 @@ public class FareRulesController(AppDbContext db) : ControllerBase
     public async Task<IActionResult> Create(CreateFareRuleRequest request)
     {
         if (!await db.Routes.AnyAsync(route => route.Id == request.RouteId && route.IsActive)) return BadRequest(new { error = "The selected active route does not exist." });
-        if (await db.FareRules.AnyAsync(rule => rule.RouteId == request.RouteId && rule.PassengerCategory == request.PassengerCategory)) return Conflict(new { error = "A fare rule already exists for this passenger category on the selected route." });
+        if (await db.FareRules.AnyAsync(rule => rule.RouteId == request.RouteId && rule.PassengerCategory == PassengerCategory.Adult)) return Conflict(new { error = "A standard fare already exists for this route. Edit the existing fare instead." });
 
-        var rule = new FareRule { RouteId = request.RouteId, PassengerCategory = request.PassengerCategory, Amount = request.Amount };
+        var rule = new FareRule { RouteId = request.RouteId, PassengerCategory = PassengerCategory.Adult, Amount = request.Amount };
         db.FareRules.Add(rule);
         await db.SaveChangesAsync();
         return CreatedAtAction(nameof(Get), new { fareRuleId = rule.Id }, new { rule.Id, rule.RouteId, rule.PassengerCategory, rule.Amount, rule.IsActive });
@@ -106,10 +107,10 @@ public class FareRulesController(AppDbContext db) : ControllerBase
     public async Task<IActionResult> Update(Guid fareRuleId, UpdateFareRuleRequest request)
     {
         var rule = await db.FareRules.FindAsync(fareRuleId);
-        if (rule is null) return NotFound();
-        if (await db.FareRules.AnyAsync(item => item.Id != fareRuleId && item.RouteId == rule.RouteId && item.PassengerCategory == request.PassengerCategory)) return Conflict(new { error = "A fare rule already exists for this passenger category on the selected route." });
+        if (rule is null || rule.PassengerCategory != PassengerCategory.Adult) return NotFound();
+        if (await db.FareRules.AnyAsync(item => item.Id != fareRuleId && item.RouteId == rule.RouteId && item.PassengerCategory == PassengerCategory.Adult)) return Conflict(new { error = "A standard fare already exists for this route. Edit the existing fare instead." });
 
-        rule.PassengerCategory = request.PassengerCategory;
+        rule.PassengerCategory = PassengerCategory.Adult;
         rule.Amount = request.Amount;
         rule.IsActive = request.IsActive;
         rule.UpdatedAt = DateTime.UtcNow;
@@ -121,7 +122,7 @@ public class FareRulesController(AppDbContext db) : ControllerBase
     public async Task<IActionResult> Deactivate(Guid fareRuleId)
     {
         var rule = await db.FareRules.FindAsync(fareRuleId);
-        if (rule is null) return NotFound();
+        if (rule is null || rule.PassengerCategory != PassengerCategory.Adult) return NotFound();
         rule.IsActive = false;
         rule.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();

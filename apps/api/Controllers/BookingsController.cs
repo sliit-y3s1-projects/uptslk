@@ -88,8 +88,8 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         if (!BookingEligibility.IsOpenForBooking(trip, DateTime.UtcNow)) return BadRequest(new { error = "Bookings have closed for this departure. Please choose a later trip." });
         if (request.PassengerCount is < 1 or > 10) return BadRequest(new { error = "Passenger count must be between 1 and 10." });
 
-        var fare = await db.FareRules.SingleOrDefaultAsync(rule => rule.RouteId == trip.RouteId && rule.PassengerCategory == passenger.Category && rule.IsActive);
-        if (fare is null) return BadRequest(new { error = "No active fare rule exists for this passenger category and route." });
+        var fare = await db.FareRules.SingleOrDefaultAsync(rule => rule.RouteId == trip.RouteId && rule.PassengerCategory == PassengerCategory.Adult && rule.IsActive);
+        if (fare is null) return BadRequest(new { error = "No active standard fare exists for this route." });
         var totalFare = fare.Amount * request.PassengerCount;
         if (passenger.Wallet is null || passenger.Wallet.Balance < totalFare) return BadRequest(new { error = "Insufficient wallet balance." });
         if (await OccupiedCapacity(trip.Id) + request.PassengerCount > trip.Vehicle.Capacity) return Conflict(new { error = "This departure does not have enough remaining spaces for every passenger." });

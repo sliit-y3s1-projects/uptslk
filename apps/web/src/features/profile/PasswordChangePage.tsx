@@ -6,7 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiClient } from "@/lib/api/api-client";
 
-export function PasswordChangePage() {
+export function PasswordChangePage({
+  embedded = false,
+}: {
+  embedded?: boolean;
+}) {
   const navigate = useNavigate();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -41,7 +45,9 @@ export function PasswordChangePage() {
     }
   }
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10">
+    <main
+      className={`${embedded ? "flex-1 bg-muted/20" : "min-h-screen bg-slate-50"} px-5 py-8`}
+    >
       <div className="mx-auto max-w-xl">
         <Link
           to="/profile"

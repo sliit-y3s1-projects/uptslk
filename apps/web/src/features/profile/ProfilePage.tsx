@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  CheckCircle2,
-  ImagePlus,
-  LogOut,
-  Pencil,
-} from "lucide-react";
+import { CheckCircle2, ImagePlus, LogOut, Pencil } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,8 +20,8 @@ function genderFromNic(value: string) {
   return day >= 1 && day <= 866 ? (day > 500 ? "Female" : "Male") : "";
 }
 
-export function ProfilePage() {
-  const { user, logout, setProfilePhotoUrl } = useAuth();
+export function ProfilePage({ embedded = false }: { embedded?: boolean }) {
+  const { user, logout, setProfilePhotoUrl, setProfile } = useAuth();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -49,7 +44,12 @@ export function ProfilePage() {
     setSaveError(null);
     setSaving(true);
     try {
-      await apiClient(`/api/v1/auth/me`, {
+      const updated = await apiClient<{
+        name: string;
+        homeLocation: string | null;
+        nicNumber: string | null;
+        gender: string | null;
+      }>(`/api/v1/auth/me`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -59,6 +59,7 @@ export function ProfilePage() {
           gender,
         }),
       });
+      setProfile(updated);
       let savedPhoto = photo;
       if (photoFile) {
         const form = new FormData();
@@ -145,7 +146,9 @@ export function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main
+      className={embedded ? "flex-1 bg-muted/20" : "min-h-screen bg-slate-50"}
+    >
       <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
@@ -153,7 +156,11 @@ export function ProfilePage() {
           </h1>
           {editing ? (
             <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={handleCancel} disabled={saving}>
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                disabled={saving}
+              >
                 Cancel
               </Button>
               <Button onClick={() => void handleSave()} disabled={saving}>
@@ -292,7 +299,10 @@ export function ProfilePage() {
                     label="Home location"
                     value={location || "Not set"}
                   />
-                  <ProfileRow label="NIC number" value={nic || "Not provided"} />
+                  <ProfileRow
+                    label="NIC number"
+                    value={nic || "Not provided"}
+                  />
                   <ProfileRow label="Gender" value={gender || "Not set"} />
                   <ProfileRow
                     label="Identity verification"

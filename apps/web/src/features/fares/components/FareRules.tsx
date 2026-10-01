@@ -31,7 +31,6 @@ import {
   Feedback,
 } from "@/features/riders/components/FeatureUi";
 import { money } from "@/features/riders/components/format";
-import type { PassengerCategory } from "@/features/riders/types/passengers";
 import type { FareRule, RouteOption } from "../types/fares";
 import {
   useFareRules,
@@ -90,9 +89,6 @@ function FareForm({
 }) {
   const { create, update } = useFareRuleMutations();
   const [routeId, setRouteId] = useState(rule?.routeId ?? "");
-  const [passengerCategory, setCategory] = useState<PassengerCategory>(
-    rule?.passengerCategory ?? "Adult",
-  );
   const [amount, setAmount] = useState(rule ? String(rule.amount) : "");
   const [isActive, setActive] = useState(rule?.isActive ?? true);
   const mutation = rule ? update : create;
@@ -105,13 +101,13 @@ function FareForm({
           update.mutate(
             {
               id: rule.id,
-              body: { passengerCategory, amount: Number(amount), isActive },
+              body: { amount: Number(amount), isActive },
             },
             { onSuccess: onSaved },
           );
         else
           create.mutate(
-            { routeId, passengerCategory, amount: Number(amount) },
+            { routeId, amount: Number(amount) },
             { onSuccess: onSaved },
           );
       }}
@@ -151,26 +147,6 @@ function FareForm({
               </Select>
             </div>
           )}
-          <div className="flex min-w-0 flex-col gap-1.5 text-sm">
-            <label className="font-medium">Passenger category</label>
-            <Select
-              value={passengerCategory}
-              onValueChange={(value) => setCategory(value as PassengerCategory)}
-            >
-              <SelectTrigger className="h-12 w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(
-                  ["Adult", "Student", "Senior", "Child"] as PassengerCategory[]
-                ).map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           <Field
             label="Fare (LKR)"
             type="number"
@@ -239,15 +215,12 @@ export function FareRules() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState({
     routeId: "all",
-    passengerCategory: "all",
     active: "all",
   });
   const [draftFilters, setDraftFilters] = useState(filters);
   const query = useFareRules({
     centreId,
     routeId: filters.routeId === "all" ? "" : filters.routeId,
-    passengerCategory:
-      filters.passengerCategory === "all" ? "" : filters.passengerCategory,
     active: filters.active === "all" ? "" : filters.active,
   });
   const { deactivate } = useFareRuleMutations();
@@ -265,7 +238,7 @@ export function FareRules() {
           <div>
             <p className="font-medium">Current centre fare directory</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Create and maintain fares for routes assigned to your centre.
+              Set one fare per route, charged per passenger.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -312,9 +285,6 @@ export function FareRules() {
                 <thead className="bg-muted/60 text-muted-foreground">
                   <tr>
                     <th className="px-5 py-3 font-medium">Route</th>
-                    <th className="px-5 py-3 font-medium">
-                      Passenger category
-                    </th>
                     <th className="px-5 py-3 font-medium">Fare</th>
                     <th className="px-5 py-3 font-medium">Status</th>
                     <th className="px-5 py-3 text-right font-medium">
@@ -335,11 +305,6 @@ export function FareRules() {
                         <p className="mt-0.5 text-muted-foreground">
                           {rule.route.name}
                         </p>
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
-                          {rule.passengerCategory}
-                        </span>
                       </td>
                       <td className="px-5 py-4 text-base font-semibold">
                         {money(rule.amount)}
@@ -390,7 +355,7 @@ export function FareRules() {
         {confirmation && (
           <div className="space-y-3 rounded-md border p-3">
             <p className="text-sm">
-              Deactivate the {confirmation.passengerCategory} fare for route{" "}
+              Deactivate the standard fare for route{" "}
               {confirmation.route.routeNumber}? Existing tickets retain their
               recorded fares.
             </p>
@@ -443,23 +408,6 @@ export function FareRules() {
               ]}
             />
             <FilterSelect
-              label="Passenger category"
-              value={draftFilters.passengerCategory}
-              onValueChange={(value) =>
-                setDraftFilters((current) => ({
-                  ...current,
-                  passengerCategory: value,
-                }))
-              }
-              items={[
-                { value: "all", label: "All categories" },
-                ...["Adult", "Student", "Senior", "Child"].map((category) => ({
-                  value: category,
-                  label: category,
-                })),
-              ]}
-            />
-            <FilterSelect
               label="Fare status"
               value={draftFilters.active}
               onValueChange={(value) =>
@@ -478,7 +426,6 @@ export function FareRules() {
               onClick={() =>
                 setDraftFilters({
                   routeId: "all",
-                  passengerCategory: "all",
                   active: "all",
                 })
               }

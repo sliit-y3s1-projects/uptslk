@@ -159,9 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   function setProfilePhotoUrl(profilePhotoUrl: string) {
-    setUser((current) =>
-      current ? { ...current, profilePhotoUrl } : current,
-    );
+    setUser((current) => (current ? { ...current, profilePhotoUrl } : current));
   }
 
   return (
@@ -172,6 +170,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         setProfilePhotoUrl,
+        setProfile: (profile) =>
+          setUser((current) =>
+            current
+              ? {
+                  ...current,
+                  name: profile.name,
+                  homeLocation: profile.homeLocation,
+                  nicNumber: profile.nicNumber,
+                  gender: profile.gender,
+                }
+              : current,
+          ),
         logout,
         loading,
       }}
