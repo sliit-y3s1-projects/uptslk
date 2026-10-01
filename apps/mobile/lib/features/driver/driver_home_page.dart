@@ -93,7 +93,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AppTheme.surface,
+    backgroundColor: AppTheme.background,
     appBar: AppBar(
       title: const Text('Driver duties'),
       backgroundColor: AppTheme.surface,
@@ -304,8 +304,9 @@ class _DriverSummary extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
-      color: AppTheme.brandLight,
-      borderRadius: BorderRadius.circular(24),
+      color: AppTheme.surface,
+      border: Border.all(color: AppTheme.borderStrong, width: 1.25),
+      borderRadius: BorderRadius.circular(14),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,12 +331,11 @@ class _DriverSummary extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'ON DUTY WITH UPTSLK',
+                    'Driver details',
                     style: TextStyle(
-                      color: AppTheme.brandPrimary,
-                      fontSize: 10,
+                      color: AppTheme.muted,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      letterSpacing: 0.7,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -382,8 +382,8 @@ class _SummaryChip extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
     decoration: BoxDecoration(
-      color: AppTheme.surface,
-      borderRadius: BorderRadius.circular(99),
+      color: AppTheme.surfaceMuted,
+      borderRadius: BorderRadius.circular(6),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
@@ -439,18 +439,18 @@ class _DutyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: AppTheme.surface,
-    borderRadius: BorderRadius.circular(20),
+    borderRadius: BorderRadius.circular(14),
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           border: Border.all(
             color: highlighted ? AppTheme.success : AppTheme.borderStrong,
-            width: highlighted ? 2 : 1,
+            width: highlighted ? 2 : 1.25,
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -509,8 +509,8 @@ class _DutyCard extends StatelessWidget {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.brandLight,
-                    borderRadius: BorderRadius.circular(9),
+                    color: AppTheme.surfaceMuted,
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     duty.routeNumber,
@@ -541,7 +541,7 @@ class _DutyCard extends StatelessWidget {
             ),
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
-              child: Divider(height: 1),
+              child: Divider(height: 1, color: AppTheme.borderStrong),
             ),
             Row(
               children: [
@@ -557,18 +557,27 @@ class _DutyCard extends StatelessWidget {
                     label: 'Bay ${duty.bayCode}',
                   ),
                 ),
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.surfaceMuted,
-                    shape: BoxShape.circle,
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Flexible(
+                  child: Text(
+                    'View duty',
+                    style: TextStyle(
+                      color: AppTheme.brandPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 17,
-                    color: AppTheme.brandPrimary,
-                  ),
+                ),
+                SizedBox(width: 8),
+                Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 17,
+                  color: AppTheme.brandPrimary,
                 ),
               ],
             ),
@@ -640,7 +649,7 @@ class _StatusPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(99),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         _displayStatus(status),

@@ -6,6 +6,7 @@ import '../../models/app_user.dart';
 import '../../services/auth_api_service.dart';
 import '../../state/auth_store.dart';
 import '../commuter/commuter_home_page.dart';
+import '../auth/auth_widgets.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({
@@ -57,7 +58,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _nameController.text = user.name;
     _locationController.text = user.homeLocation ?? '';
     _nicController.text = user.nicNumber ?? '';
-    _gender = _dropdownGender(user.gender);
+    _gender = normalizeGender(user.gender);
   }
 
   Future<void> _pickPhoto() async {
@@ -407,7 +408,7 @@ class _ProfileDetails extends StatelessWidget {
         _DetailRow(
           icon: Icons.person_outline,
           label: 'Gender',
-          value: _display(user.gender),
+          value: _display(normalizeGender(user.gender)),
         ),
         const Divider(height: 1, color: AppTheme.border),
         _DetailRow(
@@ -444,8 +445,8 @@ class _EditProfileForm extends StatelessWidget {
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
       color: AppTheme.surface,
-      border: Border.all(color: AppTheme.borderStrong),
-      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: AppTheme.borderStrong, width: 1.25),
+      borderRadius: BorderRadius.circular(14),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -477,18 +478,88 @@ class _EditProfileForm extends StatelessWidget {
           textCapitalization: TextCapitalization.characters,
         ),
         const SizedBox(height: 14),
-        DropdownButtonFormField<String>(
-          initialValue: _dropdownGender(gender),
-          decoration: _inputDecoration('Gender'),
-          items: const [
-            DropdownMenuItem(value: 'Female', child: Text('Female')),
-            DropdownMenuItem(value: 'Male', child: Text('Male')),
-            DropdownMenuItem(
-              value: 'Prefer not to say',
-              child: Text('Prefer not to say'),
+        const Text(
+          'Gender',
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppTheme.ink,
+            side: const BorderSide(color: AppTheme.borderStrong),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
             ),
-          ],
-          onChanged: saving ? null : onGenderChanged,
+          ),
+          onPressed: saving
+              ? null
+              : () async {
+                  final selected = await showModalBottomSheet<String>(
+                    context: context,
+                    useSafeArea: true,
+                    showDragHandle: false,
+                    backgroundColor: AppTheme.surface,
+                    builder: (sheetContext) => SafeArea(
+                      top: false,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                const Expanded(
+                                  child: Text(
+                                    'Gender',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: 'Close',
+                                  onPressed: () => Navigator.pop(sheetContext),
+                                  icon: const Icon(Icons.close),
+                                ),
+                              ],
+                            ),
+                            for (final option in {
+                              'Female',
+                              'Male',
+                              'Other',
+                              'Prefer not to say',
+                              ?gender,
+                            })
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(option),
+                                selected: option == gender,
+                                trailing: option == gender
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: AppTheme.brandPrimary,
+                                      )
+                                    : null,
+                                onTap: () =>
+                                    Navigator.pop(sheetContext, option),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                  if (selected != null && context.mounted) {
+                    onGenderChanged(selected);
+                  }
+                },
+          child: Row(
+            children: [
+              Expanded(child: Text(gender ?? 'Select gender')),
+              const Icon(Icons.expand_more, size: 20),
+            ],
+          ),
         ),
         const SizedBox(height: 20),
         FilledButton(
@@ -520,15 +591,13 @@ class _ProfileField extends StatelessWidget {
   final TextCapitalization textCapitalization;
 
   @override
-  Widget build(BuildContext context) => TextField(
+  Widget build(BuildContext context) => AuthField(
     controller: controller,
+    label: label,
+    hint: label,
     textCapitalization: textCapitalization,
-    decoration: _inputDecoration(label),
   );
 }
-
-InputDecoration _inputDecoration(String label) =>
-    InputDecoration(labelText: label);
 
 class _DetailRow extends StatelessWidget {
   const _DetailRow({
@@ -588,10 +657,3 @@ String _verificationLabel(String? value) =>
     value == null || value.isEmpty || value == 'NotStarted'
     ? 'Not completed'
     : value;
-
-String? _dropdownGender(String? value) {
-  final normalized = value?.trim();
-  return const {'Female', 'Male', 'Prefer not to say'}.contains(normalized)
-      ? normalized
-      : null;
-}

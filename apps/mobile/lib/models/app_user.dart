@@ -32,7 +32,7 @@ class AppUser {
       centreId: json['centreId']?.toString(),
       homeLocation: json['homeLocation']?.toString(),
       nicNumber: json['nicNumber']?.toString(),
-      gender: json['gender']?.toString(),
+      gender: normalizeGender(json['gender']?.toString()),
       profilePhotoUrl: json['profilePhotoUrl']?.toString(),
       nicVerificationStatus: json['nicVerificationStatus']?.toString(),
     );
@@ -65,4 +65,17 @@ class AppUser {
     if (role.isEmpty) return 'Account';
     return role.replaceAllMapped(RegExp(r'(?<=[a-z])(?=[A-Z])'), (_) => ' ');
   }
+}
+
+/// Keep server-provided values intact while standardising known labels.
+String? normalizeGender(String? value) {
+  final trimmed = value?.trim();
+  if (trimmed == null || trimmed.isEmpty) return null;
+  return switch (trimmed.toLowerCase()) {
+    'male' => 'Male',
+    'female' => 'Female',
+    'other' => 'Other',
+    'prefer not to say' => 'Prefer not to say',
+    _ => trimmed,
+  };
 }

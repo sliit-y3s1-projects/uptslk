@@ -9,29 +9,26 @@ import '../../services/trip_search_api_service.dart';
 import '../../state/auth_store.dart';
 import 'search_results_page.dart';
 
-const _fromTint = Color(0xFFF4F2FC);
-const _toTint = Color(0xFFF0F8F8);
-const _toAccent = Color(0xFF087A78);
-const _routeTint = Color(0xFFFCFBFF);
-
 class CommuterHomePage extends StatefulWidget {
   const CommuterHomePage({
     super.key,
     required this.firstName,
     required this.authStore,
     this.onOpenTickets,
+    this.service,
   });
 
   final String firstName;
   final AuthStore authStore;
   final VoidCallback? onOpenTickets;
+  final TripSearchApiService? service;
 
   @override
   State<CommuterHomePage> createState() => _CommuterHomePageState();
 }
 
 class _CommuterHomePageState extends State<CommuterHomePage> {
-  final _service = TripSearchApiService();
+  late final TripSearchApiService _service;
   late Future<List<TransitCentre>> _centresFuture;
   late Future<List<JourneyOption>> _journeysFuture;
   TransitCentre? _origin;
@@ -42,6 +39,7 @@ class _CommuterHomePageState extends State<CommuterHomePage> {
   @override
   void initState() {
     super.initState();
+    _service = widget.service ?? TripSearchApiService();
     _centresFuture = _service.getOperatingCentres();
     _journeysFuture = _service.getJourneyOptions();
   }
@@ -88,7 +86,7 @@ class _CommuterHomePageState extends State<CommuterHomePage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AppTheme.surface,
+    backgroundColor: AppTheme.background,
     body: SafeArea(
       child: FutureBuilder<List<TransitCentre>>(
         future: _centresFuture,
@@ -99,9 +97,9 @@ class _CommuterHomePageState extends State<CommuterHomePage> {
           if (snapshot.hasError) {
             return _LoadError(
               message: 'Could not load journey locations.',
-              onRetry: () => setState(
-                () => _centresFuture = _service.getOperatingCentres(),
-              ),
+              onRetry: () => setState(() {
+                _centresFuture = _service.getOperatingCentres();
+              }),
             );
           }
           final centres = snapshot.data ?? const <TransitCentre>[];
@@ -119,9 +117,9 @@ class _CommuterHomePageState extends State<CommuterHomePage> {
                     const Text(
                       'Plan a journey',
                       style: TextStyle(
-                        color: AppTheme.brandPrimary,
-                        fontSize: 29,
-                        fontWeight: FontWeight.w700,
+                        color: AppTheme.ink,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w600,
                         height: 1.16,
                         letterSpacing: -0.9,
                       ),
@@ -131,63 +129,87 @@ class _CommuterHomePageState extends State<CommuterHomePage> {
                       'Find a route and choose your departure.',
                       style: TextStyle(color: AppTheme.muted, fontSize: 14),
                     ),
-                    const SizedBox(height: 26),
-                    Row(
-                      children: [
-                        const Expanded(child: _SectionTitle('Your journey')),
-                        if (_origin != null || _destination != null)
-                          TextButton(
-                            onPressed: () => setState(() {
-                              _origin = null;
-                              _destination = null;
-                            }),
-                            child: const Text('Clear'),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _CentreField(
-                      label: 'FROM',
-                      placeholder: 'Select departure centre',
-                      centre: _origin,
-                      onTap: () =>
-                          _chooseCentre(centres: centres, isOrigin: true),
-                    ),
-                    const SizedBox(height: 12),
-                    _CentreField(
-                      label: 'TO',
-                      placeholder: 'Select arrival centre',
-                      centre: _destination,
-                      onTap: () =>
-                          _chooseCentre(centres: centres, isOrigin: false),
-                    ),
                     const SizedBox(height: 24),
-                    const _SectionTitle('Travel details'),
-                    const SizedBox(height: 12),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final date = _DateField(
-                          date: _date,
-                          onTap: _chooseDate,
-                        );
-                        final seats = _PassengerStepper(
-                          value: _passengerCount,
-                          onChanged: (value) =>
-                              setState(() => _passengerCount = value),
-                        );
-                        if (constraints.maxWidth < 360) {
-                          return Column(
-                            children: [date, const SizedBox(height: 12), seats],
-                          );
-                        }
-                        return Row(
-                          children: [
-                            Expanded(child: date),
-                            const SizedBox(width: 12),
-                            SizedBox(width: 156, child: seats),
-                          ],
-                        );
-                      },
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface,
+                        border: Border.all(
+                          color: AppTheme.borderStrong,
+                          width: 1.25,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              const Expanded(
+                                child: _SectionTitle('Journey details'),
+                              ),
+                              if (_origin != null || _destination != null)
+                                TextButton(
+                                  onPressed: () => setState(() {
+                                    _origin = null;
+                                    _destination = null;
+                                  }),
+                                  child: const Text('Clear'),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          _CentreField(
+                            label: 'From',
+                            placeholder: 'Select departure centre',
+                            centre: _origin,
+                            onTap: () =>
+                                _chooseCentre(centres: centres, isOrigin: true),
+                          ),
+                          const Divider(height: 1),
+                          _CentreField(
+                            label: 'To',
+                            placeholder: 'Select arrival centre',
+                            centre: _destination,
+                            onTap: () => _chooseCentre(
+                              centres: centres,
+                              isOrigin: false,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final date = _DateField(
+                                date: _date,
+                                onTap: _chooseDate,
+                              );
+                              final seats = _PassengerStepper(
+                                value: _passengerCount,
+                                onChanged: (value) =>
+                                    setState(() => _passengerCount = value),
+                              );
+                              if (constraints.maxWidth < 290 ||
+                                  MediaQuery.textScalerOf(context).scale(14) >
+                                      19) {
+                                return Column(
+                                  children: [
+                                    date,
+                                    const SizedBox(height: 12),
+                                    seats,
+                                  ],
+                                );
+                              }
+                              return Row(
+                                children: [
+                                  Expanded(child: date),
+                                  const SizedBox(width: 12),
+                                  SizedBox(width: 136, child: seats),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 28),
                     FutureBuilder<List<JourneyOption>>(
@@ -205,10 +227,9 @@ class _CommuterHomePageState extends State<CommuterHomePage> {
                         if (journeysSnapshot.hasError) {
                           return _LoadError(
                             message: 'Could not load routes.',
-                            onRetry: () => setState(
-                              () => _journeysFuture = _service
-                                  .getJourneyOptions(),
-                            ),
+                            onRetry: () => setState(() {
+                              _journeysFuture = _service.getJourneyOptions();
+                            }),
                           );
                         }
                         final journeys =
@@ -275,11 +296,8 @@ class _CentreField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isOrigin = label == 'FROM';
-    final tint = isOrigin ? _fromTint : _toTint;
-    final accent = isOrigin ? AppTheme.brandPrimary : _toAccent;
     return Material(
-      color: tint,
+      color: AppTheme.surface,
       borderRadius: BorderRadius.circular(13),
       child: InkWell(
         onTap: onTap,
@@ -287,15 +305,7 @@ class _CentreField extends StatelessWidget {
         child: Container(
           width: double.infinity,
           constraints: const BoxConstraints(minHeight: 62),
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: isOrigin
-                  ? const Color(0xFFD2CBEB)
-                  : const Color(0xFFB9DFDD),
-            ),
-            borderRadius: BorderRadius.circular(13),
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 12),
           child: Row(
             children: [
               Expanded(
@@ -305,11 +315,10 @@ class _CentreField extends StatelessWidget {
                   children: [
                     Text(
                       label,
-                      style: TextStyle(
-                        color: accent,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.7,
+                      style: const TextStyle(
+                        color: AppTheme.muted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -329,7 +338,11 @@ class _CentreField extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Icon(Icons.keyboard_arrow_down_rounded, color: accent, size: 21),
+              const Icon(
+                Icons.expand_more_rounded,
+                color: AppTheme.muted,
+                size: 20,
+              ),
             ],
           ),
         ),
@@ -477,16 +490,16 @@ class _DateField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: _fromTint,
+    color: AppTheme.surface,
     borderRadius: BorderRadius.circular(13),
     child: InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(13),
       child: Container(
-        height: 62,
-        padding: const EdgeInsets.symmetric(horizontal: 15),
+        constraints: const BoxConstraints(minHeight: 64),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFD2CBEB)),
+          border: Border.all(color: AppTheme.borderStrong),
           borderRadius: BorderRadius.circular(13),
         ),
         child: Row(
@@ -497,12 +510,11 @@ class _DateField extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'TRAVEL DATE',
+                    'Travel date',
                     style: TextStyle(
-                      color: AppTheme.brandPrimary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.6,
+                      color: AppTheme.muted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -538,10 +550,11 @@ class _PassengerStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    height: 62,
+    constraints: const BoxConstraints(minHeight: 64),
+    padding: const EdgeInsets.symmetric(vertical: 6),
     decoration: BoxDecoration(
-      color: _toTint,
-      border: Border.all(color: const Color(0xFFB9DFDD)),
+      color: AppTheme.surface,
+      border: Border.all(color: AppTheme.borderStrong),
       borderRadius: BorderRadius.circular(13),
     ),
     child: Row(
@@ -549,7 +562,7 @@ class _PassengerStepper extends StatelessWidget {
         IconButton(
           tooltip: 'Remove seat',
           onPressed: value > 1 ? () => onChanged(value - 1) : null,
-          icon: const Icon(Icons.remove_rounded, size: 19, color: _toAccent),
+          icon: const Icon(Icons.remove_rounded, size: 18),
         ),
         Expanded(
           child: Column(
@@ -558,19 +571,14 @@ class _PassengerStepper extends StatelessWidget {
               Text(
                 '$value',
                 style: const TextStyle(
-                  color: _toAccent,
+                  color: AppTheme.ink,
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const Text(
-                'SEATS',
-                style: TextStyle(
-                  color: _toAccent,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                ),
+              Text(
+                value == 1 ? 'seat' : 'seats',
+                style: const TextStyle(color: AppTheme.muted, fontSize: 11),
               ),
             ],
           ),
@@ -578,7 +586,7 @@ class _PassengerStepper extends StatelessWidget {
         IconButton(
           tooltip: 'Add seat',
           onPressed: value < 8 ? () => onChanged(value + 1) : null,
-          icon: const Icon(Icons.add_rounded, size: 19, color: _toAccent),
+          icon: const Icon(Icons.add_rounded, size: 18),
         ),
       ],
     ),
@@ -610,17 +618,21 @@ class _JourneyList extends StatelessWidget {
     children: [
       Row(
         children: [
-          const Expanded(child: _SectionTitle('Routes')),
+          Expanded(
+            child: _SectionTitle(
+              hasFilters ? 'Matching routes' : 'Browse routes',
+            ),
+          ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
             decoration: BoxDecoration(
-              color: AppTheme.brandLight,
+              color: AppTheme.surfaceMuted,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               '${journeys.length} ${journeys.length == 1 ? 'route' : 'routes'}',
               style: const TextStyle(
-                color: AppTheme.brandPrimary,
+                color: AppTheme.muted,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
@@ -703,7 +715,7 @@ class _JourneyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: _routeTint,
+    color: AppTheme.surface,
     borderRadius: BorderRadius.circular(13),
     child: InkWell(
       onTap: () => _openDepartures(context),
@@ -711,7 +723,7 @@ class _JourneyCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 15, 16, 13),
         decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFD5D0E8)),
+          border: Border.all(color: AppTheme.borderStrong),
           borderRadius: BorderRadius.circular(13),
         ),
         child: Column(
@@ -725,13 +737,13 @@ class _JourneyCard extends StatelessWidget {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.brandPrimary,
+                    color: AppTheme.surfaceMuted,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     journey.routeNumber,
                     style: const TextStyle(
-                      color: AppTheme.surface,
+                      color: AppTheme.ink,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),
@@ -749,37 +761,29 @@ class _JourneyCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 17),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: _RouteEnd(label: 'FROM', name: journey.origin),
-                ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(8, 18, 8, 0),
-                  child: Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 18,
-                    color: AppTheme.brandPrimary,
-                  ),
-                ),
-                Expanded(
-                  child: _RouteEnd(label: 'TO', name: journey.destination),
-                ),
+                _RouteEnd(label: 'From', name: journey.origin),
+                const SizedBox(height: 10),
+                _RouteEnd(label: 'To', name: journey.destination),
               ],
             ),
             const SizedBox(height: 16),
-            const Divider(height: 1, color: Color(0xFFE4E0F1)),
+            const Divider(height: 1, color: AppTheme.border),
             const SizedBox(height: 11),
             const Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(
-                  'View departures',
-                  style: TextStyle(
-                    color: AppTheme.brandPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                Flexible(
+                  child: Text(
+                    'View departures',
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      color: AppTheme.brandPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 SizedBox(width: 5),
@@ -803,28 +807,31 @@ class _RouteEnd extends StatelessWidget {
   final String name;
 
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
-        label,
-        style: const TextStyle(
-          color: AppTheme.muted,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.6,
+      SizedBox(
+        width: 46,
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: AppTheme.muted,
+            fontSize: 13,
+            height: 1.45,
+          ),
         ),
       ),
-      const SizedBox(height: 5),
-      Text(
-        name,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          color: AppTheme.ink,
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-          height: 1.25,
+      Expanded(
+        child: Text(
+          name,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: AppTheme.ink,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            height: 1.25,
+          ),
         ),
       ),
     ],

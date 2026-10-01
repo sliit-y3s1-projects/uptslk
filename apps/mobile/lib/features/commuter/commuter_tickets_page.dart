@@ -73,6 +73,8 @@ class _CommuterTicketsPageState extends State<CommuterTicketsPage> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: false,
       backgroundColor: AppTheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -263,8 +265,9 @@ class _TicketSheetState extends State<_TicketSheet> {
 
   @override
   Widget build(BuildContext context) => SafeArea(
+    top: false,
     child: SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
       child: FutureBuilder<List<MobileTicket>>(
         future: _future,
         builder: (context, snapshot) {
@@ -274,7 +277,9 @@ class _TicketSheetState extends State<_TicketSheet> {
           }
           if (snapshot.hasError) {
             return TextButton(
-              onPressed: () => setState(() => _future = widget.load()),
+              onPressed: () => setState(() {
+                _future = widget.load();
+              }),
               child: const Text('Could not verify this booking. Tap to retry.'),
             );
           }

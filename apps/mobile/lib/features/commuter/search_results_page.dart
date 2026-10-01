@@ -71,68 +71,89 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AppTheme.surface,
+    backgroundColor: AppTheme.background,
     appBar: AppBar(
       title: const Text('Departures'),
       backgroundColor: AppTheme.surface,
-      centerTitle: true,
+      centerTitle: false,
     ),
-    body: FutureBuilder<List<TripSearchResult>>(
-      future: _results,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData &&
-            snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return _ResultError(
-            onRetry: () => setState(() => _results = _load()),
-          );
-        }
-        final trips = (snapshot.data ?? const <TripSearchResult>[])
-            .where((trip) => trip.isOpenForBooking)
-            .toList();
-        return CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(22, 10, 22, 0),
-              sliver: SliverToBoxAdapter(
-                child: _SearchSummary(
-                  origin: widget.origin,
-                  destination: widget.destination,
-                  date: widget.date,
-                  passengerCount: widget.passengerCount,
-                ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(22, 30, 22, 14),
-              sliver: SliverToBoxAdapter(
-                child: _ResultsHeading(count: trips.length),
-              ),
-            ),
-            if (trips.isEmpty)
-              const SliverFillRemaining(
-                hasScrollBody: false,
-                child: _NoResults(),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(22, 0, 22, 36),
-                sliver: SliverList.separated(
-                  itemCount: trips.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 14),
-                  itemBuilder: (_, index) => _TripCard(
-                    trip: trips[index],
-                    passengerCount: widget.passengerCount,
-                    authStore: widget.authStore,
-                    onOpenTickets: widget.onOpenTickets,
+    body: SafeArea(
+      top: false,
+      child: FutureBuilder<List<TripSearchResult>>(
+        future: _results,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData &&
+              snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return _ResultError(
+              onRetry: () => setState(() {
+                _results = _load();
+              }),
+            );
+          }
+          final trips =
+              (snapshot.data ?? const <TripSearchResult>[])
+                  .where((trip) => trip.isOpenForBooking)
+                  .toList()
+                ..sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
+          return RefreshIndicator(
+            onRefresh: () async {
+              final request = _load();
+              setState(() {
+                _results = request;
+              });
+              // FutureBuilder renders a retry state if the refresh fails.
+              try {
+                await request;
+              } catch (_) {}
+            },
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(22, 18, 22, 0),
+                  sliver: SliverToBoxAdapter(
+                    child: _SearchSummary(
+                      origin: widget.origin,
+                      destination: widget.destination,
+                      date: widget.date,
+                      passengerCount: widget.passengerCount,
+                      onEdit: () => Navigator.of(context).maybePop(),
+                    ),
                   ),
                 ),
-              ),
-          ],
-        );
-      },
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(22, 30, 22, 14),
+                  sliver: SliverToBoxAdapter(
+                    child: _ResultsHeading(count: trips.length),
+                  ),
+                ),
+                if (trips.isEmpty)
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _NoResults(),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(22, 0, 22, 36),
+                    sliver: SliverList.separated(
+                      itemCount: trips.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 14),
+                      itemBuilder: (_, index) => _TripCard(
+                        trip: trips[index],
+                        passengerCount: widget.passengerCount,
+                        authStore: widget.authStore,
+                        onOpenTickets: widget.onOpenTickets,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
     ),
   );
 }
@@ -143,33 +164,42 @@ class _SearchSummary extends StatelessWidget {
     required this.destination,
     required this.date,
     required this.passengerCount,
+    required this.onEdit,
   });
   final String? origin;
   final String? destination;
   final DateTime date;
   final int passengerCount;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) => Container(
     width: double.infinity,
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
-      color: AppTheme.brandLight,
-      borderRadius: BorderRadius.circular(24),
+      color: AppTheme.surface,
+      border: Border.all(color: AppTheme.borderStrong, width: 1.25),
+      borderRadius: BorderRadius.circular(14),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'YOUR JOURNEY',
-          style: TextStyle(
-            color: AppTheme.brandPrimary,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8,
-          ),
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Your journey',
+                style: TextStyle(
+                  color: AppTheme.ink,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            TextButton(onPressed: onEdit, child: const Text('Edit')),
+          ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 8),
         _SummaryPoint(
           icon: Icons.trip_origin_rounded,
           label: origin ?? 'All origins',
@@ -186,7 +216,10 @@ class _SearchSummary extends StatelessWidget {
           icon: Icons.location_on_rounded,
           label: destination ?? 'All destinations',
         ),
-        const SizedBox(height: 18),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: Divider(height: 1, color: AppTheme.borderStrong),
+        ),
         Wrap(
           spacing: 9,
           runSpacing: 9,
@@ -201,6 +234,11 @@ class _SearchSummary extends StatelessWidget {
                   '$passengerCount ${passengerCount == 1 ? 'seat' : 'seats'}',
             ),
           ],
+        ),
+        const SizedBox(height: 10),
+        const Text(
+          'Times shown in Sri Lanka time',
+          style: TextStyle(color: AppTheme.muted, fontSize: 12),
         ),
       ],
     ),
@@ -220,8 +258,6 @@ class _SummaryPoint extends StatelessWidget {
       Expanded(
         child: Text(
           label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
@@ -238,8 +274,8 @@ class _SummaryMeta extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
     decoration: BoxDecoration(
-      color: AppTheme.surface,
-      borderRadius: BorderRadius.circular(99),
+      color: AppTheme.surfaceMuted,
+      borderRadius: BorderRadius.circular(6),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
@@ -264,7 +300,7 @@ class _ResultsHeading extends StatelessWidget {
     children: [
       Expanded(
         child: Text(
-          'Available departures',
+          'Select a departure',
           style: Theme.of(context).textTheme.titleMedium
               ?.copyWith(fontSize: 18),
         ),
@@ -300,8 +336,8 @@ class _TripCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        border: Border.all(color: AppTheme.borderStrong),
-        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.borderStrong, width: 1.25),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -314,12 +350,11 @@ class _TripCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'DEPARTURE',
+                      'Departs at',
                       style: TextStyle(
                         color: AppTheme.muted,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.7,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -347,8 +382,8 @@ class _TripCard extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: AppTheme.brandLight,
-                  borderRadius: BorderRadius.circular(9),
+                  color: AppTheme.surfaceMuted,
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   trip.routeNumber,
@@ -370,13 +405,18 @@ class _TripCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          _TripPoint(icon: Icons.trip_origin_rounded, label: trip.origin),
-          const SizedBox(height: 9),
-          _TripPoint(icon: Icons.location_on_rounded, label: trip.destination),
+          const SizedBox(height: 12),
+          Text(
+            '${trip.origin} → ${trip.destination}',
+            style: const TextStyle(
+              color: AppTheme.muted,
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 17),
-            child: Divider(height: 1),
+            child: Divider(height: 1, color: AppTheme.borderStrong),
           ),
           Row(
             children: [
@@ -391,7 +431,7 @@ class _TripCard extends StatelessWidget {
                 child: _TripMeta(
                   icon: Icons.event_seat_outlined,
                   label: '${trip.available} seats left',
-                  color: canSelect ? AppTheme.success : AppTheme.danger,
+                  color: canSelect ? AppTheme.ink : AppTheme.danger,
                 ),
               ),
             ],
@@ -415,8 +455,17 @@ class _TripCard extends StatelessWidget {
               style: FilledButton.styleFrom(
                 minimumSize: const Size(168, 46),
                 padding: const EdgeInsets.symmetric(horizontal: 18),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-              child: Text(canSelect ? 'Choose departure' : 'Not available'),
+              child: Text(
+                canSelect
+                    ? 'Select departure'
+                    : trip.available == 0
+                    ? 'Sold out'
+                    : 'Not enough seats',
+              ),
             ),
           ),
         ],
@@ -434,14 +483,14 @@ class _StatusPill extends StatelessWidget {
     final normalized = label.toLowerCase();
     final color = normalized == 'delayed'
         ? AppTheme.warning
-        : {'scheduled', 'ready', 'boarding'}.contains(normalized)
+        : {'ready', 'boarding'}.contains(normalized)
         ? AppTheme.success
         : AppTheme.muted;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(99),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         label,
@@ -453,28 +502,6 @@ class _StatusPill extends StatelessWidget {
       ),
     );
   }
-}
-
-class _TripPoint extends StatelessWidget {
-  const _TripPoint({required this.icon, required this.label});
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Icon(icon, size: 15, color: AppTheme.brandPrimary),
-      const SizedBox(width: 10),
-      Expanded(
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-        ),
-      ),
-    ],
-  );
 }
 
 class _TripMeta extends StatelessWidget {
