@@ -20,8 +20,9 @@ public sealed class RecoveryPlanningService(
 
     public async Task<RecoveryPlanningResult> CreatePlanAsync(
         RecoveryPlanningInput input,
-        CancellationToken cancellationToken) =>
-        await CreatePlanAsync(input, [], cancellationToken);
+        CancellationToken cancellationToken,
+        bool allowFallback = true) =>
+        await CreatePlanAsync(input, [], cancellationToken, allowFallback);
 
     public async Task<RecoveryPlanningResult> CreateRevisedPlanAsync(
         RecoveryPlanningInput input,
@@ -37,7 +38,8 @@ public sealed class RecoveryPlanningService(
     private async Task<RecoveryPlanningResult> CreatePlanAsync(
         RecoveryPlanningInput input,
         IReadOnlyCollection<string> initialFeedback,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool allowFallback = true)
     {
         var timer = Stopwatch.StartNew();
         var inputJson = JsonSerializer.Serialize(input, JsonOptions);
@@ -112,6 +114,9 @@ public sealed class RecoveryPlanningService(
                 ? "Gemini planning is disabled by configuration."
                 : "GEMINI_API_KEY is not configured.";
         }
+
+        if (!allowFallback)
+            throw new RecoveryPlanningUnavailableException(fallbackReason ?? "The AI planner is unavailable.");
 
         var fallbackPlan = SafeRecoveryPlanFactory.Create(input.Objective);
         var fallbackErrors = validator.Validate(fallbackPlan, input.Incident.Type);

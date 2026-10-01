@@ -4,6 +4,7 @@ using api.Data;
 using api.DTOs;
 using api.Enums;
 using api.Services.AgentRecovery;
+using api.Services.AgentRecovery.Planning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -104,11 +105,26 @@ public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService re
                 cancellationToken))
             return NotFound();
 
-        var (workflow, error) = await recoveryWorkflows.StartAsync(
-            request.IncidentId,
-            objective,
-            accessScope.CentreId,
-            cancellationToken);
+        (api.Models.AgentWorkflow? workflow, string? error) result;
+        try
+        {
+            result = await recoveryWorkflows.StartAsync(
+                request.IncidentId,
+                objective,
+                accessScope.CentreId,
+                cancellationToken,
+                request.AllowFallback);
+        }
+        catch (RecoveryPlanningUnavailableException exception)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                code = "ai_planning_unavailable",
+                error = exception.Message
+            });
+        }
+
+        var (workflow, error) = result;
         if (workflow is null) return BadRequest(new { error });
         return CreatedAtAction(nameof(Get), new { workflowId = workflow.Id }, new { workflow.Id, workflow.Status, workflow.FailureReason });
     }

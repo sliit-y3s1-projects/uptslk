@@ -18,8 +18,19 @@ export type RecoveryWorkflow = {
   completedAt?: string | null;
 };
 
+export type RecoveryPlanning = {
+  planningMode: string;
+  modelProvider?: string | null;
+  modelName?: string | null;
+  planningDurationMs: number;
+  totalTokenCount: number;
+  planningFallbackReason?: string | null;
+  replanCount: number;
+};
+
 export type RecoveryWorkflowDetail = {
   summary: RecoveryWorkflow;
+  planning: RecoveryPlanning;
   trip: {
     id: string;
     scheduledTime: string;

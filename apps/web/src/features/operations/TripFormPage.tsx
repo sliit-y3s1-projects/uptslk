@@ -24,6 +24,9 @@ import { useBays } from "@/features/centres/hooks/useCentres";
 import { useDrivers, useVehicles } from "@/features/fleet/hooks";
 import { useCreateTrip, useTrip, useUpdateTrip } from "./hooks/useTrips";
 
+const toDateValue = (day: Date) =>
+  `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+
 export function TripFormPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
@@ -34,9 +37,11 @@ export function TripFormPage() {
   const { data: routes = [] } = useRoutes(centreId);
   const [selectedRouteId, setSelectedRouteId] = useState("");
   const [selectedDirectionId, setSelectedDirectionId] = useState("");
-  const selectedRoute = routes.find(
-    (route) => route.id === (selectedRouteId || existing?.routeId),
-  );
+  // Mirror the Route select, which shows the first route until one is chosen.
+  const selectedRoute =
+    routes.find(
+      (route) => route.id === (selectedRouteId || existing?.routeId),
+    ) ?? (selectedRouteId || existing?.routeId ? undefined : routes[0]);
   const activeDirectionId =
     selectedDirectionId ||
     existing?.routeDirectionId ||
@@ -59,7 +64,7 @@ export function TripFormPage() {
   const scheduled = existing?.scheduledTime
     ? new Date(existing.scheduledTime)
     : undefined;
-  const dateValue = serviceDate || scheduled?.toISOString().slice(0, 10) || "";
+  const dateValue = serviceDate || (scheduled ? toDateValue(scheduled) : "");
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
@@ -239,7 +244,7 @@ function ServiceDatePicker({
             selected={selected}
             onSelect={(day) => {
               if (day) {
-                onChange(day.toISOString().slice(0, 10));
+                onChange(toDateValue(day));
                 setOpen(false);
               }
             }}

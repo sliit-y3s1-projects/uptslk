@@ -59,11 +59,8 @@ export function IncidentFormPage() {
                   ? undefined
                   : String(form.get("tripId") || ""),
               reportedByName: user?.name ?? "Dispatch operator",
-              type:
-                String(form.get("category")) === "Vehicle"
-                  ? "Breakdown"
-                  : (String(form.get("category")) as
-                      "Delay" | "Safety" | "Other"),
+              type: String(form.get("category")) as
+                "Delay" | "Safety" | "Breakdown" | "Other",
               severity: String(form.get("severity")) as
                 "Low" | "Medium" | "High",
               title: String(form.get("title")),
@@ -141,7 +138,7 @@ export function IncidentFormPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {["Delay", "Vehicle", "Safety", "Other"].map((item) => (
+                    {["Delay", "Breakdown", "Safety", "Other"].map((item) => (
                       <SelectItem key={item} value={item}>
                         {item}
                       </SelectItem>
