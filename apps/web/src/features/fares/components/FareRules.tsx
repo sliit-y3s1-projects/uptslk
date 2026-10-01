@@ -202,7 +202,7 @@ export function FareRulesPage() {
   const rules = query.data ?? [];
 
   return (
-    <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
+    <div className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
       <PageHeading
         title="Fare rules"
         description="One standard fare per route."
@@ -226,7 +226,7 @@ export function FareRulesPage() {
         </p>
       )}
       {centreId && <QueryState query={routes} />}
-      <Feedback error={deactivate.error} success={notice} />
+      <Feedback success={notice} />
 
       <section className="overflow-hidden rounded-lg border bg-card">
         <div className="flex flex-col gap-3 border-b p-3 sm:flex-row sm:items-end">
@@ -344,7 +344,10 @@ export function FareRulesPage() {
       <AlertDialog
         open={!!confirmation}
         onOpenChange={(open) => {
-          if (!open) setConfirmation(null);
+          if (!open) {
+            setConfirmation(null);
+            deactivate.reset();
+          }
         }}
       >
         <AlertDialogContent>
@@ -356,6 +359,7 @@ export function FareRulesPage() {
               recorded fares.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <Feedback error={deactivate.error} />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deactivate.isPending}>
               Keep active
@@ -424,6 +428,6 @@ export function FareRulesPage() {
           )}
         </DialogContent>
       </Dialog>
-    </main>
+    </div>
   );
 }

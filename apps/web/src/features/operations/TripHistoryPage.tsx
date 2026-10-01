@@ -45,7 +45,7 @@ export function TripHistoryPage() {
       .filter(
         (trip) =>
           !term ||
-          `${trip.routeNumber} ${trip.routeName} ${trip.vehicle} ${trip.driver} ${trip.bay}`
+          `${trip.id} ${trip.routeNumber} ${trip.routeName} ${trip.vehicle} ${trip.driver} ${trip.bay}`
             .toLowerCase()
             .includes(term),
       )

@@ -636,7 +636,7 @@ function VehicleFormInner({
             Optional · JPG, PNG, or WebP · up to 5 MB
           </p>
           <label
-            className={`group relative flex min-h-40 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed bg-muted/30 p-4 text-center transition-colors hover:border-primary/50 hover:bg-muted/60 ${isSubmitting ? "pointer-events-none opacity-60" : ""}`}
+            className={`group relative flex min-h-40 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed bg-muted/30 p-4 text-center transition-colors hover:border-primary/50 hover:bg-muted/60 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 ${isSubmitting ? "pointer-events-none opacity-60" : ""}`}
           >
             {imagePreview ? (
               <>

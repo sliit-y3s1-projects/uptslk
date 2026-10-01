@@ -8,6 +8,7 @@ export interface User {
   homeLocation?: string | null;
   nicNumber?: string | null;
   gender?: string | null;
+  nicVerificationStatus?: string | null;
   profilePhotoUrl?: string | null;
 }
 
@@ -23,7 +24,8 @@ export interface AuthContextType {
   ) => Promise<string | null>;
   setProfilePhotoUrl: (url: string) => void;
   setProfile: (
-    profile: Pick<User, "name" | "homeLocation" | "nicNumber" | "gender">,
+    profile: Pick<User, "name" | "homeLocation" | "nicNumber" | "gender"> &
+      Partial<Pick<User, "nicVerificationStatus">>,
   ) => void;
   logout: () => void;
   loading: boolean;

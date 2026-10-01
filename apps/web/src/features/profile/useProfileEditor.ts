@@ -26,6 +26,9 @@ export function useProfileEditor() {
   );
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [verificationStatus, setVerificationStatus] = useState(
+    user?.nicVerificationStatus ?? "NotStarted",
+  );
   const [editSnapshot, setEditSnapshot] = useState({
     name: user?.name ?? "",
     location: user?.homeLocation ?? "",
@@ -52,7 +55,25 @@ export function useProfileEditor() {
           gender,
         }),
       });
-      setProfile(updated);
+      let status = "NotStarted";
+      const nicValue = nic.trim().toUpperCase();
+      if (nicValue) {
+        try {
+          const result = await apiClient<{ nicVerificationStatus: string }>(
+            "/api/v1/auth/me/verify-nic",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ nicNumber: nicValue }),
+            },
+          );
+          status = result.nicVerificationStatus;
+        } catch {
+          status = "Failed";
+        }
+      }
+      setVerificationStatus(status);
+      setProfile({ ...updated, nicVerificationStatus: status });
       let savedPhoto = photo;
       if (photoFile) {
         const form = new FormData();
@@ -102,15 +123,6 @@ export function useProfileEditor() {
     [photo],
   );
 
-  useEffect(() => {
-    const value = nic.trim().toUpperCase();
-    if (!editing || !/^(\d{9}[VX]|\d{12})$/.test(value)) return;
-    void apiClient("/api/v1/auth/me/verify-nic", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nicNumber: value }),
-    });
-  }, [editing, nic]);
   const initials = name
     .split(" ")
     .map((part) => part[0])
@@ -135,6 +147,13 @@ export function useProfileEditor() {
     setPhoto(URL.createObjectURL(file));
   }
 
+  const verificationLabel =
+    {
+      Verified: "Verified",
+      Invalid: "Invalid NIC format",
+      Failed: "Verification failed. Save again to retry.",
+    }[verificationStatus] ?? "Not verified";
+
   return {
     user,
     editing,
@@ -153,5 +172,6 @@ export function useProfileEditor() {
     handleEdit,
     handleCancel,
     handlePhoto,
+    verificationLabel,
   };
 }

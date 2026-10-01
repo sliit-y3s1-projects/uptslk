@@ -12,7 +12,10 @@ import { useProfileEditor } from "./useProfileEditor";
 const roleLabels: Record<string, string> = {
   SuperAdmin: "Super administrator",
   Admin: "Administrator",
-  Manager: "Centre manager",
+  CentreManager: "Centre manager",
+  Dispatcher: "Dispatcher",
+  FleetOfficer: "Fleet officer",
+  Driver: "Driver",
 };
 
 export function StaffProfilePage() {
@@ -36,6 +39,7 @@ export function StaffProfilePage() {
     handleEdit,
     handleCancel,
     handlePhoto,
+    verificationLabel,
   } = useProfileEditor();
   if (!user) return null;
 
@@ -174,7 +178,7 @@ export function StaffProfilePage() {
               <Info label="Gender" value={gender || "Not set"} />
               <Info
                 label="Identity verification"
-                value={nic ? "Pending verification" : "Not completed"}
+                value={nic ? verificationLabel : "Not completed"}
               />
             </dl>
           )}

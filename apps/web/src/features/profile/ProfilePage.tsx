@@ -28,6 +28,7 @@ export function ProfilePage() {
     handleEdit,
     handleCancel,
     handlePhoto,
+    verificationLabel,
   } = useProfileEditor();
   if (!user) return null;
   const accountLabel = "Commuter account";
@@ -191,7 +192,7 @@ export function ProfilePage() {
                   <ProfileRow label="Gender" value={gender || "Not set"} />
                   <ProfileRow
                     label="Identity verification"
-                    value={nic ? "Pending verification" : "Not completed"}
+                    value={nic ? verificationLabel : "Not completed"}
                   />
                 </dl>
               )}

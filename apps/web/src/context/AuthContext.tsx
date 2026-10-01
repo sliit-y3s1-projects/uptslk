@@ -44,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           homeLocation: data.homeLocation,
           nicNumber: data.nicNumber,
           gender: data.gender,
+          nicVerificationStatus: data.nicVerificationStatus,
           profilePhotoUrl: data.profilePhotoUrl,
         });
       } catch {
@@ -82,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       homeLocation: data.homeLocation,
       nicNumber: data.nicNumber,
       gender: data.gender,
+      nicVerificationStatus: data.nicVerificationStatus,
       profilePhotoUrl: data.profilePhotoUrl,
     });
     return data.role as string;
@@ -140,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       homeLocation: data.homeLocation,
       nicNumber: data.nicNumber,
       gender: data.gender,
+      nicVerificationStatus: data.nicVerificationStatus,
       profilePhotoUrl,
     });
     return profilePhotoWarning;
@@ -179,6 +182,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   homeLocation: profile.homeLocation,
                   nicNumber: profile.nicNumber,
                   gender: profile.gender,
+                  nicVerificationStatus:
+                    profile.nicVerificationStatus ??
+                    current.nicVerificationStatus,
                 }
               : current,
           ),
