@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { ChevronDown, Loader2, UsersRound } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  UsersRound,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -20,6 +26,8 @@ type Departure = {
   available: number;
   isFull: boolean;
 };
+
+const DEPARTURES_PER_PAGE = 10;
 
 function departureTone(status: string) {
   if (status === "Delayed") return "danger" as const;
@@ -55,6 +63,17 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
       isFull: trip.isFull,
     }));
   const [selected, setSelected] = useState<Departure | undefined>(undefined);
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(
+    1,
+    Math.ceil(departures.length / DEPARTURES_PER_PAGE),
+  );
+  const currentPage = Math.min(page, pageCount);
+  const pageStart = (currentPage - 1) * DEPARTURES_PER_PAGE;
+  const visibleDepartures = departures.slice(
+    pageStart,
+    pageStart + DEPARTURES_PER_PAGE,
+  );
 
   if (isLoading)
     return (
@@ -140,7 +159,7 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
               No upcoming trips are scheduled for this centre.
             </p>
           )}
-          {departures.map((departure) => (
+          {visibleDepartures.map((departure) => (
             <button
               type="button"
               key={departure.id}
@@ -171,6 +190,38 @@ export function CentreConsolePage({ centreId }: { centreId?: string }) {
             </button>
           ))}
         </div>
+        {departures.length > DEPARTURES_PER_PAGE && (
+          <footer className="flex items-center justify-between border-t px-4 py-3 text-sm">
+            <span className="text-muted-foreground">
+              Showing {pageStart + 1}–
+              {Math.min(pageStart + DEPARTURES_PER_PAGE, departures.length)} of{" "}
+              {departures.length}
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">
+                Page {currentPage} of {pageCount}
+              </span>
+              <Button
+                size="icon"
+                variant="outline"
+                aria-label="Previous page"
+                disabled={currentPage === 1}
+                onClick={() => setPage(currentPage - 1)}
+              >
+                <ChevronLeft />
+              </Button>
+              <Button
+                size="icon"
+                variant="outline"
+                aria-label="Next page"
+                disabled={currentPage === pageCount}
+                onClick={() => setPage(currentPage + 1)}
+              >
+                <ChevronRight />
+              </Button>
+            </div>
+          </footer>
+        )}
       </section>
     </main>
   );

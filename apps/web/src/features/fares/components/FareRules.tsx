@@ -1,7 +1,17 @@
 import { useState } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -17,15 +27,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { PageHeading } from "@/components/shared/PageHeading";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { LabeledSelect } from "@/components/shared/LabeledSelect";
 import {
-  Panel,
   Field,
   QueryState,
   Feedback,
@@ -39,42 +51,6 @@ import {
 } from "../hooks/useFareRules";
 import { useRoutes } from "../hooks/useBookings";
 import { useAuth } from "@/hooks/useAuth";
-
-function FilterSelect({
-  label,
-  value,
-  onValueChange,
-  items,
-}: {
-  label: string;
-  value: string;
-  onValueChange: (value: string) => void;
-  items: { value: string; label: string }[];
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-sm font-medium">{label}</label>
-      <Select
-        value={value}
-        onValueChange={(nextValue) => onValueChange(String(nextValue ?? "all"))}
-        itemToStringLabel={(nextValue) =>
-          items.find((item) => item.value === nextValue)?.label ?? nextValue
-        }
-      >
-        <SelectTrigger className="h-11 w-full">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {items.map((item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
 
 function FareForm({
   rule,
@@ -112,13 +88,10 @@ function FareForm({
           );
       }}
     >
-      <fieldset
-        disabled={mutation.isPending}
-        className="space-y-5 [&_input]:h-12"
-      >
+      <fieldset disabled={mutation.isPending} className="space-y-5">
         <div className="space-y-5">
           {rule ? (
-            <p className="rounded-lg border border-primary/20 bg-primary/10 px-4 py-3 text-base font-medium text-primary">
+            <p className="rounded-lg border bg-muted/40 px-4 py-3 text-sm font-medium">
               Route {rule.route.routeNumber} · {rule.route.name}
             </p>
           ) : (
@@ -132,7 +105,7 @@ function FareForm({
                   return route ? `${route.routeNumber} · ${route.name}` : value;
                 }}
               >
-                <SelectTrigger className="h-12 w-full">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select an active route" />
                 </SelectTrigger>
                 <SelectContent>
@@ -208,198 +181,61 @@ function EditFare({
     </>
   );
 }
-export function FareRules() {
+export function FareRulesPage() {
   const { user } = useAuth();
   const centreId = user?.centreId ?? "";
   const routes = useRoutes(centreId);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filters, setFilters] = useState({
-    routeId: "all",
-    active: "all",
-  });
-  const [draftFilters, setDraftFilters] = useState(filters);
+  const [routeId, setRouteId] = useState("all");
+  const [active, setActive] = useState("all");
   const query = useFareRules({
     centreId,
-    routeId: filters.routeId === "all" ? "" : filters.routeId,
-    active: filters.active === "all" ? "" : filters.active,
+    routeId: routeId === "all" ? "" : routeId,
+    active: active === "all" ? "" : active,
   });
   const { deactivate } = useFareRuleMutations();
   const [editing, setEditing] = useState("");
   const [adding, setAdding] = useState(false);
   const [confirmation, setConfirmation] = useState<FareRule | null>(null);
   const [notice, setNotice] = useState("");
-  const appliedFilterCount = Object.values(filters).filter(
-    (value) => value !== "all",
-  ).length;
+  const filtered = routeId !== "all" || active !== "all";
+  const canCreate = !!routes.data?.some((route) => route.isActive);
+  const rules = query.data ?? [];
+
   return (
-    <div className="space-y-4">
-      <Panel title="Fare rules">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-4">
-          <div>
-            <p className="font-medium">Current centre fare directory</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Set one fare per route, charged per passenger.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => {
-                setDraftFilters(filters);
-                setFiltersOpen(true);
-              }}
-            >
-              <SlidersHorizontal className="size-4" />
-              All filters
-              {appliedFilterCount > 0 && (
-                <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
-                  {appliedFilterCount}
-                </span>
-              )}
-            </Button>
-            <Button
-              disabled={!routes.data?.some((route) => route.isActive)}
-              onClick={() => {
-                setAdding(true);
-                setEditing("");
-              }}
-            >
-              Create fare rule
-            </Button>
-          </div>
-        </div>
-        {!centreId && (
-          <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-            Your account is not assigned to a centre, so fare rules cannot be
-            loaded.
-          </p>
-        )}
-        {centreId && <QueryState query={routes} empty={!routes.data?.length} />}
-        <Feedback error={deactivate.error} success={notice} />
-        <QueryState query={query} empty={!query.data?.length} />
-        {query.data && !query.error && (
-          <div className="overflow-hidden rounded-xl border">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] text-left text-sm">
-                <thead className="bg-muted/60 text-muted-foreground">
-                  <tr>
-                    <th className="px-5 py-3 font-medium">Route</th>
-                    <th className="px-5 py-3 font-medium">Fare</th>
-                    <th className="px-5 py-3 font-medium">Status</th>
-                    <th className="px-5 py-3 text-right font-medium">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {query.data.map((rule) => (
-                    <tr
-                      key={rule.id}
-                      className="bg-card transition-colors hover:bg-muted/30"
-                    >
-                      <td className="px-5 py-4">
-                        <p className="font-semibold">
-                          {rule.route.routeNumber}
-                        </p>
-                        <p className="mt-0.5 text-muted-foreground">
-                          {rule.route.name}
-                        </p>
-                      </td>
-                      <td className="px-5 py-4 text-base font-semibold">
-                        {money(rule.amount)}
-                      </td>
-                      <td className="px-5 py-4">
-                        <span
-                          className={
-                            rule.isActive
-                              ? "rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800"
-                              : "rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"
-                          }
-                        >
-                          {rule.isActive ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            className="bg-primary/10 text-primary hover:bg-primary/20"
-                            variant="ghost"
-                            onClick={() => {
-                              setEditing(rule.id);
-                              setAdding(false);
-                            }}
-                          >
-                            Edit
-                          </Button>
-                          {rule.isActive && (
-                            <Button
-                              size="sm"
-                              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                              variant="ghost"
-                              onClick={() => setConfirmation(rule)}
-                            >
-                              Deactivate
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-        {confirmation && (
-          <div className="space-y-3 rounded-md border p-3">
-            <p className="text-sm">
-              Deactivate the standard fare for route{" "}
-              {confirmation.route.routeNumber}? Existing tickets retain their
-              recorded fares.
-            </p>
-            <div className="flex gap-2">
-              <Button
-                disabled={deactivate.isPending}
-                onClick={() =>
-                  deactivate.mutate(confirmation.id, {
-                    onSuccess: () => {
-                      setConfirmation(null);
-                      setNotice("Fare rule deactivated.");
-                    },
-                  })
-                }
-              >
-                Confirm deactivation
-              </Button>
-              <Button
-                variant="outline"
-                disabled={deactivate.isPending}
-                onClick={() => setConfirmation(null)}
-              >
-                Keep active
-              </Button>
-            </div>
-          </div>
-        )}
-      </Panel>
-      <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-        <SheetContent side="right" className="sm:!max-w-sm">
-          <SheetHeader>
-            <SheetTitle>Filter fare rules</SheetTitle>
-            <SheetDescription>
-              Choose one or more filters, then apply them to the fare directory.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="space-y-5 py-2">
-            <FilterSelect
+    <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
+      <PageHeading
+        title="Fare rules"
+        description="One standard fare per route."
+        action={
+          <Button
+            disabled={!canCreate}
+            onClick={() => {
+              setAdding(true);
+              setEditing("");
+            }}
+          >
+            <Plus /> Create fare rule
+          </Button>
+        }
+      />
+
+      {!centreId && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          Your account is not assigned to a centre, so fare rules cannot be
+          loaded.
+        </p>
+      )}
+      {centreId && <QueryState query={routes} />}
+      <Feedback error={deactivate.error} success={notice} />
+
+      <section className="overflow-hidden rounded-lg border bg-card">
+        <div className="flex flex-col gap-3 border-b p-3 sm:flex-row sm:items-end">
+          <div className="grid flex-1 gap-3 sm:max-w-xl sm:grid-cols-2">
+            <LabeledSelect
               label="Route"
-              value={draftFilters.routeId}
-              onValueChange={(value) =>
-                setDraftFilters((current) => ({ ...current, routeId: value }))
-              }
-              items={[
+              value={routeId}
+              onChange={setRouteId}
+              options={[
                 { value: "all", label: "All routes" },
                 ...(routes.data ?? []).map((route) => ({
                   value: route.id,
@@ -407,42 +243,143 @@ export function FareRules() {
                 })),
               ]}
             />
-            <FilterSelect
-              label="Fare status"
-              value={draftFilters.active}
-              onValueChange={(value) =>
-                setDraftFilters((current) => ({ ...current, active: value }))
-              }
-              items={[
+            <LabeledSelect
+              label="Status"
+              value={active}
+              onChange={setActive}
+              options={[
                 { value: "all", label: "All statuses" },
                 { value: "true", label: "Active" },
                 { value: "false", label: "Inactive" },
               ]}
             />
           </div>
-          <SheetFooter>
+          {filtered && (
             <Button
-              variant="outline"
-              onClick={() =>
-                setDraftFilters({
-                  routeId: "all",
-                  active: "all",
-                })
-              }
-            >
-              Clear
-            </Button>
-            <Button
+              variant="ghost"
               onClick={() => {
-                setFilters(draftFilters);
-                setFiltersOpen(false);
+                setRouteId("all");
+                setActive("all");
               }}
             >
-              Apply filters
+              Clear filters
             </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          )}
+          <p className="text-sm text-muted-foreground sm:ml-auto">
+            {rules.length} fare{rules.length === 1 ? "" : "s"}
+          </p>
+        </div>
+
+        {query.isPending && centreId ? (
+          <p className="p-6 text-sm text-muted-foreground">Loading fares...</p>
+        ) : query.error ? (
+          <div className="p-4">
+            <QueryState query={query} />
+          </div>
+        ) : rules.length === 0 ? (
+          <p className="p-8 text-center text-sm text-muted-foreground">
+            {filtered
+              ? "No fares match these filters."
+              : "No fares have been set for this centre yet."}
+          </p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className="px-4">Route</TableHead>
+                <TableHead>Fare per passenger</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="px-4 text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rules.map((rule) => (
+                <TableRow key={rule.id}>
+                  <TableCell className="px-4">
+                    <p className="font-medium">{rule.route.routeNumber}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {rule.route.name}
+                    </p>
+                  </TableCell>
+                  <TableCell className="font-medium tabular-nums">
+                    {money(rule.amount)}
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge
+                      label={rule.isActive ? "Active" : "Inactive"}
+                      tone={rule.isActive ? "good" : "neutral"}
+                    />
+                  </TableCell>
+                  <TableCell className="px-4">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setEditing(rule.id);
+                          setAdding(false);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      {rule.isActive && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-destructive"
+                          onClick={() => setConfirmation(rule)}
+                        >
+                          Deactivate
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </section>
+
+      <AlertDialog
+        open={!!confirmation}
+        onOpenChange={(open) => {
+          if (!open) setConfirmation(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate this fare?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Route {confirmation?.route.routeNumber} will no longer accept new
+              bookings until a fare is active again. Existing tickets keep their
+              recorded fares.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deactivate.isPending}>
+              Keep active
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              disabled={deactivate.isPending}
+              onClick={(event) => {
+                event.preventDefault();
+                if (!confirmation) return;
+                deactivate.mutate(confirmation.id, {
+                  onSuccess: () => {
+                    setConfirmation(null);
+                    setNotice("Fare rule deactivated.");
+                  },
+                });
+              }}
+            >
+              Deactivate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog
         open={adding || !!editing}
         onOpenChange={(open) => {
@@ -452,15 +389,15 @@ export function FareRules() {
           }
         }}
       >
-        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto p-6 sm:max-w-2xl sm:p-8">
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {editing ? "Edit fare rule" : "Create fare rule"}
             </DialogTitle>
             <DialogDescription>
               {editing
-                ? "Update the fare or its active status. Changes affect future bookings only."
-                : "Add the standard fare for an active route."}
+                ? "Changes affect future bookings only."
+                : "Set the standard fare for an active route."}
             </DialogDescription>
           </DialogHeader>
           {adding && (
@@ -487,6 +424,6 @@ export function FareRules() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </main>
   );
 }

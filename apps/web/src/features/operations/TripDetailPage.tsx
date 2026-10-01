@@ -44,6 +44,10 @@ export function TripDetailPage() {
           : trip.status === "Dispatched"
             ? "Completed"
             : undefined;
+  const isClosed = ["Completed", "Cancelled"].includes(trip.status);
+  const back = isClosed
+    ? { to: "/operations/history", label: "Trip history" }
+    : { to: "/operations/dispatch", label: "Dispatch board" };
   const change = () =>
     next && statusMutation.mutate({ id: trip.id, status: next });
   return (
@@ -53,11 +57,8 @@ export function TripDetailPage() {
         description={`${trip.route.origin} to ${trip.route.destination} · ${new Date(trip.scheduledTime).toLocaleDateString()}`}
         action={
           <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              render={<Link to="/operations/dispatch" />}
-            >
-              <ArrowLeft /> Dispatch board
+            <Button variant="outline" render={<Link to={back.to} />}>
+              <ArrowLeft /> {back.label}
             </Button>
             {!["Completed", "Cancelled"].includes(trip.status) && (
               <Button
@@ -174,7 +175,9 @@ export function TripDetailPage() {
       <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel {trip.id}?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Cancel route {trip.route.routeNumber} departure?
+            </AlertDialogTitle>
             <AlertDialogDescription>
               Provide a reason for the cancellation.
             </AlertDialogDescription>

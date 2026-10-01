@@ -703,25 +703,23 @@ export function RouteFormPage() {
               const isTerminal =
                 !editing && (index === 0 || index === stops.length - 1);
               return (
-                <div
-                  key={`${index}-${stop.stopName}`}
-                  className="flex items-center gap-2"
-                >
+                <div key={index} className="flex items-center gap-2">
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                     {index + 1}
                   </span>
                   <Input
                     value={stop.stopName}
                     onChange={(e) => {
-                      const newStops = [...stops];
-                      newStops[index].stopName = e.target.value;
-                      setStops(newStops);
+                      const stopName = e.target.value;
+                      setStops((current) =>
+                        current.map((item, stopIndex) =>
+                          stopIndex === index ? { ...item, stopName } : item,
+                        ),
+                      );
                     }}
                     readOnly={isTerminal}
                     className={
-                      isTerminal
-                        ? "border-emerald-200 bg-emerald-50 font-medium text-emerald-900 focus-visible:border-emerald-400 focus-visible:ring-emerald-200"
-                        : undefined
+                      isTerminal ? "bg-muted/60 font-medium" : undefined
                     }
                     placeholder={
                       isTerminal
@@ -731,7 +729,7 @@ export function RouteFormPage() {
                     required
                   />
                   {isTerminal ? (
-                    <span className="w-20 shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-center text-xs font-semibold text-emerald-800">
+                    <span className="w-20 shrink-0 rounded-full border bg-muted px-2 py-1 text-center text-xs font-semibold text-muted-foreground">
                       Terminal
                     </span>
                   ) : (
@@ -976,10 +974,7 @@ function DirectionForm({
           {stops.map((stop, index) => {
             const isTerminal = index === 0 || index === stops.length - 1;
             return (
-              <div
-                key={`${index}-${stop.stopName}`}
-                className="flex items-center gap-2"
-              >
+              <div key={index} className="flex items-center gap-2">
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                   {index + 1}
                 </span>

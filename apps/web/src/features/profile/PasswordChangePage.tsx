@@ -55,7 +55,9 @@ export function PasswordChangePage({
         >
           <ArrowLeft className="size-4" /> Back to profile
         </Link>
-        <section className="mt-7 rounded-2xl border border-slate-200 bg-white p-7 sm:p-9">
+        <section
+          className={`mt-7 border bg-white ${embedded ? "rounded-lg bg-card p-5" : "rounded-2xl border-slate-200 p-7 sm:p-9"}`}
+        >
           <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <LockKeyhole className="size-5" />
           </div>
