@@ -2,7 +2,7 @@
   "redirects": [
     {
       "source": "/apk",
-      "destination": "https://github.com/chamals3n4/uptslk-mobile/releases/latest",
+      "destination": "https://github.com/sliit-y3s1-projects/uptslk/releases/latest",
       "permanent": false
     }
   ]
