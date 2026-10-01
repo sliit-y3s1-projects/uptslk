@@ -415,7 +415,7 @@ export function FareRulesManagementPage() {
       <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-5">
         <PageHeading
           title="Fare rules"
-          description="Set and maintain route fares by passenger category. Changes apply only to new bookings."
+          description="Set and maintain one standard fare per route. Changes apply only to new bookings."
         />
         <FareRules />
       </div>

@@ -82,10 +82,10 @@ test("passenger mutations preserve exact bodies and keep wallet within passenger
   check("DELETE", `/api/v1/passengers/${passengerId}`);
 });
 test("fare update does not send the immutable route relation", async () => {
-  const body = { routeId: tripId, passengerCategory: "Student", amount: 180 };
+  const body = { routeId: tripId, amount: 180 };
   await fares.create(body);
   check("POST", "/api/v1/fare-rules", body);
-  const update = { passengerCategory: "Adult", amount: 200, isActive: true };
+  const update = { amount: 200, isActive: true };
   await fares.update(tripId, update);
   check("PUT", `/api/v1/fare-rules/${tripId}`, update);
   await fares.deactivate(tripId);

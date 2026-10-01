@@ -50,7 +50,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<RouteDirectionModel>().HasIndex(direction => new { direction.RouteId, direction.StartCentreId, direction.EndCentreId }).IsUnique();
         modelBuilder.Entity<Passenger>().HasIndex(p => p.PhoneNumber).IsUnique();
         modelBuilder.Entity<Passenger>().HasOne(p => p.User).WithOne(u => u.Passenger).HasForeignKey<Passenger>(p => p.UserId).OnDelete(DeleteBehavior.SetNull);
-        modelBuilder.Entity<FareRule>().HasIndex(rule => new { rule.RouteId, rule.PassengerCategory }).IsUnique();
+        modelBuilder.Entity<FareRule>().HasIndex(rule => rule.RouteId).IsUnique();
         modelBuilder.Entity<Booking>().HasIndex(booking => new { booking.TripId, booking.SeatNumber })
             .IsUnique()
             .HasFilter("\"Status\" IN (0, 1)");

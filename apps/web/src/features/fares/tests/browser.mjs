@@ -142,7 +142,7 @@ await page.route("**/api/v1/**", async (route) => {
       : reply(
           {
             error:
-              "No active fare rule exists for this passenger category and route.",
+              "No active standard fare exists for this route.",
           },
           404,
         );

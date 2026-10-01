@@ -460,7 +460,7 @@ export function FareRules() {
             <DialogDescription>
               {editing
                 ? "Update the fare or its active status. Changes affect future bookings only."
-                : "Add a fare for an active route and passenger category."}
+                : "Add the standard fare for an active route."}
             </DialogDescription>
           </DialogHeader>
           {adding && (

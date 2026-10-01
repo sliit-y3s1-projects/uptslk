@@ -19,7 +19,7 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
         if (request.PassengerCount is < 1 or > 10) return (null, "Passenger count must be between 1 and 10.", StatusCodes.Status400BadRequest);
 
         if (await OccupiedCapacity(trip.Id, cancellationToken) + request.PassengerCount > trip.Vehicle.Capacity) return (null, "This departure does not have enough remaining spaces for every passenger.", StatusCodes.Status409Conflict);
-        var fare = await db.FareRules.SingleOrDefaultAsync(rule => rule.RouteId == trip.RouteId && rule.PassengerCategory == PassengerCategory.Adult && rule.IsActive, cancellationToken);
+        var fare = await db.FareRules.SingleOrDefaultAsync(rule => rule.RouteId == trip.RouteId && rule.IsActive, cancellationToken);
         if (fare is null) return (null, "No active standard fare exists for this route.", StatusCodes.Status400BadRequest);
         var gateway = gateways.SingleOrDefault(item => item.Provider == request.Provider);
         if (gateway is null) return (null, "The requested payment provider is not available.", StatusCodes.Status400BadRequest);
