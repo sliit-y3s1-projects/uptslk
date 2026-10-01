@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/apk",
+      "destination": "https://github.com/chamals3n4/uptslk-mobile/releases/latest",
+      "permanent": false
+    }
+  ]
+}
