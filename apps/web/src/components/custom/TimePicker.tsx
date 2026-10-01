@@ -53,10 +53,20 @@ export function TimePicker({
 }: TimePickerProps) {
   const [internalValue, setInternalValue] = useState(defaultValue ?? "");
   const selectedValue = value ?? internalValue;
-  const selection = useMemo(() => parseTime(selectedValue), [selectedValue]);
+  // Keep a draft so a partial pick (e.g. only the hour) is not lost before the
+  // time is complete. The draft is ignored once the value changes externally.
+  const [draft, setDraft] = useState(() => parseTime(selectedValue));
+  const draftValue = toTimeValue(draft.hour, draft.minute, draft.period);
+  const selection = useMemo(
+    () => (draftValue === selectedValue ? draft : parseTime(selectedValue)),
+    [draft, draftValue, selectedValue],
+  );
 
   const update = (next: Partial<typeof selection>) => {
     const nextSelection = { ...selection, ...next };
+    if (nextSelection.hour && !nextSelection.minute)
+      nextSelection.minute = "00";
+    setDraft(nextSelection);
     const nextValue = toTimeValue(
       nextSelection.hour,
       nextSelection.minute,

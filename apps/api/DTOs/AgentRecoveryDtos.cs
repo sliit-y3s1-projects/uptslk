@@ -7,6 +7,11 @@ public sealed class StartRecoveryWorkflowRequest
 {
     public Guid IncidentId { get; init; }
     [StringLength(1000)] public string? Objective { get; init; }
+    /// <summary>
+    /// When false, the workflow is not started if the AI planner is unavailable, so the
+    /// caller can ask the user whether to continue with the safe built-in plan.
+    /// </summary>
+    public bool AllowFallback { get; init; } = true;
 }
 
 public sealed class DecideRecoveryApprovalRequest

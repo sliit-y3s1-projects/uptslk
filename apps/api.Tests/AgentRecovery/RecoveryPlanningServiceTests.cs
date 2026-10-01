@@ -70,6 +70,18 @@ public sealed class RecoveryPlanningServiceTests
         Assert.DoesNotContain(sensitiveProviderDetail, result.FallbackReason);
     }
 
+    [Fact]
+    public async Task CreatePlanAsync_ThrowsWhenFallbackIsNotAllowedAndPlannerFails()
+    {
+        const string sensitiveProviderDetail = "provider-secret-detail";
+        var service = CreateService(new ThrowingPlanner(sensitiveProviderDetail));
+
+        var exception = await Assert.ThrowsAsync<RecoveryPlanningUnavailableException>(() =>
+            service.CreatePlanAsync(CreatePlanningInput(), CancellationToken.None, allowFallback: false));
+
+        Assert.DoesNotContain(sensitiveProviderDetail, exception.Message);
+    }
+
     private static RecoveryPlanningService CreateService(IRecoveryPlanner planner)
     {
         IRecoveryAgent[] agents =

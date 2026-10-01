@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, AlertCircle, Loader2, ImagePlus } from "lucide-react";
+import { Plus, Search, AlertCircle, Loader2 } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ImageUploadIcon } from "@hugeicons/core-free-icons";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -628,31 +630,49 @@ function VehicleFormInner({
           </div>
         )}
 
-        <div className="mb-5 flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center">
-          <img
-            src={imagePreview ?? "/vehicle-placeholder.svg"}
-            alt={imagePreview ? "Vehicle image preview" : "Vehicle placeholder"}
-            className={`h-28 w-full rounded-lg border bg-muted sm:w-44 ${imagePreview ? "object-cover" : "object-contain"}`}
-          />
-          <div className="space-y-2">
-            <div>
-              <p className="text-sm font-medium">Primary vehicle image</p>
-              <p className="text-xs text-muted-foreground">
-                Optional · JPG, PNG, or WebP · up to 5 MB
-              </p>
-            </div>
-            <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border bg-background px-3 text-sm font-medium transition-colors hover:bg-muted">
-              <ImagePlus className="size-4" />
-              {imagePreview ? "Replace image" : "Choose image"}
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="sr-only"
-                onChange={handleImageChange}
-                disabled={isSubmitting}
-              />
-            </label>
-          </div>
+        <div className="mb-5 border-b pb-5">
+          <p className="text-sm font-medium">Primary vehicle image</p>
+          <p className="mb-2 text-xs text-muted-foreground">
+            Optional · JPG, PNG, or WebP · up to 5 MB
+          </p>
+          <label
+            className={`group relative flex min-h-40 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed bg-muted/30 p-4 text-center transition-colors hover:border-primary/50 hover:bg-muted/60 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 ${isSubmitting ? "pointer-events-none opacity-60" : ""}`}
+          >
+            {imagePreview ? (
+              <>
+                <img
+                  src={imagePreview}
+                  alt="Vehicle image preview"
+                  className="absolute inset-0 size-full object-cover"
+                />
+                <span className="relative inline-flex items-center gap-2 rounded-md bg-background/90 px-3 py-1.5 text-sm font-medium shadow-sm">
+                  <HugeiconsIcon icon={ImageUploadIcon} className="size-4" />
+                  Replace image
+                </span>
+              </>
+            ) : (
+              <>
+                <HugeiconsIcon
+                  icon={ImageUploadIcon}
+                  strokeWidth={1.5}
+                  className="size-9 text-muted-foreground transition-colors group-hover:text-primary"
+                />
+                <span className="text-sm font-medium">
+                  Click to upload a vehicle image
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  JPG, PNG or WebP
+                </span>
+              </>
+            )}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="sr-only"
+              onChange={handleImageChange}
+              disabled={isSubmitting}
+            />
+          </label>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">

@@ -24,7 +24,7 @@ public sealed class NetworkContinuityAgent(INetworkRecoveryTools tools) : IRecov
             : $"{context.Trip.RouteDirection.StartCentre.Name} to {context.Trip.RouteDirection.EndCentre.Name}";
         var recommendation = new AgentRecommendation(
             Name,
-            toolOutput.CandidateBayId is null ? $"Keep the current bay and move {routeName} by 15 minutes." : $"Use bay {toolOutput.CandidateBayCode} and move {routeName} by 15 minutes.",
+            toolOutput.CandidateBayId is null ? $"Keep the current bay and delay the {routeName} departure by 15 minutes." : $"Use bay {toolOutput.CandidateBayCode} and delay the {routeName} departure by 15 minutes.",
             ["The proposed departure is held 15 minutes later to give dispatch time to replace the affected resource.", "The bay belongs to the route direction's departure centre."],
             toolOutput.CandidateBayId is null ? ["No alternative available bay was found; dispatch must confirm the current bay can still be used."] : [],
             BayId: bayId,

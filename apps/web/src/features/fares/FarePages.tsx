@@ -41,7 +41,7 @@ import { useBookings, useTrips } from "./hooks/useBookings";
 import { bookingsService } from "./services/bookings.service";
 import { CreateBooking } from "./components/CreateBooking";
 import { BookingTicket } from "./components/BookingTicket";
-import { FareRules } from "./components/FareRules";
+import { FareRulesPage } from "./components/FareRules";
 
 const BOOKING_PAGE_SIZE = 50;
 
@@ -410,17 +410,7 @@ export function BookingManagementPage() {
 }
 
 export function FareRulesManagementPage() {
-  return (
-    <main className="flex flex-1 flex-col bg-muted/20 p-4 lg:p-6">
-      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-5">
-        <PageHeading
-          title="Fare rules"
-          description="Set and maintain one standard fare per route. Changes apply only to new bookings."
-        />
-        <FareRules />
-      </div>
-    </main>
-  );
+  return <FareRulesPage />;
 }
 export function PaymentsPage() {
   return (

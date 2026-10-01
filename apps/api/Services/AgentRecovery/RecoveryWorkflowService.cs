@@ -22,6 +22,7 @@ public sealed class RecoveryWorkflowService(
 {
     private const int AgentTimeoutSeconds = 5;
     private const int MaxAgentRetries = 1;
+    private const int MaximumDepartureAgeMinutes = 120;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         Converters = { new JsonStringEnumConverter() }
@@ -32,7 +33,8 @@ public sealed class RecoveryWorkflowService(
         Guid incidentId,
         string? objective,
         Guid? scopedCentreId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool allowFallback = true)
     {
         var incident = await db.Incidents
             .Include(item => item.Trip).ThenInclude(trip => trip!.Route)
@@ -45,6 +47,8 @@ public sealed class RecoveryWorkflowService(
             return (null, "The incident does not exist.");
         if (incident.Trip is null) return (null, "Recovery requires an incident linked to a scheduled trip.");
         if (incident.Trip.Status is TripStatus.Completed or TripStatus.Cancelled) return (null, "Completed or cancelled trips cannot enter recovery.");
+        if (incident.Trip.ScheduledTime.AddMinutes(MaximumDepartureAgeMinutes) < DateTime.UtcNow)
+            return (null, "This departure is too far in the past to recover. Choose a current or upcoming trip.");
         if (await db.AgentWorkflows.AnyAsync(workflow => workflow.IncidentId == incidentId && (workflow.Status == WorkflowStatus.Running || workflow.Status == WorkflowStatus.PausedForApproval), cancellationToken))
             return (null, "This incident already has an active recovery workflow.");
 
@@ -66,7 +70,15 @@ public sealed class RecoveryWorkflowService(
         RecoveryPlanningResult planningResult;
         try
         {
-            planningResult = await planningService.CreatePlanAsync(planningInput, cancellationToken);
+            planningResult = await planningService.CreatePlanAsync(planningInput, cancellationToken, allowFallback);
+        }
+        catch (RecoveryPlanningUnavailableException)
+        {
+            // Nothing has been planned or executed yet, so drop the empty workflow and let
+            // the caller decide whether to retry or continue with the safe plan.
+            db.AgentWorkflows.Remove(workflow);
+            await db.SaveChangesAsync(CancellationToken.None);
+            throw;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

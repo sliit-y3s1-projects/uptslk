@@ -1,19 +1,33 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
-  Bot,
+  ArrowRight,
+  Bus,
   Check,
   CircleAlert,
   Clock3,
   LoaderCircle,
+  Network,
   ShieldCheck,
+  Ticket,
+  UserCheck,
   X,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -26,7 +40,7 @@ import {
 import { PageHeading } from "@/components/shared/PageHeading";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useAuth } from "@/hooks/useAuth";
-import { apiClient } from "@/lib/api/api-client";
+import { ApiError, apiClient } from "@/lib/api/api-client";
 import { agentRecoveryApi } from "./agent-recovery.api";
 import type {
   RecoveryIncident,
@@ -43,12 +57,9 @@ const tone = (status: WorkflowStatus) =>
         ? "warning"
         : "neutral";
 const agentTone = (agentName: string) => {
-  if (agentName.startsWith("Network"))
-    return "bg-indigo-50/35";
-  if (agentName.startsWith("Fleet"))
-    return "bg-sky-50/40";
-  if (agentName.startsWith("Dispatch"))
-    return "bg-amber-50/35";
+  if (agentName.startsWith("Network")) return "bg-indigo-50/35";
+  if (agentName.startsWith("Fleet")) return "bg-sky-50/40";
+  if (agentName.startsWith("Dispatch")) return "bg-amber-50/35";
   return "bg-emerald-50/35";
 };
 const incidentLabel = (incident: RecoveryIncident) => {
@@ -91,7 +102,8 @@ const assessmentStages = [
   {
     title: "Prepare approval-ready audit",
     owner: "Workflow coordinator",
-    detail: "Persisting the plan, recommendations, tool calls and safety checks.",
+    detail:
+      "Persisting the plan, recommendations, tool calls and safety checks.",
   },
 ];
 const wait = (milliseconds: number) =>
@@ -104,6 +116,9 @@ export function AgentRecoveryPage() {
   const [incidentId, setIncidentId] = useState("");
   const [objective, setObjective] = useState("");
   const [assessmentStage, setAssessmentStage] = useState<number | null>(null);
+  const [filter, setFilter] = useState<"all" | WorkflowStatus>("all");
+  const [planningIssue, setPlanningIssue] = useState<string | null>(null);
+  const stageTimers = useRef<number[]>([]);
   const workflows = useQuery({
     queryKey: ["agent-recovery", user?.centreId],
     queryFn: () => agentRecoveryApi.list(user?.centreId),
@@ -119,10 +134,11 @@ export function AgentRecoveryPage() {
     retry: false,
   });
   const start = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (allowFallback: boolean) => {
       const workflowRequest = agentRecoveryApi.start(
         incidentId,
         objective || undefined,
+        allowFallback,
       );
       const [workflow] = await Promise.all([workflowRequest, wait(6000)]);
       return workflow;
@@ -131,8 +147,32 @@ export function AgentRecoveryPage() {
       void queryClient.invalidateQueries({ queryKey: ["agent-recovery"] });
       navigate(`/operations/agent-recovery/${workflow.id}`);
     },
-    onError: () => setAssessmentStage(null),
+    onError: (error) => {
+      clearStageTimers();
+      setAssessmentStage(null);
+      if (error instanceof ApiError && error.code === "ai_planning_unavailable")
+        setPlanningIssue(error.message);
+    },
   });
+  function clearStageTimers() {
+    stageTimers.current.forEach((timer) => window.clearTimeout(timer));
+    stageTimers.current = [];
+  }
+  function beginAssessment(allowFallback: boolean) {
+    if (!incidentId) return;
+    clearStageTimers();
+    setPlanningIssue(null);
+    setAssessmentStage(0);
+    assessmentStages.forEach((_, index) => {
+      stageTimers.current.push(
+        window.setTimeout(
+          () => setAssessmentStage(index + 1),
+          (index + 1) * 850,
+        ),
+      );
+    });
+    start.mutate(allowFallback);
+  }
   const eligibleIncidents = useMemo(
     () =>
       incidents.data?.filter(
@@ -144,85 +184,88 @@ export function AgentRecoveryPage() {
   if (start.isPending && assessmentStage !== null)
     return <RecoveryAssessmentRun activeStage={assessmentStage} />;
 
+  const allWorkflows = workflows.data ?? [];
+  const awaiting = allWorkflows.filter(
+    (workflow) => workflow.status === "PausedForApproval",
+  );
+  const counts = {
+    all: allWorkflows.length,
+    PausedForApproval: awaiting.length,
+    Running: allWorkflows.filter((item) => item.status === "Running").length,
+    Completed: allWorkflows.filter((item) => item.status === "Completed")
+      .length,
+    Failed: allWorkflows.filter((item) => item.status === "Failed").length,
+  };
+  const visibleWorkflows = allWorkflows.filter(
+    (workflow) => filter === "all" || workflow.status === filter,
+  );
+  const filters: { value: "all" | WorkflowStatus; label: string }[] = [
+    { value: "all", label: "All" },
+    { value: "PausedForApproval", label: "Awaiting approval" },
+    { value: "Running", label: "Running" },
+    { value: "Completed", label: "Completed" },
+    { value: "Failed", label: "Failed" },
+  ];
+
   return (
-    <main className="flex flex-1 flex-col gap-5 bg-slate-50/70 p-4">
+    <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
       <PageHeading
         title="Agent recovery"
-        description="Run a supervised recovery assessment for a trip incident. Agents recommend; an authorized manager decides."
-      />
-      <section className="overflow-hidden rounded-xl border border-slate-300 bg-card">
-        <header className="flex flex-wrap items-start justify-between gap-3 border-b border-primary/20 bg-primary/[0.035] px-5 py-4 sm:px-6">
-          <div>
-            <h2 className="font-semibold">New recovery assessment</h2>
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Select an incident and define the outcome the recovery team should
-              work toward.
-            </p>
-          </div>
+        description="Brief the recovery agents on a trip incident. They recommend, a manager decides."
+        action={
           <Badge
             variant="outline"
-            className="h-7 gap-1.5 border-amber-300 bg-amber-50 px-3 text-amber-900"
+            className="h-8 gap-1.5 border-amber-300 bg-amber-50 px-3 text-amber-900"
           >
             <ShieldCheck className="size-3.5" />
             Approval gate enabled
           </Badge>
-        </header>
+        }
+      />
 
-        <div className="grid lg:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className="border-b border-primary/15 bg-primary/[0.045] px-5 py-5 lg:border-r lg:border-b-0 sm:px-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
-              What happens next
-            </p>
-            <ol className="mt-4 space-y-4">
-              {[
-                {
-                  number: "1",
-                  title: "Specialists assess",
-                  detail: "Network, fleet, dispatch and passengers",
-                },
-                {
-                  number: "2",
-                  title: "Safety rules validate",
-                  detail: "Capacity, availability and conflicts",
-                },
-                {
-                  number: "3",
-                  title: "Manager decides",
-                  detail: "No trip changes before approval",
-                },
-              ].map(({ number, title, detail }) => (
-                <li key={number} className="flex gap-3">
-                  <span
-                    className="flex size-7 shrink-0 items-center justify-center rounded-full border border-primary bg-primary text-xs font-semibold text-primary-foreground"
-                  >
-                    {number}
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium">{title}</p>
-                    <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-                      {detail}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </aside>
-
-          <form
-            className="grid content-start gap-4 bg-white px-5 py-5 sm:px-6"
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (!incidentId) return;
-              setAssessmentStage(0);
-              assessmentStages.forEach((_, index) => {
-                window.setTimeout(
-                  () => setAssessmentStage(index + 1),
-                  (index + 1) * 850,
-                );
-              });
-              start.mutate();
-            }}
+      {awaiting.length > 0 && (
+        <div className="flex flex-col gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <CircleAlert className="mt-0.5 size-5 shrink-0 text-amber-700" />
+            <div>
+              <p className="font-medium text-amber-950">
+                {awaiting.length} recovery proposal
+                {awaiting.length === 1 ? " is" : "s are"} waiting for your
+                decision
+              </p>
+              <p className="text-sm text-amber-800">
+                No trip changes are applied until a manager approves.
+              </p>
+            </div>
+          </div>
+          <Button
+            className="shrink-0 bg-amber-600 text-white hover:bg-amber-700"
+            render={
+              <Link to={`/operations/agent-recovery/${awaiting[0].id}`} />
+            }
           >
+            Review proposal <ArrowRight />
+          </Button>
+        </div>
+      )}
+
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <form
+          className="rounded-lg border bg-card"
+          onSubmit={(event) => {
+            event.preventDefault();
+            beginAssessment(false);
+          }}
+        >
+          <header className="flex items-center gap-3 border-b px-5 py-4">
+            <div>
+              <h2 className="font-semibold">Brief the agents</h2>
+              <p className="text-sm text-muted-foreground">
+                Choose an open incident and say what a good outcome looks like.
+              </p>
+            </div>
+          </header>
+          <div className="grid gap-4 p-5">
             <label className="grid gap-1.5 text-sm font-medium">
               Incident
               <Select
@@ -237,7 +280,7 @@ export function AgentRecoveryPage() {
                     : "Select an open trip incident";
                 }}
               >
-                <SelectTrigger className="h-11 w-full border-slate-300 bg-white focus-visible:border-primary">
+                <SelectTrigger className="w-full bg-muted/60">
                   <SelectValue placeholder="Select an open trip incident" />
                 </SelectTrigger>
                 <SelectContent>
@@ -264,15 +307,13 @@ export function AgentRecoveryPage() {
                   (optional)
                 </span>
               </span>
-              <Input
-                className="h-11 border-slate-300 bg-white focus-visible:border-primary"
+              <Textarea
+                className="bg-muted/60"
+                rows={3}
                 value={objective}
                 onChange={(event) => setObjective(event.target.value)}
-                placeholder="Restore service with a capacity-safe replacement"
+                placeholder="e.g. Restore service with a capacity-safe replacement. Leave blank to let the agents derive it from the incident."
               />
-              <span className="text-xs font-normal text-muted-foreground">
-                Leave blank to use the incident-based objective automatically.
-              </span>
             </label>
 
             {start.error && (
@@ -284,46 +325,109 @@ export function AgentRecoveryPage() {
             )}
 
             {!incidents.isLoading && !eligibleIncidents.length ? (
-              <div className="flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 rounded-lg border bg-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm font-medium text-amber-950">
-                    No open trip incidents
-                  </p>
-                  <p className="mt-1 text-xs text-amber-800">
+                  <p className="text-sm font-medium">No open trip incidents</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Report an incident from Dispatch before running recovery.
                   </p>
                 </div>
                 <Button
                   type="button"
                   variant="outline"
-                  className="shrink-0 border-amber-300 bg-white"
+                  className="shrink-0"
                   render={<Link to="/operations/incidents/new" />}
                 >
                   Report incident
                 </Button>
               </div>
             ) : (
-              <div className="flex justify-end border-t border-slate-200 pt-4">
+              <div className="flex justify-end">
                 <Button
                   type="submit"
                   className="h-10 px-5"
                   disabled={!incidentId || start.isPending}
                 >
-                  {start.isPending ? "Starting assessment..." : "Start assessment"}
+                  {start.isPending ? "Starting..." : "Start assessment"}
                 </Button>
               </div>
             )}
-          </form>
-        </div>
+          </div>
+        </form>
+
+        <aside className="self-start rounded-lg border bg-card p-5">
+          <h2 className="font-semibold">Your recovery team</h2>
+          <ol className="mt-4 space-y-3">
+            {[
+              {
+                icon: Network,
+                name: "Network Continuity",
+                role: "Bay and revised departure time",
+                accent: "bg-indigo-50 text-indigo-700",
+              },
+              {
+                icon: Bus,
+                name: "Fleet Readiness",
+                role: "Replacement vehicles and capacity",
+                accent: "bg-sky-50 text-sky-700",
+              },
+              {
+                icon: UserCheck,
+                name: "Dispatch Recovery",
+                role: "Eligible drivers and service window",
+                accent: "bg-amber-50 text-amber-700",
+              },
+              {
+                icon: Ticket,
+                name: "Passenger & Fare Impact",
+                role: "Affected bookings and fares",
+                accent: "bg-rose-50 text-rose-700",
+              },
+            ].map(({ icon: Icon, name, role, accent }) => (
+              <li key={name} className="flex items-center gap-3">
+                <span
+                  className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${accent}`}
+                >
+                  <Icon className="size-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{name}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {role}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-4 flex items-start gap-2.5 rounded-md bg-muted/50 p-3 text-xs leading-5 text-muted-foreground">
+            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
+            <p>Trips only change after a manager approves.</p>
+          </div>
+        </aside>
       </section>
-      <section className="overflow-hidden rounded-xl border border-slate-300 bg-card">
-        <header className="flex items-center justify-between border-b border-slate-300 bg-slate-50 px-5 py-4">
+
+      <section className="overflow-hidden rounded-lg border bg-card">
+        <header className="flex flex-col gap-3 border-b px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-semibold">Recovery workflows</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Every assessment, decision, and executed recovery is retained
-              here.
+            <p className="text-sm text-muted-foreground">
+              Every assessment, decision and executed recovery is kept here.
             </p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {filters.map((item) => (
+              <Button
+                key={item.value}
+                size="sm"
+                variant={filter === item.value ? "default" : "outline"}
+                onClick={() => setFilter(item.value)}
+              >
+                {item.label}
+                <span className="tabular-nums opacity-70">
+                  {counts[item.value]}
+                </span>
+              </Button>
+            ))}
           </div>
         </header>
         {workflows.isLoading ? (
@@ -334,30 +438,39 @@ export function AgentRecoveryPage() {
           <p className="p-6 text-sm text-destructive">
             Could not load recovery workflows.
           </p>
-        ) : !workflows.data?.length ? (
+        ) : !allWorkflows.length ? (
           <div className="p-10 text-center">
-            <Bot className="mx-auto size-7 text-muted-foreground" />
-            <p className="mt-3 font-medium">No recovery workflows yet</p>
+            <p className="font-medium">No recovery workflows yet</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Start from an open trip incident when you need a supervised
+              Brief the agents on an open trip incident to get a supervised
               recovery proposal.
             </p>
           </div>
+        ) : !visibleWorkflows.length ? (
+          <p className="p-8 text-center text-sm text-muted-foreground">
+            No workflows with this status.
+          </p>
         ) : (
           <div className="divide-y">
-            {workflows.data.map((workflow) => (
+            {visibleWorkflows.map((workflow) => (
               <Link
                 key={workflow.id}
                 to={`/operations/agent-recovery/${workflow.id}`}
-                className="grid gap-3 px-5 py-4 transition-colors hover:bg-muted/30 md:grid-cols-[minmax(0,1fr)_170px_150px] md:items-center"
+                className="grid gap-3 px-5 py-4 transition-colors hover:bg-muted/30 md:grid-cols-[minmax(0,1fr)_150px_110px] md:items-center"
               >
-                <div>
-                  <p className="font-medium">
-                    {workflow.trip.route} · {workflow.incident.title}
+                <div className="min-w-0">
+                  <p className="truncate font-medium">
+                    Route {workflow.trip.route} · {workflow.incident.title}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {new Date(workflow.createdAt).toLocaleString()} ·{" "}
-                    {workflow.incident.type} incident
+                    {workflow.incident.type} · {workflow.incident.severity}{" "}
+                    severity · started{" "}
+                    {new Date(workflow.createdAt).toLocaleString([], {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </p>
                 </div>
                 <StatusBadge
@@ -368,14 +481,50 @@ export function AgentRecoveryPage() {
                   }
                   tone={tone(workflow.status)}
                 />
-                <span className="text-sm text-primary md:text-right">
-                  Open workflow →
+                <span className="inline-flex items-center gap-1 text-sm font-medium text-primary md:justify-end">
+                  Open <ArrowRight className="size-4" />
                 </span>
               </Link>
             ))}
           </div>
         )}
       </section>
+      <AlertDialog
+        open={planningIssue !== null}
+        onOpenChange={(open) => {
+          if (!open) setPlanningIssue(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>AI planning is unavailable</AlertDialogTitle>
+            <AlertDialogDescription>
+              The AI planner could not create a plan right now. This is usually
+              temporary, for example when the model is busy. You can try again,
+              or continue with the built-in safe plan. The safe plan runs the
+              same four specialists and is recorded as a fallback on the
+              workflow.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {planningIssue && (
+            <p className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground">
+              {planningIssue}
+            </p>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="outline"
+              onClick={() => beginAssessment(false)}
+            >
+              Try again
+            </AlertDialogAction>
+            <AlertDialogAction onClick={() => beginAssessment(true)}>
+              Use safe plan
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
@@ -383,9 +532,7 @@ export function AgentRecoveryPage() {
 function RecoveryAssessmentRun({ activeStage }: { activeStage: number }) {
   const completedCount = Math.min(activeStage, assessmentStages.length);
   const active = assessmentStages[activeStage];
-  const progress = Math.round(
-    (completedCount / assessmentStages.length) * 100,
-  );
+  const progress = Math.round((completedCount / assessmentStages.length) * 100);
 
   return (
     <main className="flex flex-1 justify-center bg-background px-5 py-10 sm:px-8 lg:py-14">
@@ -411,7 +558,8 @@ function RecoveryAssessmentRun({ activeStage }: { activeStage: number }) {
             <Progress value={progress} className="recovery-progress" />
             <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
               <span>
-                Step {Math.min(activeStage + 1, assessmentStages.length)} of {assessmentStages.length}
+                Step {Math.min(activeStage + 1, assessmentStages.length)} of{" "}
+                {assessmentStages.length}
               </span>
               <span className="tabular-nums">{progress}% complete</span>
             </div>
@@ -434,73 +582,75 @@ function RecoveryAssessmentRun({ activeStage }: { activeStage: number }) {
               </span>
             </div>
             <ol aria-label="Recovery assessment progress">
-            {assessmentStages.map((stage, index) => {
-              const complete = index < activeStage;
-              const isActive = index === activeStage;
-              return (
-                <li
-                  key={stage.title}
-                  aria-current={isActive ? "step" : undefined}
-                  className={`relative grid grid-cols-[32px_minmax(0,1fr)_auto] gap-4 pb-7 last:pb-0 ${
-                    complete
-                      ? "recovery-step-complete"
-                      : isActive
-                        ? "recovery-step-active"
-                        : ""
-                  }`}
-                >
-                  {index < assessmentStages.length - 1 && (
-                    <span
-                      aria-hidden="true"
-                      className={`recovery-step-rail absolute left-[15px] top-8 h-[calc(100%-1.25rem)] w-px ${
-                        complete ? "bg-emerald-500/50" : "bg-border"
-                      }`}
-                    />
-                  )}
-                  <span
-                    className={`recovery-step-icon relative z-10 flex size-8 items-center justify-center rounded-full border text-xs font-semibold ${
+              {assessmentStages.map((stage, index) => {
+                const complete = index < activeStage;
+                const isActive = index === activeStage;
+                return (
+                  <li
+                    key={stage.title}
+                    aria-current={isActive ? "step" : undefined}
+                    className={`relative grid grid-cols-[32px_minmax(0,1fr)_auto] gap-4 pb-7 last:pb-0 ${
                       complete
-                        ? "border-emerald-600 bg-emerald-600 text-white"
+                        ? "recovery-step-complete"
                         : isActive
-                          ? "border-primary bg-primary/5 text-primary ring-4 ring-primary/10"
-                          : "border-border bg-background text-muted-foreground"
+                          ? "recovery-step-active"
+                          : ""
                     }`}
                   >
-                    {complete ? (
-                      <Check className="size-3.5" />
-                    ) : isActive ? (
-                      <LoaderCircle className="size-3.5 animate-spin" />
-                    ) : (
-                      index + 1
+                    {index < assessmentStages.length - 1 && (
+                      <span
+                        aria-hidden="true"
+                        className={`recovery-step-rail absolute left-[15px] top-8 h-[calc(100%-1.25rem)] w-px ${
+                          complete ? "bg-emerald-500/50" : "bg-border"
+                        }`}
+                      />
                     )}
-                  </span>
-                  <div className="min-w-0 pt-1">
-                    <p className={`text-sm ${complete || isActive ? "font-medium text-foreground" : "text-muted-foreground"}`}>
-                      {stage.title}
-                    </p>
-                    {isActive && (
-                      <div className="recovery-step-detail mt-2 max-w-xl">
-                        <p className="text-sm leading-6 text-muted-foreground">
-                          {stage.detail}
-                        </p>
-                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-medium text-primary">
-                          <span>{stage.owner}</span>
-                          <span aria-hidden="true" className="flex gap-0.5">
-                            <span className="recovery-thinking-dot size-1 rounded-full bg-primary" />
-                            <span className="recovery-thinking-dot size-1 rounded-full bg-primary [animation-delay:140ms]" />
-                            <span className="recovery-thinking-dot size-1 rounded-full bg-primary [animation-delay:280ms]" />
-                          </span>
+                    <span
+                      className={`recovery-step-icon relative z-10 flex size-8 items-center justify-center rounded-full border text-xs font-semibold ${
+                        complete
+                          ? "border-emerald-600 bg-emerald-600 text-white"
+                          : isActive
+                            ? "border-primary bg-primary/5 text-primary ring-4 ring-primary/10"
+                            : "border-border bg-background text-muted-foreground"
+                      }`}
+                    >
+                      {complete ? (
+                        <Check className="size-3.5" />
+                      ) : isActive ? (
+                        <LoaderCircle className="size-3.5 animate-spin" />
+                      ) : (
+                        index + 1
+                      )}
+                    </span>
+                    <div className="min-w-0 pt-1">
+                      <p
+                        className={`text-sm ${complete || isActive ? "font-medium text-foreground" : "text-muted-foreground"}`}
+                      >
+                        {stage.title}
+                      </p>
+                      {isActive && (
+                        <div className="recovery-step-detail mt-2 max-w-xl">
+                          <p className="text-sm leading-6 text-muted-foreground">
+                            {stage.detail}
+                          </p>
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-medium text-primary">
+                            <span>{stage.owner}</span>
+                            <span aria-hidden="true" className="flex gap-0.5">
+                              <span className="recovery-thinking-dot size-1 rounded-full bg-primary" />
+                              <span className="recovery-thinking-dot size-1 rounded-full bg-primary [animation-delay:140ms]" />
+                              <span className="recovery-thinking-dot size-1 rounded-full bg-primary [animation-delay:280ms]" />
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                  <span className="pt-1 text-xs text-muted-foreground">
-                    {complete ? "Recorded" : isActive ? "Working" : "Queued"}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
+                      )}
+                    </div>
+                    <span className="pt-1 text-xs text-muted-foreground">
+                      {complete ? "Recorded" : isActive ? "Working" : "Queued"}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
           </div>
 
           <aside
@@ -638,6 +788,26 @@ function RecoveryDetail({
               }
               tone={tone(summary.status)}
             />
+          </div>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-5 py-3 text-sm">
+            {workflow.planning.planningMode.startsWith("Gemini") ? (
+              <>
+                <StatusBadge label="Planned by Gemini" tone="good" />
+                <span className="text-muted-foreground">
+                  {workflow.planning.modelName} ·{" "}
+                  {workflow.planning.totalTokenCount.toLocaleString()} tokens ·{" "}
+                  {(workflow.planning.planningDurationMs / 1000).toFixed(1)}s
+                </span>
+              </>
+            ) : (
+              <>
+                <StatusBadge label="Fallback plan" tone="warning" />
+                <span className="text-muted-foreground">
+                  {workflow.planning.planningFallbackReason ??
+                    "A safe built-in plan was used instead of an AI plan."}
+                </span>
+              </>
+            )}
           </div>
           <div className="grid gap-3 border-b border-slate-300 bg-slate-50 px-5 py-4 sm:grid-cols-3">
             <Fact

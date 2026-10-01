@@ -12,11 +12,11 @@ export const agentRecoveryApi = {
     ),
   detail: (id: string) =>
     apiClient<RecoveryWorkflowDetail>(`/api/v1/agent-recovery/workflows/${id}`),
-  start: (incidentId: string, objective?: string) =>
+  start: (incidentId: string, objective?: string, allowFallback = true) =>
     apiClient<{ id: string }>("/api/v1/agent-recovery/workflows", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ incidentId, objective }),
+      body: JSON.stringify({ incidentId, objective, allowFallback }),
     }),
   decide: (id: string, decision: ApprovalDecision, note?: string) =>
     apiClient<{ id: string }>(

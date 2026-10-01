@@ -4,6 +4,7 @@ import { SignInPanel } from "@/components/auth/SignInPanel";
 import { RegisterPage } from "@/components/auth/RegisterPage";
 import { OnboardingPage } from "@/components/auth/OnboardingPage";
 import { ProfilePage } from "@/features/profile/ProfilePage";
+import { StaffProfilePage } from "@/features/profile/StaffProfilePage";
 import { PasswordChangePage } from "@/features/profile/PasswordChangePage";
 import {
   BookingPaymentStatusPage,
@@ -139,7 +140,7 @@ function App() {
   if (location.pathname === "/profile")
     return user.role === "Admin" || user.role === "SuperAdmin" ? (
       <SuperAdminShell>
-        <ProfilePage embedded />
+        <StaffProfilePage />
       </SuperAdminShell>
     ) : user.role === "Commuter" ? (
       <CommuterLayout>
@@ -147,7 +148,7 @@ function App() {
       </CommuterLayout>
     ) : (
       <AdminShell>
-        <ProfilePage embedded />
+        <StaffProfilePage />
       </AdminShell>
     );
   if (location.pathname === "/profile/password")

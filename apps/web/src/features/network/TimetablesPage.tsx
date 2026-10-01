@@ -5,7 +5,7 @@ import {
   Loader2,
   Pencil,
   Plus,
-  Sparkles,
+  CalendarPlus,
   Trash2,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
@@ -172,8 +172,18 @@ export function TimetablesPage() {
     );
   };
 
+  const tripsFor = (directionId: string) =>
+    generatedTrips
+      .filter((trip) => trip.routeDirectionId === directionId)
+      .sort((left, right) =>
+        left.scheduledTime.localeCompare(right.scheduledTime),
+      );
+  const activeDirectionTrips = activeDirectionId
+    ? tripsFor(activeDirectionId)
+    : [];
+
   return (
-    <main className="flex flex-1 flex-col gap-5 bg-muted/20 p-4">
+    <main className="flex flex-1 flex-col gap-4 bg-muted/20 p-4">
       <PageHeading
         title="Timetables & schedules"
         description="Timetables are repeating plans. Generate a day’s departures, then manage them on the Dispatch board."
@@ -187,181 +197,106 @@ export function TimetablesPage() {
         }
       />
 
-      <section className="rounded-xl border border-slate-300 bg-card p-5">
-        <p className="mb-2 text-sm font-medium">Route</p>
-        <Select
-          value={routeId || null}
-          onValueChange={updateRoute}
-          itemToStringLabel={(value) =>
-            routes.find((item) => item.id === value)
-              ? `${routes.find((item) => item.id === value)?.routeNumber} · ${routes.find((item) => item.id === value)?.name}`
-              : value
-          }
-        >
-          <SelectTrigger className="w-full max-w-xl bg-muted/30">
-            <SelectValue
-              placeholder={
-                loadingRoutes ? "Loading routes..." : "Choose a route"
-              }
-            />
-          </SelectTrigger>
-          <SelectContent>
-            {routes.map((item) => (
-              <SelectItem key={item.id} value={item.id}>
-                {item.routeNumber} · {item.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {route && (
-          <>
-            <div className="mt-4 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-sm font-medium">Daily trip check</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Choose a date to verify the actual departures already created
-                  for each direction.
-                </p>
-              </div>
-              <label className="grid gap-1.5 text-sm font-medium">
-                <span className="text-muted-foreground">Service date</span>
-                <DatePicker
-                  name="reviewDate"
-                  value={reviewDate}
-                  onValueChange={updateReviewDate}
+      <section className="space-y-4 rounded-lg border bg-card p-4">
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_240px]">
+          <div className="min-w-0 space-y-1.5">
+            <p className="text-sm font-medium">Route</p>
+            <Select
+              value={routeId || null}
+              onValueChange={updateRoute}
+              itemToStringLabel={(value) => {
+                const match = routes.find((item) => item.id === value);
+                return match ? `${match.routeNumber} · ${match.name}` : value;
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue
+                  placeholder={
+                    loadingRoutes ? "Loading routes..." : "Choose a route"
+                  }
                 />
-              </label>
+              </SelectTrigger>
+              <SelectContent>
+                {routes.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.routeNumber} · {item.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {route && (
+            <div className="min-w-0 space-y-1.5">
+              <p className="text-sm font-medium">Service date</p>
+              <DatePicker
+                name="reviewDate"
+                className="h-8"
+                value={reviewDate}
+                onValueChange={updateReviewDate}
+              />
             </div>
-            <div className="mt-5">
-              <p className="text-sm font-medium">Travel direction</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Create and generate a timetable for each direction separately.
-              </p>
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
-                {route.directions?.map((item) => {
-                  const selected = item.id === activeDirectionId;
-                  const directionSchedules = schedules.filter(
-                    (schedule) =>
-                      schedule.routeDirectionId === item.id &&
-                      schedule.isActive,
-                  );
-                  const directionTrips = generatedTrips
-                    .filter((trip) => trip.routeDirectionId === item.id)
-                    .sort((left, right) =>
-                      left.scheduledTime.localeCompare(right.scheduledTime),
-                    );
-                  const timetableCount = directionSchedules.length;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => updateDirection(item.id)}
-                      className={`rounded-lg border p-4 text-left transition ${selected ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-slate-300 bg-card hover:border-primary/50 hover:bg-muted/20"}`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                            {selected ? "Selected direction" : "Direction"}
-                          </p>
-                          <p className="mt-1 font-semibold">
-                            {item.startCentre.name}{" "}
-                            <ArrowRight className="mx-1 inline size-4 text-primary" />{" "}
-                            {item.endCentre.name}
-                          </p>
-                        </div>
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${selected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
-                        >
-                          {timetableCount} timetable
-                          {timetableCount === 1 ? "" : "s"}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        Departs from {item.startCentre.code} ·{" "}
-                        {item.estimatedDurationMin} minutes
-                      </p>
-                      {directionSchedules.length > 0 ? (
-                        <div className="mt-3 grid gap-1 rounded-md border border-slate-200 bg-background/70 px-3 py-2 text-sm">
-                          <p className="font-medium text-foreground">
-                            {time(directionSchedules[0].firstDeparture)} –{" "}
-                            {time(directionSchedules[0].lastDeparture)} · Every{" "}
-                            {directionSchedules[0].headwayMinutes} min
-                          </p>
-                          <p className="text-muted-foreground">
-                            Departure bay {directionSchedules[0].bayCode} ·{" "}
-                            {directionSchedules[0].operatingDays}
-                          </p>
-                          {directionSchedules.length > 1 && (
-                            <p className="text-xs text-muted-foreground">
-                              + {directionSchedules.length - 1} additional
-                              active timetable
-                              {directionSchedules.length === 2 ? "" : "s"}
-                            </p>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="mt-3 rounded-md border border-dashed border-slate-300 px-3 py-2 text-sm text-muted-foreground">
-                          No timetable created for this direction yet.
-                        </p>
-                      )}
-                      <div
-                        role={directionTrips.length > 0 ? "button" : undefined}
-                        tabIndex={directionTrips.length > 0 ? 0 : undefined}
-                        onClick={(event) => {
-                          if (directionTrips.length > 0) {
-                            event.stopPropagation();
-                            setTripSummary({
-                              direction: {
-                                startCentreName: item.startCentre.name,
-                                endCentreName: item.endCentre.name,
-                                bayCode: directionTrips[0].bay,
-                              },
-                              trips: directionTrips,
-                            });
-                          }
-                        }}
-                        onKeyDown={(event) => {
-                          if (
-                            directionTrips.length > 0 &&
-                            (event.key === "Enter" || event.key === " ")
-                          ) {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            setTripSummary({
-                              direction: {
-                                startCentreName: item.startCentre.name,
-                                endCentreName: item.endCentre.name,
-                                bayCode: directionTrips[0].bay,
-                              },
-                              trips: directionTrips,
-                            });
-                          }
-                        }}
-                        className={`mt-3 rounded-md border px-3 py-2 text-sm ${directionTrips.length > 0 ? "cursor-pointer border-emerald-200 bg-emerald-50 text-emerald-950 hover:border-emerald-400" : "border-slate-200 bg-muted/20 text-muted-foreground"}`}
-                      >
-                        <p className="font-medium">
-                          {loadingGeneratedTrips
-                            ? "Checking generated trips…"
-                            : directionTrips.length > 0
-                              ? `${directionTrips.length} trip${directionTrips.length === 1 ? "" : "s"} created for ${reviewDate}`
-                              : `No trips generated for ${reviewDate}`}
-                        </p>
-                        {!loadingGeneratedTrips &&
-                          directionTrips.length > 0 && (
-                            <p className="mt-1 text-emerald-800">
-                              {directionTrips
-                                .map((trip) => tripTime(trip.scheduledTime))
-                                .join(" · ")}{" "}
-                              · View details
-                            </p>
-                          )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </>
+          )}
+        </div>
+        {route && (
+          <div className="grid gap-2 md:grid-cols-2">
+            {route.directions?.map((item) => {
+              const selected = item.id === activeDirectionId;
+              const timetableCount = schedules.filter(
+                (schedule) =>
+                  schedule.routeDirectionId === item.id && schedule.isActive,
+              ).length;
+              const tripCount = tripsFor(item.id).length;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => updateDirection(item.id)}
+                  className={`cursor-pointer rounded-lg border p-3 text-left transition ${selected ? "border-primary bg-primary/5 ring-1 ring-primary" : "bg-card hover:border-primary/50 hover:bg-muted/30"}`}
+                >
+                  <p className="font-semibold">
+                    {item.startCentre.name}{" "}
+                    <ArrowRight className="mx-1 inline size-4 text-primary" />{" "}
+                    {item.endCentre.name}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {timetableCount} timetable{timetableCount === 1 ? "" : "s"}{" "}
+                    ·{" "}
+                    {loadingGeneratedTrips
+                      ? "checking trips…"
+                      : `${tripCount} trip${tripCount === 1 ? "" : "s"} on ${reviewDate}`}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {route && direction && (
+          <div className="flex flex-col gap-2 border-t pt-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">
+                {activeDirectionTrips.length} trip
+                {activeDirectionTrips.length === 1 ? "" : "s"}
+              </span>{" "}
+              on {reviewDate} · {direction.startCentre.name} to{" "}
+              {direction.endCentre.name}
+            </p>
+            <Button
+              className="h-9 w-full bg-orange-500 px-6 text-white hover:bg-orange-600 sm:w-44"
+              disabled={activeDirectionTrips.length === 0}
+              onClick={() =>
+                setTripSummary({
+                  direction: {
+                    startCentreName: direction.startCentre.name,
+                    endCentreName: direction.endCentre.name,
+                    bayCode: activeDirectionTrips[0].bay,
+                  },
+                  trips: activeDirectionTrips,
+                })
+              }
+            >
+              View trips
+            </Button>
+          </div>
         )}
       </section>
 
@@ -382,13 +317,14 @@ export function TimetablesPage() {
           <Loader2 className="animate-spin text-primary" />
         </div>
       ) : (
-        <section className="rounded-xl border border-slate-300 bg-card">
-          <header className="flex flex-col gap-1 border-b border-slate-300 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <section className="overflow-hidden rounded-lg border bg-card">
+          <header className="flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="font-semibold">Recurring timetables</h2>
               <p className="text-sm text-muted-foreground">
-                Each timetable is a service pattern for this direction. Generate
-                trips when you are ready to dispatch a date.
+                {direction
+                  ? `${direction.startCentre.name} to ${direction.endCentre.name}`
+                  : "Service patterns for this direction"}
               </p>
             </div>
             <span className="text-sm text-muted-foreground">
@@ -405,7 +341,7 @@ export function TimetablesPage() {
           ).length === 0 ? (
             <EmptyState text="No timetable patterns yet for this travel direction." />
           ) : (
-            <div className="divide-y divide-slate-200">
+            <div className="divide-y">
               {schedules
                 .filter(
                   (schedule) => schedule.routeDirectionId === activeDirectionId,
@@ -473,9 +409,7 @@ export function TimetablesPage() {
           <DialogHeader>
             <DialogTitle>Generate daily trips</DialogTitle>
             <DialogDescription>
-              Creates the day’s departures from this timetable. The system
-              chooses available buses and drivers, and does not duplicate a
-              departure already on the board.
+              Creates the day’s departures from this timetable.
             </DialogDescription>
           </DialogHeader>
           {direction && generateSchedule && (
@@ -623,16 +557,15 @@ function ScheduleRow({
       <div className="flex flex-wrap gap-2">
         {schedule.isActive && (
           <>
-            <Button size="sm" variant="outline" onClick={onEdit}>
+            <Button className="w-36" variant="outline" onClick={onEdit}>
               <Pencil /> Edit
             </Button>
-            <Button size="sm" onClick={onGenerate}>
-              <Sparkles /> Generate trips
+            <Button className="w-36" onClick={onGenerate}>
+              <CalendarPlus /> Generate trips
             </Button>
             <Button
-              size="sm"
               variant="outline"
-              className="text-destructive hover:bg-destructive/10"
+              className="w-36 text-destructive hover:bg-destructive/10"
               onClick={onDeactivate}
               disabled={busy}
             >
@@ -824,7 +757,7 @@ function GenerationSummary({
         </Button>
       </div>
       {direction && (
-        <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+        <div className="mt-4 rounded-lg border bg-muted/40 px-4 py-3 text-sm">
           <span className="font-semibold">Generated direction: </span>
           {direction.startCentreName}{" "}
           <ArrowRight className="mx-1 inline size-4" />{" "}
