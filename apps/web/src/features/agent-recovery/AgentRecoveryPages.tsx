@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -8,7 +8,6 @@ import {
   Check,
   CircleAlert,
   Clock3,
-  LoaderCircle,
   Network,
   ShieldCheck,
   Ticket,
@@ -28,8 +27,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -42,6 +39,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError, apiClient } from "@/lib/api/api-client";
 import { agentRecoveryApi } from "./agent-recovery.api";
+import { RecoveryLiveRun } from "./RecoveryLiveRun";
 import type {
   RecoveryIncident,
   RecoveryWorkflowDetail,
@@ -73,52 +71,16 @@ const incidentLabel = (incident: RecoveryIncident) => {
     : "Centre-wide";
   return `${time} · ${incident.tripRouteNumber ?? "Trip"} · ${incident.title}`;
 };
-const assessmentStages = [
-  {
-    title: "Assess service continuity",
-    owner: "Network Continuity Agent",
-    detail: "Reviewing the departure bay and a safe revised departure time.",
-  },
-  {
-    title: "Assess fleet readiness",
-    owner: "Fleet Readiness Agent",
-    detail: "Checking active replacement vehicles, maintenance and capacity.",
-  },
-  {
-    title: "Assess dispatch availability",
-    owner: "Dispatch Recovery Agent",
-    detail: "Checking eligible drivers against the proposed service window.",
-  },
-  {
-    title: "Assess passenger impact",
-    owner: "Passenger & Fare Impact Agent",
-    detail: "Counting affected bookings and reviewing fare implications.",
-  },
-  {
-    title: "Run safety validation",
-    owner: "Deterministic validation",
-    detail: "Validating vehicle, driver, bay, capacity and conflict rules.",
-  },
-  {
-    title: "Prepare approval-ready audit",
-    owner: "Workflow coordinator",
-    detail:
-      "Persisting the plan, recommendations, tool calls and safety checks.",
-  },
-];
-const wait = (milliseconds: number) =>
-  new Promise<void>((resolve) => window.setTimeout(resolve, milliseconds));
-
 export function AgentRecoveryPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [incidentId, setIncidentId] = useState("");
   const [objective, setObjective] = useState("");
-  const [assessmentStage, setAssessmentStage] = useState<number | null>(null);
+  const [runActive, setRunActive] = useState(false);
+  const [startedWorkflowId, setStartedWorkflowId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | WorkflowStatus>("all");
   const [planningIssue, setPlanningIssue] = useState<string | null>(null);
-  const stageTimers = useRef<number[]>([]);
   const workflows = useQuery({
     queryKey: ["agent-recovery", user?.centreId],
     queryFn: () => agentRecoveryApi.list(user?.centreId),
@@ -134,45 +96,29 @@ export function AgentRecoveryPage() {
     retry: false,
   });
   const start = useMutation({
-    mutationFn: async (allowFallback: boolean) => {
-      const workflowRequest = agentRecoveryApi.start(
-        incidentId,
-        objective || undefined,
-        allowFallback,
-      );
-      const [workflow] = await Promise.all([workflowRequest, wait(6000)]);
-      return workflow;
-    },
+    mutationFn: (allowFallback: boolean) =>
+      agentRecoveryApi.start(incidentId, objective || undefined, allowFallback),
     onSuccess: (workflow) => {
       void queryClient.invalidateQueries({ queryKey: ["agent-recovery"] });
-      navigate(`/operations/agent-recovery/${workflow.id}`);
+      setStartedWorkflowId(workflow.id);
     },
     onError: (error) => {
-      clearStageTimers();
-      setAssessmentStage(null);
+      setRunActive(false);
       if (error instanceof ApiError && error.code === "ai_planning_unavailable")
         setPlanningIssue(error.message);
     },
   });
-  function clearStageTimers() {
-    stageTimers.current.forEach((timer) => window.clearTimeout(timer));
-    stageTimers.current = [];
-  }
   function beginAssessment(allowFallback: boolean) {
     if (!incidentId) return;
-    clearStageTimers();
     setPlanningIssue(null);
-    setAssessmentStage(0);
-    assessmentStages.forEach((_, index) => {
-      stageTimers.current.push(
-        window.setTimeout(
-          () => setAssessmentStage(index + 1),
-          (index + 1) * 850,
-        ),
-      );
-    });
+    setStartedWorkflowId(null);
+    setRunActive(true);
     start.mutate(allowFallback);
   }
+  const finishRun = useCallback(() => {
+    if (startedWorkflowId)
+      navigate(`/operations/agent-recovery/${startedWorkflowId}`);
+  }, [navigate, startedWorkflowId]);
   const eligibleIncidents = useMemo(
     () =>
       incidents.data?.filter(
@@ -181,8 +127,14 @@ export function AgentRecoveryPage() {
     [incidents.data],
   );
 
-  if (start.isPending && assessmentStage !== null)
-    return <RecoveryAssessmentRun activeStage={assessmentStage} />;
+  if (runActive)
+    return (
+      <RecoveryLiveRun
+        incident={eligibleIncidents.find((item) => item.id === incidentId)}
+        workflowId={startedWorkflowId}
+        onDone={finishRun}
+      />
+    );
 
   const allWorkflows = workflows.data ?? [];
   const awaiting = allWorkflows.filter(
@@ -525,160 +477,6 @@ export function AgentRecoveryPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </main>
-  );
-}
-
-function RecoveryAssessmentRun({ activeStage }: { activeStage: number }) {
-  const completedCount = Math.min(activeStage, assessmentStages.length);
-  const active = assessmentStages[activeStage];
-  const progress = Math.round((completedCount / assessmentStages.length) * 100);
-
-  return (
-    <main className="flex flex-1 justify-center bg-background px-5 py-10 sm:px-8 lg:py-14">
-      <section className="recovery-workspace-enter w-full max-w-5xl">
-        <header className="max-w-3xl">
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge variant="secondary" className="h-7 gap-2 px-3 text-primary">
-              <LoaderCircle className="size-3.5 animate-spin" />
-              Agents working
-            </Badge>
-            <span className="text-xs text-muted-foreground">
-              Recommendations only · no trip changes applied
-            </span>
-          </div>
-          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-foreground">
-            Preparing a recovery proposal
-          </h1>
-          <p className="mt-2 max-w-2xl text-base leading-7 text-muted-foreground">
-            Four transport specialists are reviewing the incident, then the
-            coordinator will validate and assemble the evidence for approval.
-          </p>
-          <div className="mt-6 max-w-2xl">
-            <Progress value={progress} className="recovery-progress" />
-            <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-              <span>
-                Step {Math.min(activeStage + 1, assessmentStages.length)} of{" "}
-                {assessmentStages.length}
-              </span>
-              <span className="tabular-nums">{progress}% complete</span>
-            </div>
-          </div>
-        </header>
-
-        <Separator className="my-9" />
-
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-14">
-          <div>
-            <div className="mb-5 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-semibold">Live activity</h2>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Each result is persisted before the next specialist begins.
-                </p>
-              </div>
-              <span className="text-xs text-muted-foreground">
-                {completedCount} recorded
-              </span>
-            </div>
-            <ol aria-label="Recovery assessment progress">
-              {assessmentStages.map((stage, index) => {
-                const complete = index < activeStage;
-                const isActive = index === activeStage;
-                return (
-                  <li
-                    key={stage.title}
-                    aria-current={isActive ? "step" : undefined}
-                    className={`relative grid grid-cols-[32px_minmax(0,1fr)_auto] gap-4 pb-7 last:pb-0 ${
-                      complete
-                        ? "recovery-step-complete"
-                        : isActive
-                          ? "recovery-step-active"
-                          : ""
-                    }`}
-                  >
-                    {index < assessmentStages.length - 1 && (
-                      <span
-                        aria-hidden="true"
-                        className={`recovery-step-rail absolute left-[15px] top-8 h-[calc(100%-1.25rem)] w-px ${
-                          complete ? "bg-emerald-500/50" : "bg-border"
-                        }`}
-                      />
-                    )}
-                    <span
-                      className={`recovery-step-icon relative z-10 flex size-8 items-center justify-center rounded-full border text-xs font-semibold ${
-                        complete
-                          ? "border-emerald-600 bg-emerald-600 text-white"
-                          : isActive
-                            ? "border-primary bg-primary/5 text-primary ring-4 ring-primary/10"
-                            : "border-border bg-background text-muted-foreground"
-                      }`}
-                    >
-                      {complete ? (
-                        <Check className="size-3.5" />
-                      ) : isActive ? (
-                        <LoaderCircle className="size-3.5 animate-spin" />
-                      ) : (
-                        index + 1
-                      )}
-                    </span>
-                    <div className="min-w-0 pt-1">
-                      <p
-                        className={`text-sm ${complete || isActive ? "font-medium text-foreground" : "text-muted-foreground"}`}
-                      >
-                        {stage.title}
-                      </p>
-                      {isActive && (
-                        <div className="recovery-step-detail mt-2 max-w-xl">
-                          <p className="text-sm leading-6 text-muted-foreground">
-                            {stage.detail}
-                          </p>
-                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-medium text-primary">
-                            <span>{stage.owner}</span>
-                            <span aria-hidden="true" className="flex gap-0.5">
-                              <span className="recovery-thinking-dot size-1 rounded-full bg-primary" />
-                              <span className="recovery-thinking-dot size-1 rounded-full bg-primary [animation-delay:140ms]" />
-                              <span className="recovery-thinking-dot size-1 rounded-full bg-primary [animation-delay:280ms]" />
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <span className="pt-1 text-xs text-muted-foreground">
-                      {complete ? "Recorded" : isActive ? "Working" : "Queued"}
-                    </span>
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
-
-          <aside
-            key={activeStage}
-            className="recovery-context-enter h-fit border-l pl-6 lg:pl-8"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              Run context
-            </p>
-            <p className="mt-3 text-sm font-medium">
-              {active ? active.owner : "Workflow coordinator"}
-            </p>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              {active
-                ? "Working with scoped operational data and allow-listed tools."
-                : "All evidence has been recorded. Opening the review now."}
-            </p>
-            <Separator className="my-4" />
-            <div className="flex gap-2.5 text-xs leading-5 text-muted-foreground">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
-              <p>
-                The workflow pauses after validation. A Centre Manager or Admin
-                must review and approve the proposed dispatch change.
-              </p>
-            </div>
-          </aside>
-        </div>
-      </section>
     </main>
   );
 }

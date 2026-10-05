@@ -137,6 +137,7 @@ builder.Services.AddCors(options =>
         var webOrigins = new[]
             {
                 "http://localhost:5173",
+                "http://localhost:4173",
                 "https://uptslk.vercel.app",
                 builder.Configuration["Payments:Stripe:WebAppBaseUrl"]
             }
@@ -176,11 +177,8 @@ if (!app.Environment.IsEnvironment("Testing"))
     }
 }
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseCors("AllowWebApp");
