@@ -4,6 +4,7 @@ using api.Services.AgentRecovery;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
+using api.Tests.Shared;
 namespace api.Tests.AgentRecovery;
 
 public sealed class RecoveryActionExecutorIntegrationTests
@@ -11,7 +12,7 @@ public sealed class RecoveryActionExecutorIntegrationTests
     [Fact]
     public async Task ExecuteAsync_AppliesApprovedRecoveryAndCreatesPassengerNotificationAtomically()
     {
-        await using var database = await RecoveryTestDb.CreateAsync();
+        await using var database = await TestDb.CreateAsync();
         var scenario = RecoveryToolIntegrationTests.CreateTripScenario();
         var replacementVehicle = RecoveryToolIntegrationTests.CreateVehicle(scenario.Centre, "REPLACEMENT", 55);
         var replacementDriver = RecoveryToolIntegrationTests.CreateDriver(scenario.Centre, "Replacement Driver", "LIC-REPLACEMENT");
@@ -111,7 +112,7 @@ public sealed class RecoveryActionExecutorIntegrationTests
     [Fact]
     public async Task ExecuteAsync_RejectsUnapprovedRecoveryWithoutChangingOperationalData()
     {
-        await using var database = await RecoveryTestDb.CreateAsync();
+        await using var database = await TestDb.CreateAsync();
         var workflow = new AgentWorkflow { Status = WorkflowStatus.PausedForApproval };
         var approval = new ApprovalRequest { Decision = ApprovalDecision.Pending };
         var proposal = new RecoveryProposal(

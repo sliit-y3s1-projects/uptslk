@@ -1,0 +1,23 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+/home/chamal/dev/uptslk/apps/api/Controllers/BookingsController.cs(240,27): warning EF1002: Method 'ExecuteSqlRawAsync' inserts interpolated strings directly into the SQL, without any protection against SQL injection. Consider using 'ExecuteSqlAsync' instead, which protects against SQL injection, or make sure that the value is sanitized and suppress the warning. [/home/chamal/dev/uptslk/apps/api/api.csproj]
+  api -> /home/chamal/dev/uptslk/apps/api/bin/Debug/net8.0/api.dll
+  api.Evaluation -> /home/chamal/dev/uptslk/apps/api.Evaluation/bin/Debug/net8.0/api.Evaluation.dll
+  api.Tests -> /home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll
+Test run for /home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll (.NETCoreApp,Version=v8.0)
+Microsoft (R) Test Execution Command Line Tool Version 17.8.0 (x64)
+Copyright (c) Microsoft Corporation.  All rights reserved.
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 8.0.30)
+[xUnit.net 00:00:00.26]   Discovering: api.Tests
+[xUnit.net 00:00:00.49]   Discovered:  api.Tests
+[xUnit.net 00:00:00.55]   Starting:    api.Tests
+[xUnit.net 00:00:05.11]   Finished:    api.Tests
+  Passed api.Tests.Auth.AuthenticationTests.Refresh_WithoutOrWithGarbageCookie_ReturnsUnauthorized [4 s]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 6.3119 Seconds

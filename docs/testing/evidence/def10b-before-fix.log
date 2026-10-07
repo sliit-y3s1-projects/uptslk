@@ -1,0 +1,57 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+/home/chamal/dev/uptslk/apps/api/Data/DbContextLockExtensions.cs(14,27): warning EF1002: Method 'ExecuteSqlRawAsync' inserts interpolated strings directly into the SQL, without any protection against SQL injection. Consider using 'ExecuteSqlAsync' instead, which protects against SQL injection, or make sure that the value is sanitized and suppress the warning. [/home/chamal/dev/uptslk/apps/api/api.csproj]
+  api -> /home/chamal/dev/uptslk/apps/api/bin/Debug/net8.0/api.dll
+  api.Evaluation -> /home/chamal/dev/uptslk/apps/api.Evaluation/bin/Debug/net8.0/api.Evaluation.dll
+/home/chamal/dev/uptslk/apps/api.Tests/Bookings/FareAndPaymentAccessControlTests.cs(29,57): warning CS1998: This async method lacks 'await' operators and will run synchronously. Consider using the 'await' operator to await non-blocking API calls, or 'await Task.Run(...)' to do CPU-bound work on a background thread. [/home/chamal/dev/uptslk/apps/api.Tests/api.Tests.csproj]
+/home/chamal/dev/uptslk/apps/api.Tests/Database/PostgresFixture.cs(17,55): warning CS0618: 'PostgreSqlBuilder.PostgreSqlBuilder()' is obsolete: 'This parameterless constructor is obsolete and will be removed. Use the constructor with the image parameter instead: https://github.com/testcontainers/testcontainers-dotnet/discussions/1470#discussioncomment-15185721.' [/home/chamal/dev/uptslk/apps/api.Tests/api.Tests.csproj]
+  api.Tests -> /home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll
+Test run for /home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll (.NETCoreApp,Version=v8.0)
+Microsoft (R) Test Execution Command Line Tool Version 17.8.0 (x64)
+Copyright (c) Microsoft Corporation.  All rights reserved.
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 8.0.30)
+[xUnit.net 00:00:00.14]   Discovering: api.Tests
+[xUnit.net 00:00:00.30]   Discovered:  api.Tests
+[xUnit.net 00:00:00.33]   Starting:    api.Tests
+[testcontainers.org 00:00:00.25] Connected to Docker:
+  Host: unix:///var/run/docker.sock
+  Server Version: 29.8.1
+  Kernel Version: 7.2.5-200.fc44.x86_64
+  API Version: 1.56
+  Operating System: Fedora Linux 44 (Workstation Edition)
+  Total Memory: 15.42 GB
+[testcontainers.org 00:00:00.55] Docker container a319b6210431 created
+[testcontainers.org 00:00:00.60] Start Docker container a319b6210431
+[testcontainers.org 00:00:00.80] Wait for Docker container a319b6210431 to complete readiness checks
+[testcontainers.org 00:00:01.83] Docker container a319b6210431 ready
+[testcontainers.org 00:00:01.97] Docker container 57d333994d6b created
+[testcontainers.org 00:00:01.98] Start Docker container 57d333994d6b
+[testcontainers.org 00:00:02.14] Wait for Docker container 57d333994d6b to complete readiness checks
+[testcontainers.org 00:00:02.15] Execute "pg_isready --host localhost --dbname postgres --username upts_test" at Docker container 57d333994d6b
+[testcontainers.org 00:00:03.26] Execute "pg_isready --host localhost --dbname postgres --username upts_test" at Docker container 57d333994d6b
+[testcontainers.org 00:00:03.33] Docker container 57d333994d6b ready
+[xUnit.net 00:00:09.74]     api.Tests.Database.PaymentConcurrencyTests.ParallelCancellations_OfAPaidBooking_ThroughTheBookingApi_ReachStripeOnlyOnce [FAIL]
+[xUnit.net 00:00:09.74]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:09.74]       Expected: 1
+[xUnit.net 00:00:09.74]       Actual:   6
+[xUnit.net 00:00:09.74]       Stack Trace:
+[xUnit.net 00:00:09.74]         /home/chamal/dev/uptslk/apps/api.Tests/Database/PaymentConcurrencyTests.cs(87,0): at api.Tests.Database.PaymentConcurrencyTests.ParallelCancellations_OfAPaidBooking_ThroughTheBookingApi_ReachStripeOnlyOnce()
+[xUnit.net 00:00:09.74]         --- End of stack trace from previous location ---
+[testcontainers.org 00:00:09.30] Delete Docker container 57d333994d6b
+[xUnit.net 00:00:10.15]   Finished:    api.Tests
+  Failed api.Tests.Database.PaymentConcurrencyTests.ParallelCancellations_OfAPaidBooking_ThroughTheBookingApi_ReachStripeOnlyOnce [2 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   6
+  Stack Trace:
+     at api.Tests.Database.PaymentConcurrencyTests.ParallelCancellations_OfAPaidBooking_ThroughTheBookingApi_ReachStripeOnlyOnce() in /home/chamal/dev/uptslk/apps/api.Tests/Database/PaymentConcurrencyTests.cs:line 87
+--- End of stack trace from previous location ---
+
+Test Run Failed.
+Total tests: 1
+     Failed: 1
+ Total time: 10.7754 Seconds

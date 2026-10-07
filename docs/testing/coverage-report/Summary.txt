@@ -1,0 +1,115 @@
+Summary - UPTS API coverage
+  Generated on: 10/7/2026 - 7:21:15 PM
+  Coverage date: 10/7/2026 - 7:21:14 PM
+  Parser: Cobertura
+  Assemblies: 1
+  Classes: 93
+  Files: 56
+  Line coverage: 74%
+  Covered lines: 3578
+  Uncovered lines: 1253
+  Coverable lines: 4831
+  Total lines: 6748
+  Branch coverage: 62.9% (1136 of 1804)
+  Covered branches: 1136
+  Total branches: 1804
+  Method coverage: 83.6% (312 of 373)
+  Full method coverage: 72.3% (270 of 373)
+  Covered methods: 312
+  Fully covered methods: 270
+  Total methods: 373
+
+api                                                                            74%
+  api.Controllers.AgentRecoveryController                                    16.5%
+  api.Controllers.AuthController                                             91.1%
+  api.Controllers.BookingsController                                           98%
+  api.Controllers.CentresController                                          84.8%
+  api.Controllers.DriversController                                          98.3%
+  api.Controllers.FareRulesController                                         100%
+  api.Controllers.IncidentsController                                         100%
+  api.Controllers.MaintenanceRecordsController                               86.2%
+  api.Controllers.PassengerNotificationsController                            100%
+  api.Controllers.PassengersController                                       63.4%
+  api.Controllers.PaymentsController                                          100%
+  api.Controllers.RoutesController                                           98.4%
+  api.Controllers.SupportRequestsController                                  98.1%
+  api.Controllers.TripsController                                              98%
+  api.Controllers.VehiclesController                                         69.2%
+  api.Data.AppDbContext                                                      99.3%
+  api.Data.DbContextLockExtensions                                            100%
+  api.Data.NullableUtcDateTimeConverter                                       100%
+  api.Data.UtcDateTimeConverter                                               100%
+  api.DTOs.AssignUserCentreRequest                                            100%
+  api.DTOs.AuthResponse                                                       100%
+  api.DTOs.ChangePasswordRequest                                              100%
+  api.DTOs.CreateUserRequest                                                  100%
+  api.DTOs.LoginRequest                                                       100%
+  api.DTOs.RegisterRequest                                                    100%
+  api.DTOs.UpdateProfileRequest                                               100%
+  api.DTOs.UpdateUserDetailsRequest                                           100%
+  api.DTOs.VerifyNicRequest                                                   100%
+  api.Models.Wallet                                                           100%
+  api.Services.AgentRecovery.AgentExecutionResult                             100%
+  api.Services.AgentRecovery.AgentRecommendation                              100%
+  api.Services.AgentRecovery.Agents.DispatchRecoveryAgent                    79.5%
+  api.Services.AgentRecovery.Agents.FleetReadinessAgent                      17.6%
+  api.Services.AgentRecovery.Agents.NetworkContinuityAgent                   18.7%
+  api.Services.AgentRecovery.Agents.PassengerFareImpactAgent                 27.2%
+  api.Services.AgentRecovery.AgentToolCall                                    100%
+  api.Services.AgentRecovery.PassengerNotificationPreparationResult           100%
+  api.Services.AgentRecovery.PassengerNotificationService                    94.2%
+  api.Services.AgentRecovery.Planning.AgentCapability                         100%
+  api.Services.AgentRecovery.Planning.GeminiRecoveryPlanner                   1.4%
+  api.Services.AgentRecovery.Planning.IncidentPlanningSnapshot                100%
+  api.Services.AgentRecovery.Planning.PlannedRecoveryStep                     100%
+  api.Services.AgentRecovery.Planning.RecoveryAgentRegistry                  77.7%
+  api.Services.AgentRecovery.Planning.RecoveryPlanDraft                       100%
+  api.Services.AgentRecovery.Planning.RecoveryPlannerResponse                 100%
+  api.Services.AgentRecovery.Planning.RecoveryPlanningInput                   100%
+  api.Services.AgentRecovery.Planning.RecoveryPlanningResult                  100%
+  api.Services.AgentRecovery.Planning.RecoveryPlanningService                84.2%
+  api.Services.AgentRecovery.Planning.RecoveryPlanningUnavailableException    100%
+  api.Services.AgentRecovery.Planning.RecoveryPlanValidator                  84.7%
+  api.Services.AgentRecovery.Planning.RecoveryReplanAudit                       0%
+  api.Services.AgentRecovery.Planning.SafeRecoveryPlanFactory                 100%
+  api.Services.AgentRecovery.Planning.TripPlanningSnapshot                    100%
+  api.Services.AgentRecovery.ProposalCompositionResult                        100%
+  api.Services.AgentRecovery.RecoveryAccessScope                              100%
+  api.Services.AgentRecovery.RecoveryActionExecutor                          96.6%
+  api.Services.AgentRecovery.RecoveryContext                                  100%
+  api.Services.AgentRecovery.RecoveryNotificationFactory                      100%
+  api.Services.AgentRecovery.RecoveryPlanStep                                   0%
+  api.Services.AgentRecovery.RecoveryProposal                                 100%
+  api.Services.AgentRecovery.RecoveryProposalComposer                        94.7%
+  api.Services.AgentRecovery.RecoveryTextValidator                           93.7%
+  api.Services.AgentRecovery.RecoveryWorkflowService                          3.8%
+  api.Services.AgentRecovery.Tools.AssessPassengerImpactInput                 100%
+  api.Services.AgentRecovery.Tools.AssessPassengerImpactOutput                100%
+  api.Services.AgentRecovery.Tools.DispatchRecoveryTools                     96.8%
+  api.Services.AgentRecovery.Tools.FindConflictFreeDriverInput                100%
+  api.Services.AgentRecovery.Tools.FindConflictFreeDriverOutput               100%
+  api.Services.AgentRecovery.Tools.FindDepartureBayInput                      100%
+  api.Services.AgentRecovery.Tools.FindDepartureBayOutput                     100%
+  api.Services.AgentRecovery.Tools.FindReplacementVehicleInput                100%
+  api.Services.AgentRecovery.Tools.FindReplacementVehicleOutput               100%
+  api.Services.AgentRecovery.Tools.FleetRecoveryTools                         100%
+  api.Services.AgentRecovery.Tools.NetworkRecoveryTools                       100%
+  api.Services.AgentRecovery.Tools.PassengerRecoveryTools                     100%
+  api.Services.AgentRecovery.Tools.RecoveryToolInputValidator                  75%
+  api.Services.AgentRecovery.ValidationResult                                   0%
+  api.Services.BookingEligibility                                             100%
+  api.Services.CentreAccess                                                   100%
+  api.Services.DatabaseHealthCheck                                              0%
+  api.Services.JwtTokenService                                                100%
+  api.Services.Payments.BookingPaymentService                                98.2%
+  api.Services.Payments.PaymentCheckoutRequest                                100%
+  api.Services.Payments.PaymentCheckoutSession                                100%
+  api.Services.Payments.PaymentCheckoutStatus                                 100%
+  api.Services.Payments.PaymentRefundRequest                                  100%
+  api.Services.Payments.PaymentRefundResult                                   100%
+  api.Services.Payments.StripePaymentGateway                                  1.1%
+  api.Services.ScheduleTimes                                                  100%
+  api.Services.SupabaseImageStorageService                                    4.3%
+  api.Services.TripConflictService                                            100%
+  api.Services.VehicleMaintenanceRules                                        100%
+  Program                                                                    86.9%

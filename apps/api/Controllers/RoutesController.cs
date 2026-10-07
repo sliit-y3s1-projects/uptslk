@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using api.Data;
 using api.DTOs;
 using api.Enums;
@@ -45,9 +46,11 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return Ok(ToDetail(route));
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpPost]
     public async Task<IActionResult> Create(CreateRouteRequest request)
     {
+        if (!User.CanManageCentre(request.CentreId)) return Forbid();
         if (!await db.Centres.AnyAsync(centre => centre.Id == request.CentreId)) return BadRequest(new { error = "The selected centre does not exist." });
 
         var routeNumber = request.RouteNumber.Trim().ToUpperInvariant();
@@ -96,11 +99,13 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return CreatedAtAction(nameof(Get), new { routeId = route.Id }, new { route.Id, route.CentreId, route.RouteNumber, route.Name });
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpPut("{routeId:guid}")]
     public async Task<IActionResult> Update(Guid routeId, UpdateRouteRequest request)
     {
         var route = await LoadRoute(routeId, false);
         if (route is null) return NotFound();
+        if (!User.CanManageCentre(route.CentreId)) return Forbid();
 
         route.Name = request.Name.Trim();
         route.Origin = request.Origin.Trim();
@@ -112,16 +117,18 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         route.UpdatedAt = DateTime.UtcNow;
 
         db.RouteStops.RemoveRange(route.Stops);
-        route.Stops = ToStops(request.Stops);
+        db.RouteStops.AddRange(ToStops(request.Stops, routeId: route.Id));
         await db.SaveChangesAsync();
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpDelete("{routeId:guid}")]
     public async Task<IActionResult> Archive(Guid routeId)
     {
         var route = await db.Routes.FindAsync(routeId);
         if (route is null) return NotFound();
+        if (!User.CanManageCentre(route.CentreId)) return Forbid();
 
         route.IsActive = false;
         route.UpdatedAt = DateTime.UtcNow;
@@ -129,11 +136,13 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpPost("{routeId:guid}/reactivate")]
     public async Task<IActionResult> Reactivate(Guid routeId)
     {
         var route = await db.Routes.FindAsync(routeId);
         if (route is null) return NotFound();
+        if (!User.CanManageCentre(route.CentreId)) return Forbid();
 
         route.IsActive = true;
         route.UpdatedAt = DateTime.UtcNow;
@@ -151,11 +160,13 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return Ok(directions.Select(ToDirection));
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpPost("{routeId:guid}/directions")]
     public async Task<IActionResult> CreateDirection(Guid routeId, CreateRouteDirectionRequest request)
     {
         var route = await db.Routes.FindAsync(routeId);
         if (route is null) return NotFound();
+        if (!User.CanManageCentre(route.CentreId)) return Forbid();
         if (request.StartCentreId == request.EndCentreId) return BadRequest(new { error = "A direction needs different start and end centres." });
         var endpointCount = await db.Centres.CountAsync(centre => centre.Id == request.StartCentreId || centre.Id == request.EndCentreId);
         if (endpointCount != 2) return BadRequest(new { error = "One or more direction centres do not exist." });
@@ -166,11 +177,14 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return CreatedAtAction(nameof(ListDirections), new { routeId }, ToDirection(await LoadDirection(direction.Id, true) ?? direction));
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpPut("directions/{directionId:guid}")]
     public async Task<IActionResult> UpdateDirection(Guid directionId, UpdateRouteDirectionRequest request)
     {
         var direction = await LoadDirection(directionId, false);
         if (direction is null) return NotFound();
+        var directionCentreId = await db.Routes.Where(item => item.Id == direction.RouteId).Select(item => item.CentreId).SingleAsync();
+        if (!User.CanManageCentre(directionCentreId)) return Forbid();
         if (request.StartCentreId == request.EndCentreId) return BadRequest(new { error = "A direction needs different start and end centres." });
         var endpointCount = await db.Centres.CountAsync(centre => centre.Id == request.StartCentreId || centre.Id == request.EndCentreId);
         if (endpointCount != 2) return BadRequest(new { error = "One or more direction centres do not exist." });
@@ -181,9 +195,13 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         direction.EstimatedDurationMin = request.EstimatedDurationMin;
         direction.IsActive = request.IsActive;
         direction.UpdatedAt = DateTime.UtcNow;
+        // Old stops are deleted first so the (direction, sequence) unique index is never violated.
+        await using var transaction = await db.Database.BeginTransactionAsync();
         db.RouteStops.RemoveRange(direction.Stops);
-        direction.Stops = ToStops(request.Stops, direction, direction.RouteId);
         await db.SaveChangesAsync();
+        db.RouteStops.AddRange(ToStops(request.Stops, direction, direction.RouteId));
+        await db.SaveChangesAsync();
+        await transaction.CommitAsync();
         return NoContent();
     }
 
@@ -212,11 +230,13 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return Ok(schedules);
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpPost("{routeId:guid}/schedules")]
     public async Task<IActionResult> CreateSchedule(Guid routeId, CreateRouteScheduleRequest request)
     {
         var route = await db.Routes.AsNoTracking().SingleOrDefaultAsync(item => item.Id == routeId);
         if (route is null) return NotFound();
+        if (!User.CanManageCentre(route.CentreId)) return Forbid();
         if (!IsValidRange(request.FirstDeparture, request.LastDeparture)) return BadRequest(new { error = "Last departure must be later than first departure." });
 
         RouteDirectionModel? direction = null;
@@ -246,11 +266,13 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return CreatedAtAction(nameof(ListSchedules), new { routeId }, new { schedule.Id, schedule.RouteId, schedule.RouteDirectionId, schedule.BayId, BayCode = bay.Code, schedule.FirstDeparture, schedule.LastDeparture, schedule.HeadwayMinutes, schedule.OperatingDays, schedule.IsActive });
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpPut("schedules/{scheduleId:guid}")]
     public async Task<IActionResult> UpdateSchedule(Guid scheduleId, UpdateRouteScheduleRequest request)
     {
         var schedule = await db.RouteSchedules.Include(item => item.Route).Include(item => item.RouteDirection).SingleOrDefaultAsync(item => item.Id == scheduleId);
         if (schedule is null) return NotFound();
+        if (!User.CanManageCentre(schedule.Route.CentreId)) return Forbid();
         if (!IsValidRange(request.FirstDeparture, request.LastDeparture)) return BadRequest(new { error = "Last departure must be later than first departure." });
 
         var departureCentreId = schedule.RouteDirection?.StartCentreId ?? schedule.Route.CentreId;
@@ -268,11 +290,13 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpDelete("schedules/{scheduleId:guid}")]
     public async Task<IActionResult> DeactivateSchedule(Guid scheduleId)
     {
-        var schedule = await db.RouteSchedules.FindAsync(scheduleId);
+        var schedule = await db.RouteSchedules.Include(item => item.Route).SingleOrDefaultAsync(item => item.Id == scheduleId);
         if (schedule is null) return NotFound();
+        if (!User.CanManageCentre(schedule.Route.CentreId)) return Forbid();
 
         schedule.IsActive = false;
         schedule.UpdatedAt = DateTime.UtcNow;
@@ -280,6 +304,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpPost("schedules/{scheduleId:guid}/generate-trips")]
     public async Task<IActionResult> GenerateTrips(Guid scheduleId, GenerateScheduleTripsRequest request)
     {
@@ -289,6 +314,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
             .Include(item => item.RouteDirection)
             .SingleOrDefaultAsync(item => item.Id == scheduleId);
         if (schedule is null) return NotFound();
+        if (!User.CanManageCentre(schedule.Route.CentreId)) return Forbid();
         if (!schedule.IsActive) return BadRequest(new { error = "Only active schedules can generate trips." });
         if (schedule.HeadwayMinutes <= 0) return BadRequest(new { error = "The schedule must have a positive departure interval." });
         if (!OperatesOn(schedule.OperatingDays, request.ServiceDate))
@@ -313,7 +339,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         var createdDepartures = new List<string>();
         var skippedDepartures = new List<object>();
         var sequence = 0;
-        for (var departure = schedule.FirstDeparture; departure <= schedule.LastDeparture; departure = departure.AddMinutes(schedule.HeadwayMinutes))
+        foreach (var departure in ScheduleTimes.Departures(schedule.FirstDeparture, schedule.LastDeparture, schedule.HeadwayMinutes))
         {
             var localDeparture = request.ServiceDate.ToDateTime(departure, DateTimeKind.Unspecified);
             var scheduledTime = TimeZoneInfo.ConvertTimeToUtc(localDeparture, SriLankaTimeZone);

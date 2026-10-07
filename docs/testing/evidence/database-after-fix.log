@@ -1,0 +1,96 @@
+Test run for /home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll (.NETCoreApp,Version=v8.0)
+Microsoft (R) Test Execution Command Line Tool Version 17.8.0 (x64)
+Copyright (c) Microsoft Corporation.  All rights reserved.
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 8.0.30)
+[xUnit.net 00:00:00.25]   Discovering: api.Tests
+[xUnit.net 00:00:00.53]   Discovered:  api.Tests
+[xUnit.net 00:00:00.62]   Starting:    api.Tests
+[testcontainers.org 00:00:00.47] Connected to Docker:
+  Host: unix:///var/run/docker.sock
+  Server Version: 29.8.1
+  Kernel Version: 7.2.5-200.fc44.x86_64
+  API Version: 1.56
+  Operating System: Fedora Linux 44 (Workstation Edition)
+  Total Memory: 15.42 GB
+[testcontainers.org 00:00:01.49] Docker container 2905c1e12ae1 created
+[testcontainers.org 00:00:01.59] Start Docker container 2905c1e12ae1
+[testcontainers.org 00:00:02.06] Wait for Docker container 2905c1e12ae1 to complete readiness checks
+[testcontainers.org 00:00:03.13] Docker container 2905c1e12ae1 ready
+[testcontainers.org 00:00:03.71] Docker container dc36202ca05b created
+[testcontainers.org 00:00:03.72] Start Docker container dc36202ca05b
+[testcontainers.org 00:00:04.19] Wait for Docker container dc36202ca05b to complete readiness checks
+[testcontainers.org 00:00:04.20] Execute "pg_isready --host localhost --dbname postgres --username upts_test" at Docker container dc36202ca05b
+[testcontainers.org 00:00:05.43] Execute "pg_isready --host localhost --dbname postgres --username upts_test" at Docker container dc36202ca05b
+[testcontainers.org 00:00:06.57] Execute "pg_isready --host localhost --dbname postgres --username upts_test" at Docker container dc36202ca05b
+[testcontainers.org 00:00:06.91] Docker container dc36202ca05b ready
+  Passed api.Tests.Database.TransactionTests.RolledBackTransaction_LeavesNoRows [1 s]
+  Passed api.Tests.Database.TransactionTests.FailureInsideTransaction_CanRollBackEarlierSaves [1 s]
+  Passed api.Tests.Database.TransactionTests.TwoContexts_UpdatingTheSameRow_BothSucceed_LastWriteWins [129 ms]
+  Passed api.Tests.Database.TransactionTests.UncommittedRows_AreInvisibleToOtherConnections [135 ms]
+  Passed api.Tests.Database.TransactionTests.CommittedTransaction_PersistsRows_ForOtherConnections [218 ms]
+  Passed api.Tests.Database.TransactionTests.SaveChanges_IsAtomic_WhenOneRowViolatesAConstraint [176 ms]
+  Passed api.Tests.Database.RelationshipTests.SecondWallet_ForTheSamePassenger_IsRejected [162 ms]
+  Passed api.Tests.Database.RelationshipTests.DeletingARoute_CascadesToItsStopsAndSchedules_ButNotItsTrips [370 ms]
+  Passed api.Tests.Database.RelationshipTests.Trip_LoadsItsFullAssignmentGraph [326 ms]
+  Passed api.Tests.Database.RelationshipTests.Centre_ExposesItsBaysRoutesAndVehicles [281 ms]
+  Passed api.Tests.Database.RelationshipTests.DeletingATrip_KeepsItsIncidents_WithNullTripId [291 ms]
+  Passed api.Tests.Database.RelationshipTests.UtcDateTimes_RoundTripUnchanged_ThroughTimestamptz [163 ms]
+  Passed api.Tests.Database.RelationshipTests.MaintenanceRecord_RequiresAnExistingVehicle [202 ms]
+  Passed api.Tests.Database.RelationshipTests.DeletingAPassengerWithoutBookings_CascadesToWalletAndTransactions [252 ms]
+  Passed api.Tests.Database.RelationshipTests.Passenger_And_Wallet_AreOneToOne [160 ms]
+  Passed api.Tests.Database.RelationshipTests.DeletingABooking_KeepsItsWalletTransaction_WithNullBookingId [397 ms]
+  Passed api.Tests.Database.RelationshipTests.Enums_AreStoredAndReadBack [165 ms]
+  Passed api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: "AgentSteps", column: "ToolCallsJson", expectedType: "jsonb") [147 ms]
+  Passed api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: "AgentWorkflows", column: "ValidationJson", expectedType: "jsonb") [152 ms]
+  Passed api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: "Bookings", column: "Fare", expectedType: "numeric") [117 ms]
+  Passed api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: "Wallets", column: "Balance", expectedType: "numeric") [146 ms]
+  Passed api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: "Trips", column: "ScheduledTime", expectedType: "timestamp with time zone") [164 ms]
+  Passed api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: "AgentWorkflows", column: "PlanJson", expectedType: "jsonb") [127 ms]
+  Passed api.Tests.Database.MigrationTests.Migrate_OnEmptyDatabase_AppliesEveryMigration [1 s]
+  Passed api.Tests.Database.MigrationTests.ActiveBookingSeatIndex_IsAPartialUniqueIndex [114 ms]
+  Passed api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: "Transactions", column: "Amount", precision: 12, scale: 2) [267 ms]
+  Passed api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: "FareRules", column: "Amount", precision: 12, scale: 2) [137 ms]
+  Passed api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: "Bookings", column: "Fare", precision: 12, scale: 2) [148 ms]
+  Passed api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: "Wallets", column: "Balance", precision: 12, scale: 2) [165 ms]
+  Passed api.Tests.Database.MigrationTests.Model_MatchesTheLatestMigrationSnapshot [599 ms]
+  Passed api.Tests.Database.MigrationTests.Migrate_BackToZero_AndForwardAgain_Works [4 s]
+  Passed api.Tests.Database.MigrationTests.Migrate_CreatesTheCoreTables [1 s]
+  Passed api.Tests.Database.MigrationTests.Migrate_CanBeRunTwice_WithoutError [1 s]
+  Passed api.Tests.Database.ConstraintTests.CancelledBooking_FreesItsSeatForANewBooking [190 ms]
+  Passed api.Tests.Database.ConstraintTests.Vehicle_WithTrips_CannotBeDeleted [309 ms]
+  Passed api.Tests.Database.ConstraintTests.Trip_WithUnknownVehicle_IsRejected [154 ms]
+  Passed api.Tests.Database.ConstraintTests.Vehicle_WithUnknownCentre_IsRejected [116 ms]
+  Passed api.Tests.Database.ConstraintTests.Centre_Code_MustBeUnique [109 ms]
+  Passed api.Tests.Database.ConstraintTests.Centre_Name_LongerThan160Characters_IsRejected [113 ms]
+  Passed api.Tests.Database.ConstraintTests.Vehicle_PlateNumber_MustBeUnique [153 ms]
+  Passed api.Tests.Database.ConstraintTests.Driver_LicenseNumber_MustBeUnique [119 ms]
+  Passed api.Tests.Database.ConstraintTests.Centre_Name_Of160Characters_IsAccepted [396 ms]
+  Passed api.Tests.Database.ConstraintTests.Passenger_WithBookings_CannotBeDeleted [145 ms]
+  Passed api.Tests.Database.ConstraintTests.Centre_WithBays_CannotBeDeleted [193 ms]
+  Passed api.Tests.Database.ConstraintTests.Route_Number_IsUniquePerCentre [172 ms]
+  Passed api.Tests.Database.ConstraintTests.Booking_WithUnknownPassenger_IsRejected [165 ms]
+  Passed api.Tests.Database.ConstraintTests.Trip_WithBookings_CannotBeDeleted [143 ms]
+  Passed api.Tests.Database.ConstraintTests.Money_IsRoundedToTwoDecimalPlaces [112 ms]
+  Passed api.Tests.Database.ConstraintTests.Wallet_Balance_AboveNumeric12x2Range_IsRejected [151 ms]
+  Passed api.Tests.Database.ConstraintTests.FareRule_AllowsOnlyOneRulePerRoute [328 ms]
+  Passed api.Tests.Database.ConstraintTests.ActiveBookings_CannotShareASeatOnTheSameTrip [245 ms]
+  Passed api.Tests.Database.ConstraintTests.Passenger_PhoneNumber_MustBeUnique [144 ms]
+  Passed api.Tests.Database.ConstraintTests.Bay_Code_IsUniquePerCentre_ButReusableAtAnotherCentre [180 ms]
+  Passed api.Tests.Database.ConstraintTests.Centre_Name_CannotBeNull [132 ms]
+  Passed api.Tests.Database.BookingConcurrencyTests.ParallelBookings_ByOneWallet_CannotSpendMoreThanTheBalance [2 s]
+  Passed api.Tests.Database.BookingConcurrencyTests.ParallelCancellations_RefundTheBookingOnlyOnce [542 ms]
+  Passed api.Tests.Database.BookingConcurrencyTests.Trip_WithLocalTimeWithoutTimezone_IsStoredAsUtcInstant [446 ms]
+  Passed api.Tests.Database.BookingConcurrencyTests.RejectedBooking_LeavesWalletAndTablesUntouched [310 ms]
+[testcontainers.org 00:00:38.59] Delete Docker container dc36202ca05b
+  Passed api.Tests.Database.BookingConcurrencyTests.Booking_CommitsBookingTransactionAndWalletDebitTogether [340 ms]
+  Passed api.Tests.Database.BookingConcurrencyTests.ParallelBookings_NeverExceedVehicleCapacity [439 ms]
+[xUnit.net 00:00:42.45]   Finished:    api.Tests
+Results File: /home/chamal/dev/uptslk/apps/api.Tests/TestResults/database-after-fix.trx
+
+Test Run Successful.
+Total tests: 60
+     Passed: 60
+ Total time: 43.5495 Seconds

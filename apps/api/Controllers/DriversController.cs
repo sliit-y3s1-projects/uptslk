@@ -14,6 +14,7 @@ namespace api.Controllers;
 [Route("api/v1/drivers")]
 public class DriversController(AppDbContext db, UserManager<User> userManager) : ControllerBase
 {
+    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] Guid? centreId, [FromQuery] DriverStatus? status, [FromQuery] string? search)
     {
@@ -42,6 +43,7 @@ public class DriversController(AppDbContext db, UserManager<User> userManager) :
         return Ok(drivers);
     }
 
+    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpGet("{driverId:guid}")]
     public async Task<IActionResult> Get(Guid driverId)
     {

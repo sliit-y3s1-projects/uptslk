@@ -1,0 +1,57 @@
+Test run for /home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll (.NETCoreApp,Version=v8.0)
+Microsoft (R) Test Execution Command Line Tool Version 17.8.0 (x64)
+Copyright (c) Microsoft Corporation.  All rights reserved.
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 8.0.30)
+[xUnit.net 00:00:00.12]   Discovering: api.Tests
+[xUnit.net 00:00:00.26]   Discovered:  api.Tests
+[xUnit.net 00:00:00.29]   Starting:    api.Tests
+[testcontainers.org 00:00:00.22] Connected to Docker:
+  Host: unix:///var/run/docker.sock
+  Server Version: 29.8.1
+  Kernel Version: 7.2.5-200.fc44.x86_64
+  API Version: 1.56
+  Operating System: Fedora Linux 44 (Workstation Edition)
+  Total Memory: 15.42 GB
+[testcontainers.org 00:00:00.50] Docker container 36bc212d38aa created
+[testcontainers.org 00:00:00.56] Start Docker container 36bc212d38aa
+[testcontainers.org 00:00:00.73] Wait for Docker container 36bc212d38aa to complete readiness checks
+[testcontainers.org 00:00:01.79] Docker container 36bc212d38aa ready
+[testcontainers.org 00:00:01.95] Docker container c2fdcf8b3d5e created
+[testcontainers.org 00:00:01.96] Start Docker container c2fdcf8b3d5e
+[testcontainers.org 00:00:02.12] Wait for Docker container c2fdcf8b3d5e to complete readiness checks
+[testcontainers.org 00:00:02.13] Execute "pg_isready --host localhost --dbname postgres --username upts_test" at Docker container c2fdcf8b3d5e
+[testcontainers.org 00:00:03.23] Execute "pg_isready --host localhost --dbname postgres --username upts_test" at Docker container c2fdcf8b3d5e
+[testcontainers.org 00:00:03.34] Docker container c2fdcf8b3d5e ready
+[xUnit.net 00:00:09.33]     api.Tests.Database.PaymentConcurrencyTests.ParallelCheckouts_NeverHoldMoreSeatsThanTheVehicleHas [FAIL]
+[xUnit.net 00:00:09.33]       Capacity is 2 but 10 seats are held (10 checkouts started).
+[xUnit.net 00:00:09.33]       Stack Trace:
+[xUnit.net 00:00:09.33]         /home/chamal/dev/uptslk/apps/api.Tests/Database/PaymentConcurrencyTests.cs(38,0): at api.Tests.Database.PaymentConcurrencyTests.ParallelCheckouts_NeverHoldMoreSeatsThanTheVehicleHas()
+[xUnit.net 00:00:09.33]         --- End of stack trace from previous location ---
+  Failed api.Tests.Database.PaymentConcurrencyTests.ParallelCheckouts_NeverHoldMoreSeatsThanTheVehicleHas [2 s]
+  Error Message:
+   Capacity is 2 but 10 seats are held (10 checkouts started).
+  Stack Trace:
+     at api.Tests.Database.PaymentConcurrencyTests.ParallelCheckouts_NeverHoldMoreSeatsThanTheVehicleHas() in /home/chamal/dev/uptslk/apps/api.Tests/Database/PaymentConcurrencyTests.cs:line 38
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:09.96]     api.Tests.Database.PaymentConcurrencyTests.ParallelRefundRequests_ReachStripeOnlyOnce [FAIL]
+[xUnit.net 00:00:09.96]       Stripe was asked 6 times and 6 refund rows exist; expected exactly one.
+[xUnit.net 00:00:09.96]       Stack Trace:
+[xUnit.net 00:00:09.96]         /home/chamal/dev/uptslk/apps/api.Tests/Database/PaymentConcurrencyTests.cs(63,0): at api.Tests.Database.PaymentConcurrencyTests.ParallelRefundRequests_ReachStripeOnlyOnce()
+[xUnit.net 00:00:09.96]         --- End of stack trace from previous location ---
+[testcontainers.org 00:00:09.56] Delete Docker container c2fdcf8b3d5e
+[xUnit.net 00:00:10.41]   Finished:    api.Tests
+  Failed api.Tests.Database.PaymentConcurrencyTests.ParallelRefundRequests_ReachStripeOnlyOnce [631 ms]
+  Error Message:
+   Stripe was asked 6 times and 6 refund rows exist; expected exactly one.
+  Stack Trace:
+     at api.Tests.Database.PaymentConcurrencyTests.ParallelRefundRequests_ReachStripeOnlyOnce() in /home/chamal/dev/uptslk/apps/api.Tests/Database/PaymentConcurrencyTests.cs:line 63
+--- End of stack trace from previous location ---
+Results File: /home/chamal/dev/uptslk/apps/api.Tests/TestResults/def9-10-before-fix.trx
+
+Test Run Failed.
+Total tests: 2
+     Failed: 2
+ Total time: 10.9893 Seconds

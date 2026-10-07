@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using api.Models;
 using RouteModel = api.Models.Route;
 using RouteDirectionModel = api.Models.RouteDirection;
@@ -35,6 +36,14 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<ApprovalRequest> ApprovalRequests => Set<ApprovalRequest>();
     public DbSet<PassengerNotification> PassengerNotifications => Set<PassengerNotification>();
     public DbSet<SupportRequest> SupportRequests => Set<SupportRequest>();
+
+    // PostgreSQL "timestamp with time zone" only accepts UTC values. Normalize every DateTime on its way in so a client
+    // that sends a local time or a time without an offset gets a saved value instead of an HTTP 500.
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();
+        configurationBuilder.Properties<DateTime?>().HaveConversion<NullableUtcDateTimeConverter>();
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -385,3 +394,12 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .OnDelete(DeleteBehavior.SetNull);
     }
 }
+
+/// <summary>Stores DateTime values as UTC. Local times are converted; times without a kind are taken to be UTC.</summary>
+public sealed class UtcDateTimeConverter() : ValueConverter<DateTime, DateTime>(
+    value => value.Kind == DateTimeKind.Utc ? value : value.Kind == DateTimeKind.Local ? value.ToUniversalTime() : DateTime.SpecifyKind(value, DateTimeKind.Utc),
+    value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
+
+public sealed class NullableUtcDateTimeConverter() : ValueConverter<DateTime?, DateTime?>(
+    value => value == null ? value : value.Value.Kind == DateTimeKind.Utc ? value : value.Value.Kind == DateTimeKind.Local ? value.Value.ToUniversalTime() : DateTime.SpecifyKind(value.Value, DateTimeKind.Utc),
+    value => value == null ? value : DateTime.SpecifyKind(value.Value, DateTimeKind.Utc));

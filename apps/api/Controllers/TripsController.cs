@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using api.Data;
 using api.DTOs;
 using api.Enums;
@@ -87,9 +88,11 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         return Ok(ToDetail(trip));
     }
 
+    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpPost]
     public async Task<IActionResult> Create(CreateTripRequest request)
     {
+        if (!User.CanManageCentre(request.CentreId)) return Forbid();
         var validation = await ValidateAssignment(request.CentreId, request.RouteId, request.RouteDirectionId, request.VehicleId, request.DriverId, request.BayId, request.ScheduledTime);
         if (validation.Errors.Count > 0) return BadRequest(new { errors = validation.Errors });
 
@@ -110,11 +113,13 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         return CreatedAtAction(nameof(Get), new { tripId = trip.Id }, new { trip.Id, trip.CentreId, trip.RouteId, trip.ScheduledTime, trip.Status });
     }
 
+    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpPut("{tripId:guid}")]
     public async Task<IActionResult> Update(Guid tripId, UpdateTripRequest request)
     {
         var trip = await db.Trips.FindAsync(tripId);
         if (trip is null) return NotFound();
+        if (!User.CanManageCentre(trip.CentreId) || !User.CanManageCentre(request.CentreId)) return Forbid();
         if (trip.Status is TripStatus.Completed or TripStatus.Cancelled) return BadRequest(new { error = "Completed or cancelled trips cannot be edited." });
 
         var validation = await ValidateAssignment(request.CentreId, request.RouteId, request.RouteDirectionId, request.VehicleId, request.DriverId, request.BayId, request.ScheduledTime, tripId);
@@ -133,11 +138,13 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpPost("{tripId:guid}/reassign")]
     public async Task<IActionResult> Reassign(Guid tripId, ReassignTripRequest request)
     {
         var trip = await db.Trips.FindAsync(tripId);
         if (trip is null) return NotFound();
+        if (!User.CanManageCentre(trip.CentreId)) return Forbid();
         if (trip.Status is TripStatus.Completed or TripStatus.Cancelled) return BadRequest(new { error = "Completed or cancelled trips cannot be reassigned." });
 
         var validation = await ValidateAssignment(trip.CentreId, trip.RouteId, trip.RouteDirectionId, request.VehicleId, request.DriverId, request.BayId, request.ScheduledTime, tripId);
@@ -153,11 +160,13 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpPatch("{tripId:guid}/status")]
     public async Task<IActionResult> UpdateStatus(Guid tripId, UpdateTripStatusRequest request)
     {
         var trip = await db.Trips.FindAsync(tripId);
         if (trip is null) return NotFound();
+        if (!User.CanManageCentre(trip.CentreId)) return Forbid();
         if (!CanTransition(trip.Status, request.Status)) return BadRequest(new { error = $"Cannot change a {trip.Status} trip to {request.Status}." });
 
         trip.Status = request.Status;
@@ -169,11 +178,13 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpDelete("{tripId:guid}")]
     public async Task<IActionResult> Cancel(Guid tripId, CancelTripRequest request)
     {
         var trip = await db.Trips.FindAsync(tripId);
         if (trip is null) return NotFound();
+        if (!User.CanManageCentre(trip.CentreId)) return Forbid();
         if (trip.Status is TripStatus.Completed or TripStatus.Cancelled) return BadRequest(new { error = "Only active trips can be cancelled." });
 
         trip.Status = TripStatus.Cancelled;

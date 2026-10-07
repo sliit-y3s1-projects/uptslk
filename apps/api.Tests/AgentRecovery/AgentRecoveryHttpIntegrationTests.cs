@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
+using api.Tests.Shared;
 namespace api.Tests.AgentRecovery;
 
 public sealed class AgentRecoveryHttpIntegrationTests
@@ -105,14 +106,14 @@ public sealed class AgentRecoveryHttpIntegrationTests
         Assert.Equal(HttpStatusCode.TooManyRequests, rejectedByLimiter.StatusCode);
     }
 
-    private static async Task<RecoveryApiFactory> CreateFactoryAsync()
+    private static async Task<TestApiFactory> CreateFactoryAsync()
     {
-        var factory = new RecoveryApiFactory();
+        var factory = new TestApiFactory();
         await factory.InitializeDatabaseAsync();
         return factory;
     }
 
-    private static HttpClient CreateClient(RecoveryApiFactory factory) => factory.CreateClient(
+    private static HttpClient CreateClient(TestApiFactory factory) => factory.CreateClient(
         new WebApplicationFactoryClientOptions
         {
             BaseAddress = new Uri("https://localhost"),

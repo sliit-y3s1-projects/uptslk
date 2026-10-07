@@ -54,6 +54,7 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
             }));
     }
 
+    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] Guid? passengerId, [FromQuery] Guid? tripId, [FromQuery] BookingStatus? status)
     {
@@ -69,6 +70,7 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         return Ok(bookings.Select(ToListItem));
     }
 
+    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpGet("{bookingId:guid}")]
     public async Task<IActionResult> Get(Guid bookingId)
     {
@@ -77,6 +79,7 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         return Ok(ToDetail(booking));
     }
 
+    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpPost]
     public async Task<IActionResult> Create(CreateBookingRequest request)
     {
@@ -91,10 +94,17 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         var fare = await db.FareRules.SingleOrDefaultAsync(rule => rule.RouteId == trip.RouteId && rule.IsActive);
         if (fare is null) return BadRequest(new { error = "No active standard fare exists for this route." });
         var totalFare = fare.Amount * request.PassengerCount;
-        if (passenger.Wallet is null || passenger.Wallet.Balance < totalFare) return BadRequest(new { error = "Insufficient wallet balance." });
+        if (passenger.Wallet is null) return BadRequest(new { error = "Insufficient wallet balance." });
+
+        // Lock the trip and the wallet so parallel requests are checked one at a time. Without this two requests can
+        // both pass the capacity and balance checks and oversell the trip or spend the same money twice.
+        await using var transaction = await db.Database.BeginTransactionAsync();
+        await db.LockRowAsync("Trips", trip.Id);
+        await db.LockRowAsync("Wallets", passenger.Wallet.Id);
+        await db.Entry(passenger.Wallet).ReloadAsync();
+        if (passenger.Wallet.Balance < totalFare) return BadRequest(new { error = "Insufficient wallet balance." });
         if (await OccupiedCapacity(trip.Id) + request.PassengerCount > trip.Vehicle.Capacity) return Conflict(new { error = "This departure does not have enough remaining spaces for every passenger." });
 
-        await using var transaction = await db.Database.BeginTransactionAsync();
         var booking = new Booking
         {
             TripId = trip.Id,
@@ -143,6 +153,7 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         });
     }
 
+    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpPatch("{bookingId:guid}/status")]
     public async Task<IActionResult> UpdateStatus(Guid bookingId, UpdateBookingStatusRequest request)
     {
@@ -156,6 +167,7 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpDelete("{bookingId:guid}")]
     public async Task<IActionResult> Cancel(Guid bookingId, CancelBookingRequest request)
     {
@@ -178,7 +190,13 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         }
         if (booking.Passenger.Wallet is null) return BadRequest(new { error = "The passenger wallet does not exist." });
 
+        // Lock the booking and wallet, then re-read them, so a duplicate cancel request cannot refund the booking twice.
         await using var transaction = await db.Database.BeginTransactionAsync();
+        await db.LockRowAsync("Bookings", booking.Id);
+        await db.LockRowAsync("Wallets", booking.Passenger.Wallet.Id);
+        await db.Entry(booking).ReloadAsync();
+        await db.Entry(booking.Passenger.Wallet).ReloadAsync();
+        if (booking.Status is BookingStatus.Cancelled or BookingStatus.Completed) return BadRequest(new { error = "Only active bookings can be cancelled." });
         booking.Status = BookingStatus.Cancelled;
         booking.CancellationReason = request.Reason.Trim();
         booking.CancelledAt = DateTime.UtcNow;
@@ -201,6 +219,7 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         return Ok(new { capacity = trip.Vehicle.Capacity, occupied, available = Math.Max(0, trip.Vehicle.Capacity - occupied), isFull = occupied >= trip.Vehicle.Capacity });
     }
 
+    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpGet("trips/{tripId:guid}/manifest")]
     public async Task<IActionResult> Manifest(Guid tripId)
     {

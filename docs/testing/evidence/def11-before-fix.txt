@@ -1,0 +1,15 @@
+DEF-11 evidence (before the fix): schedule departures wrap around midnight and never end.
+
+1) Isolated demonstration, same loop as RoutesController.GenerateTrips used (TimeOnly.AddMinutes), capped at 20 iterations:
+
+   23:30 + 30 min = 12:00 AM; <= 23:30 ? True
+   10:30 PM 11:00 PM 11:30 PM 12:00 AM 12:30 AM 1:00 AM 1:30 AM 2:00 AM 2:30 AM 3:00 AM 3:30 AM 4:00 AM
+   4:30 AM 5:00 AM 5:30 AM 6:00 AM 6:30 AM 7:00 AM 7:30 AM 8:00 AM
+   iterations (capped at 20): 20          <- a timetable 22:30-23:30 every 30 minutes should have 3
+
+2) Calling POST /api/v1/routes/schedules/{id}/generate-trips for such a timetable through the API test host
+   did not return within 120 s (the shell timeout killed the test run, exit code 124) even though the HTTP client
+   gave up after 15 s: the server request kept looping.
+
+After the fix (ScheduleTimes.Departures counts plain minutes) the new unit tests in Centres/RouteScheduleTests.cs
+(Departures_StopAtTheLastDeparture_EvenNearMidnight and others) pass; see full-suite-final.log.

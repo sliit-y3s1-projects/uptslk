@@ -5,6 +5,7 @@ using api.Services.AgentRecovery.Tools;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
+using api.Tests.Shared;
 namespace api.Tests.AgentRecovery;
 
 public sealed class RecoveryToolIntegrationTests
@@ -12,7 +13,7 @@ public sealed class RecoveryToolIntegrationTests
     [Fact]
     public async Task NetworkTool_ReturnsFirstAvailableAlternativeBayAtDepartureCentre()
     {
-        await using var database = await RecoveryTestDb.CreateAsync();
+        await using var database = await TestDb.CreateAsync();
         var centre = CreateCentre("KAD");
         var excluded = CreateBay(centre, "B01", BayStatus.Available);
         var unavailable = CreateBay(centre, "B02", BayStatus.Occupied);
@@ -32,7 +33,7 @@ public sealed class RecoveryToolIntegrationTests
     [Fact]
     public async Task FleetTool_ExcludesVehiclesWithActiveMaintenanceAndSelectsSufficientCapacity()
     {
-        await using var database = await RecoveryTestDb.CreateAsync();
+        await using var database = await TestDb.CreateAsync();
         var centre = CreateCentre("KAD");
         var excluded = CreateVehicle(centre, "CURRENT", 45);
         var maintained = CreateVehicle(centre, "MAINTAINED", 55);
@@ -61,7 +62,7 @@ public sealed class RecoveryToolIntegrationTests
     [Fact]
     public async Task FleetTool_ExcludesVehiclesReservedForMaintenanceOnTripDate()
     {
-        await using var database = await RecoveryTestDb.CreateAsync();
+        await using var database = await TestDb.CreateAsync();
         var centre = CreateCentre("KAD");
         var excluded = CreateVehicle(centre, "CURRENT", 45);
         var reserved = CreateVehicle(centre, "RESERVED", 55);
@@ -90,7 +91,7 @@ public sealed class RecoveryToolIntegrationTests
     [Fact]
     public async Task DispatchTool_SkipsConflictingDriverAndReturnsNextAvailableDriver()
     {
-        await using var database = await RecoveryTestDb.CreateAsync();
+        await using var database = await TestDb.CreateAsync();
         var centre = CreateCentre("KAD");
         var proposedVehicle = CreateVehicle(centre, "PROPOSED", 50);
         var occupiedVehicle = CreateVehicle(centre, "OCCUPIED", 45);
@@ -142,7 +143,7 @@ public sealed class RecoveryToolIntegrationTests
     [Fact]
     public async Task PassengerTool_CountsOnlyActiveBookings()
     {
-        await using var database = await RecoveryTestDb.CreateAsync();
+        await using var database = await TestDb.CreateAsync();
         var scenario = CreateTripScenario();
         database.Context.AddRange(
             scenario.Centre,

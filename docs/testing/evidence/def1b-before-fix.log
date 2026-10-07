@@ -1,0 +1,150 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  api -> /home/chamal/dev/uptslk/apps/api/bin/Debug/net8.0/api.dll
+  api.Evaluation -> /home/chamal/dev/uptslk/apps/api.Evaluation/bin/Debug/net8.0/api.Evaluation.dll
+/home/chamal/dev/uptslk/apps/api.Tests/Bookings/FareAndPaymentAccessControlTests.cs(29,57): warning CS1998: This async method lacks 'await' operators and will run synchronously. Consider using the 'await' operator to await non-blocking API calls, or 'await Task.Run(...)' to do CPU-bound work on a background thread. [/home/chamal/dev/uptslk/apps/api.Tests/api.Tests.csproj]
+/home/chamal/dev/uptslk/apps/api.Tests/Database/PostgresFixture.cs(17,55): warning CS0618: 'PostgreSqlBuilder.PostgreSqlBuilder()' is obsolete: 'This parameterless constructor is obsolete and will be removed. Use the constructor with the image parameter instead: https://github.com/testcontainers/testcontainers-dotnet/discussions/1470#discussioncomment-15185721.' [/home/chamal/dev/uptslk/apps/api.Tests/api.Tests.csproj]
+  api.Tests -> /home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll
+Test run for /home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll (.NETCoreApp,Version=v8.0)
+Microsoft (R) Test Execution Command Line Tool Version 17.8.0 (x64)
+Copyright (c) Microsoft Corporation.  All rights reserved.
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 8.0.30)
+[xUnit.net 00:00:00.29]   Discovering: api.Tests
+[xUnit.net 00:00:00.60]   Discovered:  api.Tests
+[xUnit.net 00:00:00.66]   Starting:    api.Tests
+[xUnit.net 00:00:05.54]     api.Tests.Bookings.FareAndPaymentAccessControlTests.Commuter_CannotTriggerAPaymentRefund [FAIL]
+[xUnit.net 00:00:05.54]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:05.54]       Expected: Forbidden
+[xUnit.net 00:00:05.54]       Actual:   NotFound
+[xUnit.net 00:00:05.54]       Stack Trace:
+[xUnit.net 00:00:05.54]         /home/chamal/dev/uptslk/apps/api.Tests/Bookings/FareAndPaymentAccessControlTests.cs(58,0): at api.Tests.Bookings.FareAndPaymentAccessControlTests.Commuter_CannotTriggerAPaymentRefund()
+[xUnit.net 00:00:05.54]         --- End of stack trace from previous location ---
+  Failed api.Tests.Bookings.FareAndPaymentAccessControlTests.Commuter_CannotTriggerAPaymentRefund [4 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Forbidden
+Actual:   NotFound
+  Stack Trace:
+     at api.Tests.Bookings.FareAndPaymentAccessControlTests.Commuter_CannotTriggerAPaymentRefund() in /home/chamal/dev/uptslk/apps/api.Tests/Bookings/FareAndPaymentAccessControlTests.cs:line 58
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:06.07]     api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotStartACheckoutForAnotherPassenger [FAIL]
+[xUnit.net 00:00:06.07]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:06.07]       Expected: Unauthorized
+[xUnit.net 00:00:06.07]       Actual:   BadRequest
+[xUnit.net 00:00:06.07]       Stack Trace:
+[xUnit.net 00:00:06.07]         /home/chamal/dev/uptslk/apps/api.Tests/Bookings/FareAndPaymentAccessControlTests.cs(69,0): at api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotStartACheckoutForAnotherPassenger()
+[xUnit.net 00:00:06.07]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:06.08]     api.Tests.Dispatch.DispatchAccessControlTests.Commuter_CannotReadADriversProfile [FAIL]
+[xUnit.net 00:00:06.08]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:06.08]       Expected: Forbidden
+[xUnit.net 00:00:06.08]       Actual:   OK
+[xUnit.net 00:00:06.08]       Stack Trace:
+[xUnit.net 00:00:06.08]         /home/chamal/dev/uptslk/apps/api.Tests/Dispatch/DispatchAccessControlTests.cs(87,0): at api.Tests.Dispatch.DispatchAccessControlTests.Commuter_CannotReadADriversProfile()
+[xUnit.net 00:00:06.08]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:06.63]     api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotCreateAFareRule [FAIL]
+[xUnit.net 00:00:06.63]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:06.63]       Expected: Unauthorized
+[xUnit.net 00:00:06.63]       Actual:   Created
+[xUnit.net 00:00:06.63]       Stack Trace:
+[xUnit.net 00:00:06.63]         /home/chamal/dev/uptslk/apps/api.Tests/Bookings/FareAndPaymentAccessControlTests.cs(20,0): at api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotCreateAFareRule()
+[xUnit.net 00:00:06.63]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:06.80]     api.Tests.Dispatch.DispatchAccessControlTests.Anonymous_CannotListDriversOrSeeTheirLicenseNumbers [FAIL]
+[xUnit.net 00:00:06.80]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:06.80]       Expected: Unauthorized
+[xUnit.net 00:00:06.80]       Actual:   OK
+[xUnit.net 00:00:06.80]       Stack Trace:
+[xUnit.net 00:00:06.80]         /home/chamal/dev/uptslk/apps/api.Tests/Dispatch/DispatchAccessControlTests.cs(77,0): at api.Tests.Dispatch.DispatchAccessControlTests.Anonymous_CannotListDriversOrSeeTheirLicenseNumbers()
+[xUnit.net 00:00:06.80]         --- End of stack trace from previous location ---
+  Passed api.Tests.Dispatch.DispatchAccessControlTests.Commuter_CannotCancelTrip [4 s]
+  Failed api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotStartACheckoutForAnotherPassenger [535 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Unauthorized
+Actual:   BadRequest
+  Stack Trace:
+     at api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotStartACheckoutForAnotherPassenger() in /home/chamal/dev/uptslk/apps/api.Tests/Bookings/FareAndPaymentAccessControlTests.cs:line 69
+--- End of stack trace from previous location ---
+  Failed api.Tests.Dispatch.DispatchAccessControlTests.Commuter_CannotReadADriversProfile [511 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Forbidden
+Actual:   OK
+  Stack Trace:
+     at api.Tests.Dispatch.DispatchAccessControlTests.Commuter_CannotReadADriversProfile() in /home/chamal/dev/uptslk/apps/api.Tests/Dispatch/DispatchAccessControlTests.cs:line 87
+--- End of stack trace from previous location ---
+  Passed api.Tests.Dispatch.DispatchAccessControlTests.Driver_CannotListIncidentsOfOtherTrips_ThroughGeneralApi [344 ms]
+  Failed api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotCreateAFareRule [556 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Unauthorized
+Actual:   Created
+  Stack Trace:
+     at api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotCreateAFareRule() in /home/chamal/dev/uptslk/apps/api.Tests/Bookings/FareAndPaymentAccessControlTests.cs:line 20
+--- End of stack trace from previous location ---
+  Failed api.Tests.Dispatch.DispatchAccessControlTests.Anonymous_CannotListDriversOrSeeTheirLicenseNumbers [371 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Unauthorized
+Actual:   OK
+  Stack Trace:
+     at api.Tests.Dispatch.DispatchAccessControlTests.Anonymous_CannotListDriversOrSeeTheirLicenseNumbers() in /home/chamal/dev/uptslk/apps/api.Tests/Dispatch/DispatchAccessControlTests.cs:line 77
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:07.38]     api.Tests.Bookings.FareAndPaymentAccessControlTests.Commuter_CannotChangeAFare [FAIL]
+[xUnit.net 00:00:07.38]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:07.39]       Expected: Forbidden
+[xUnit.net 00:00:07.39]       Actual:   NoContent
+[xUnit.net 00:00:07.39]       Stack Trace:
+[xUnit.net 00:00:07.39]         /home/chamal/dev/uptslk/apps/api.Tests/Bookings/FareAndPaymentAccessControlTests.cs(35,0): at api.Tests.Bookings.FareAndPaymentAccessControlTests.Commuter_CannotChangeAFare()
+[xUnit.net 00:00:07.39]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:07.85]     api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotReadOrCreateSupportRequests [FAIL]
+[xUnit.net 00:00:07.85]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:07.86]       Expected: Unauthorized
+[xUnit.net 00:00:07.86]       Actual:   OK
+[xUnit.net 00:00:07.86]       Stack Trace:
+[xUnit.net 00:00:07.86]         /home/chamal/dev/uptslk/apps/api.Tests/Bookings/FareAndPaymentAccessControlTests.cs(81,0): at api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotReadOrCreateSupportRequests()
+[xUnit.net 00:00:07.86]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:08.16]     api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotTriggerAPaymentRefund [FAIL]
+[xUnit.net 00:00:08.16]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:08.16]       Expected: Unauthorized
+[xUnit.net 00:00:08.16]       Actual:   NotFound
+[xUnit.net 00:00:08.16]       Stack Trace:
+[xUnit.net 00:00:08.16]         /home/chamal/dev/uptslk/apps/api.Tests/Bookings/FareAndPaymentAccessControlTests.cs(47,0): at api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotTriggerAPaymentRefund()
+[xUnit.net 00:00:08.16]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:08.17]   Finished:    api.Tests
+  Passed api.Tests.Dispatch.DispatchAccessControlTests.Anonymous_CannotCreateTrip [328 ms]
+  Failed api.Tests.Bookings.FareAndPaymentAccessControlTests.Commuter_CannotChangeAFare [752 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Forbidden
+Actual:   NoContent
+  Stack Trace:
+     at api.Tests.Bookings.FareAndPaymentAccessControlTests.Commuter_CannotChangeAFare() in /home/chamal/dev/uptslk/apps/api.Tests/Bookings/FareAndPaymentAccessControlTests.cs:line 35
+--- End of stack trace from previous location ---
+  Passed api.Tests.Dispatch.DispatchAccessControlTests.Anonymous_CannotChangeTripStatus [302 ms]
+  Passed api.Tests.Dispatch.DispatchAccessControlTests.Anonymous_CannotReadDriverDuties [329 ms]
+  Failed api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotReadOrCreateSupportRequests [469 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Unauthorized
+Actual:   OK
+  Stack Trace:
+     at api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotReadOrCreateSupportRequests() in /home/chamal/dev/uptslk/apps/api.Tests/Bookings/FareAndPaymentAccessControlTests.cs:line 81
+--- End of stack trace from previous location ---
+  Failed api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotTriggerAPaymentRefund [302 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Unauthorized
+Actual:   NotFound
+  Stack Trace:
+     at api.Tests.Bookings.FareAndPaymentAccessControlTests.Anonymous_CannotTriggerAPaymentRefund() in /home/chamal/dev/uptslk/apps/api.Tests/Bookings/FareAndPaymentAccessControlTests.cs:line 47
+--- End of stack trace from previous location ---
+Results File: /home/chamal/dev/uptslk/apps/api.Tests/TestResults/def1b-before-fix.trx
+
+Test Run Failed.
+Total tests: 13
+     Passed: 5
+     Failed: 8
+ Total time: 9.2507 Seconds

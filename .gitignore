@@ -32,3 +32,5 @@ Thumbs.db
 
 
 appsettings.Development.json
+# Test run output (curated evidence lives in docs/testing/evidence)
+**/TestResults/

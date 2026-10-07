@@ -1,0 +1,126 @@
+Test run for /home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll (.NETCoreApp,Version=v8.0)
+Microsoft (R) Test Execution Command Line Tool Version 17.8.0 (x64)
+Copyright (c) Microsoft Corporation.  All rights reserved.
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 8.0.30)
+[xUnit.net 00:00:00.27]   Discovering: api.Tests
+[xUnit.net 00:00:00.56]   Discovered:  api.Tests
+[xUnit.net 00:00:00.62]   Starting:    api.Tests
+[xUnit.net 00:00:06.52]     api.Tests.Auth.CentreIsolationTests.Staff_CannotChangeVehiclesOfAnotherCentre [FAIL]
+[xUnit.net 00:00:06.53]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:06.53]       Expected: Forbidden
+[xUnit.net 00:00:06.56]       Actual:   Created
+[xUnit.net 00:00:06.56]       Stack Trace:
+[xUnit.net 00:00:06.56]         /home/chamal/dev/uptslk/apps/api.Tests/Auth/CentreIsolationTests.cs(125,0): at api.Tests.Auth.CentreIsolationTests.Staff_CannotChangeVehiclesOfAnotherCentre()
+[xUnit.net 00:00:06.56]         --- End of stack trace from previous location ---
+  Failed api.Tests.Auth.CentreIsolationTests.Staff_CannotChangeVehiclesOfAnotherCentre [5 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Forbidden
+Actual:   Created
+  Stack Trace:
+     at api.Tests.Auth.CentreIsolationTests.Staff_CannotChangeVehiclesOfAnotherCentre() in /home/chamal/dev/uptslk/apps/api.Tests/Auth/CentreIsolationTests.cs:line 125
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:07.14]     api.Tests.Auth.CentreIsolationTests.StaffWithoutACentreAssignment_CannotChangeCentreData [FAIL]
+[xUnit.net 00:00:07.14]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:07.14]       Expected: Forbidden
+[xUnit.net 00:00:07.14]       Actual:   NoContent
+[xUnit.net 00:00:07.14]       Stack Trace:
+[xUnit.net 00:00:07.14]         /home/chamal/dev/uptslk/apps/api.Tests/Auth/CentreIsolationTests.cs(208,0): at api.Tests.Auth.CentreIsolationTests.StaffWithoutACentreAssignment_CannotChangeCentreData()
+[xUnit.net 00:00:07.14]         --- End of stack trace from previous location ---
+  Failed api.Tests.Auth.CentreIsolationTests.StaffWithoutACentreAssignment_CannotChangeCentreData [615 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Forbidden
+Actual:   NoContent
+  Stack Trace:
+     at api.Tests.Auth.CentreIsolationTests.StaffWithoutACentreAssignment_CannotChangeCentreData() in /home/chamal/dev/uptslk/apps/api.Tests/Auth/CentreIsolationTests.cs:line 208
+--- End of stack trace from previous location ---
+  Passed api.Tests.Auth.CentreIsolationTests.FleetOfficer_CanStillManageVehiclesOfTheirOwnCentre [353 ms]
+[xUnit.net 00:00:08.91]     api.Tests.Auth.CentreIsolationTests.Manager_CannotChangeRoutesOrTimetablesOfAnotherCentre [FAIL]
+[xUnit.net 00:00:08.91]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:08.91]       Expected: Forbidden
+[xUnit.net 00:00:08.91]       Actual:   Created
+[xUnit.net 00:00:08.91]       Stack Trace:
+[xUnit.net 00:00:08.91]         /home/chamal/dev/uptslk/apps/api.Tests/Auth/CentreIsolationTests.cs(99,0): at api.Tests.Auth.CentreIsolationTests.Manager_CannotChangeRoutesOrTimetablesOfAnotherCentre()
+[xUnit.net 00:00:08.91]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:09.63]     api.Tests.Auth.CentreIsolationTests.Manager_CannotChangeFaresOfAnotherCentresRoute [FAIL]
+[xUnit.net 00:00:09.63]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:09.63]       Expected: Forbidden
+[xUnit.net 00:00:09.63]       Actual:   NoContent
+[xUnit.net 00:00:09.63]       Stack Trace:
+[xUnit.net 00:00:09.63]         /home/chamal/dev/uptslk/apps/api.Tests/Auth/CentreIsolationTests.cs(195,0): at api.Tests.Auth.CentreIsolationTests.Manager_CannotChangeFaresOfAnotherCentresRoute()
+[xUnit.net 00:00:09.63]         --- End of stack trace from previous location ---
+  Passed api.Tests.Auth.CentreIsolationTests.Dispatcher_CanStillManageTripsOfTheirOwnCentre [700 ms]
+  Failed api.Tests.Auth.CentreIsolationTests.Manager_CannotChangeRoutesOrTimetablesOfAnotherCentre [717 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Forbidden
+Actual:   Created
+  Stack Trace:
+     at api.Tests.Auth.CentreIsolationTests.Manager_CannotChangeRoutesOrTimetablesOfAnotherCentre() in /home/chamal/dev/uptslk/apps/api.Tests/Auth/CentreIsolationTests.cs:line 99
+--- End of stack trace from previous location ---
+  Failed api.Tests.Auth.CentreIsolationTests.Manager_CannotChangeFaresOfAnotherCentresRoute [719 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Forbidden
+Actual:   NoContent
+  Stack Trace:
+     at api.Tests.Auth.CentreIsolationTests.Manager_CannotChangeFaresOfAnotherCentresRoute() in /home/chamal/dev/uptslk/apps/api.Tests/Auth/CentreIsolationTests.cs:line 195
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:09.98]     api.Tests.Auth.CentreIsolationTests.Manager_CannotUpdateOrCloseAnotherCentre [FAIL]
+[xUnit.net 00:00:09.98]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:09.98]       Expected: Forbidden
+[xUnit.net 00:00:09.98]       Actual:   NoContent
+[xUnit.net 00:00:09.98]       Stack Trace:
+[xUnit.net 00:00:09.98]         /home/chamal/dev/uptslk/apps/api.Tests/Auth/CentreIsolationTests.cs(44,0): at api.Tests.Auth.CentreIsolationTests.Manager_CannotUpdateOrCloseAnotherCentre()
+[xUnit.net 00:00:09.98]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:10.33]     api.Tests.Auth.CentreIsolationTests.Manager_CannotChangeBaysOfAnotherCentre [FAIL]
+[xUnit.net 00:00:10.33]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:10.33]       Expected: Forbidden
+[xUnit.net 00:00:10.33]       Actual:   Created
+[xUnit.net 00:00:10.33]       Stack Trace:
+[xUnit.net 00:00:10.33]         /home/chamal/dev/uptslk/apps/api.Tests/Auth/CentreIsolationTests.cs(72,0): at api.Tests.Auth.CentreIsolationTests.Manager_CannotChangeBaysOfAnotherCentre()
+[xUnit.net 00:00:10.33]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:10.61]     api.Tests.Auth.CentreIsolationTests.Dispatcher_CannotCreateChangeOrCancelTripsOfAnotherCentre [FAIL]
+[xUnit.net 00:00:10.61]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:10.61]       Expected: Forbidden
+[xUnit.net 00:00:10.62]       Actual:   BadRequest
+[xUnit.net 00:00:10.62]       Stack Trace:
+[xUnit.net 00:00:10.62]         /home/chamal/dev/uptslk/apps/api.Tests/Auth/CentreIsolationTests.cs(160,0): at api.Tests.Auth.CentreIsolationTests.Dispatcher_CannotCreateChangeOrCancelTripsOfAnotherCentre()
+[xUnit.net 00:00:10.62]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:10.94]   Finished:    api.Tests
+  Failed api.Tests.Auth.CentreIsolationTests.Manager_CannotUpdateOrCloseAnotherCentre [347 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Forbidden
+Actual:   NoContent
+  Stack Trace:
+     at api.Tests.Auth.CentreIsolationTests.Manager_CannotUpdateOrCloseAnotherCentre() in /home/chamal/dev/uptslk/apps/api.Tests/Auth/CentreIsolationTests.cs:line 44
+--- End of stack trace from previous location ---
+  Failed api.Tests.Auth.CentreIsolationTests.Manager_CannotChangeBaysOfAnotherCentre [346 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Forbidden
+Actual:   Created
+  Stack Trace:
+     at api.Tests.Auth.CentreIsolationTests.Manager_CannotChangeBaysOfAnotherCentre() in /home/chamal/dev/uptslk/apps/api.Tests/Auth/CentreIsolationTests.cs:line 72
+--- End of stack trace from previous location ---
+  Failed api.Tests.Auth.CentreIsolationTests.Dispatcher_CannotCreateChangeOrCancelTripsOfAnotherCentre [285 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Forbidden
+Actual:   BadRequest
+  Stack Trace:
+     at api.Tests.Auth.CentreIsolationTests.Dispatcher_CannotCreateChangeOrCancelTripsOfAnotherCentre() in /home/chamal/dev/uptslk/apps/api.Tests/Auth/CentreIsolationTests.cs:line 160
+--- End of stack trace from previous location ---
+  Passed api.Tests.Auth.CentreIsolationTests.Manager_CanUpdateTheirOwnCentre_AndAdminCanUpdateAny [311 ms]
+Results File: /home/chamal/dev/uptslk/apps/api.Tests/TestResults/def12-before-fix.trx
+
+Test Run Failed.
+Total tests: 10
+     Passed: 3
+     Failed: 7
+ Total time: 12.0140 Seconds

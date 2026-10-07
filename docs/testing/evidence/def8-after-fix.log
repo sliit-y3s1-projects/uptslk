@@ -1,0 +1,31 @@
+Test run for /home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll (.NETCoreApp,Version=v8.0)
+Microsoft (R) Test Execution Command Line Tool Version 17.8.0 (x64)
+Copyright (c) Microsoft Corporation.  All rights reserved.
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 8.0.30)
+[xUnit.net 00:00:00.17]   Discovering: api.Tests
+[xUnit.net 00:00:00.41]   Discovered:  api.Tests
+[xUnit.net 00:00:00.47]   Starting:    api.Tests
+  Passed api.Tests.Bookings.StripeWebhookTests.CheckoutCompleted_WithTheWrongAmountOrCurrency_DoesNotConfirmTheBooking(amount: 9999, currency: "lkr") [4 s]
+  Passed api.Tests.Bookings.StripeWebhookTests.CheckoutCompleted_WithTheWrongAmountOrCurrency_DoesNotConfirmTheBooking(amount: 1, currency: "lkr") [275 ms]
+  Passed api.Tests.Bookings.StripeWebhookTests.CheckoutCompleted_WithTheWrongAmountOrCurrency_DoesNotConfirmTheBooking(amount: 10000, currency: "usd") [188 ms]
+  Passed api.Tests.Bookings.StripeWebhookTests.InvalidSignature_IsRejected_AndNothingChanges [224 ms]
+  Passed api.Tests.Bookings.StripeWebhookTests.CheckoutCompleted_ConfirmsTheBookingAndMarksThePaymentSucceeded [257 ms]
+  Passed api.Tests.Bookings.StripeWebhookTests.PaymentFailed_CancelsTheBooking [198 ms]
+  Passed api.Tests.Bookings.StripeWebhookTests.CheckoutExpired_CancelsThePaymentAndReleasesTheSeat [179 ms]
+  Passed api.Tests.Bookings.StripeWebhookTests.UnrelatedEventTypes_AreAcknowledged [178 ms]
+[xUnit.net 00:00:07.46]   Finished:    api.Tests
+  Passed api.Tests.Bookings.StripeWebhookTests.CheckoutCompleted_ForUnknownOrder_IsAcknowledgedAndIgnored [185 ms]
+  Passed api.Tests.Bookings.StripeWebhookTests.RefundUpdated_UpdatesTheRefundAndPayment(stripeStatus: "succeeded", expectedPayment: Refunded, expectedRefund: Succeeded) [242 ms]
+  Passed api.Tests.Bookings.StripeWebhookTests.RefundUpdated_UpdatesTheRefundAndPayment(stripeStatus: "failed", expectedPayment: Succeeded, expectedRefund: Failed) [169 ms]
+  Passed api.Tests.Bookings.StripeWebhookTests.MissingSignatureHeader_OrStaleTimestamp_IsRejected [161 ms]
+  Passed api.Tests.Bookings.StripeWebhookTests.ExpiredOrFailedEvents_DoNotUndoAPaymentThatAlreadySucceeded [174 ms]
+  Passed api.Tests.Bookings.StripeWebhookTests.RefundUpdated_WithAnUnknownRefundOrPendingStatus_ChangesNothing [170 ms]
+  Passed api.Tests.Bookings.StripeWebhookTests.ReplayedEvent_IsIgnored_AndDoesNotRecordTwice [148 ms]
+
+Test Run Successful.
+Total tests: 15
+     Passed: 15
+ Total time: 8.3964 Seconds

@@ -1,0 +1,226 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: perf/k6/read-apis.js
+        output: -
+
+     scenarios: (100.00%) 2 scenarios, 200 max VUs, 1m10s max duration (incl. graceful stop):
+              * lists: 100 looping VUs for 20s (exec: lists, gracefulStop: 30s)
+              * details: 100 looping VUs for 20s (exec: details, startTime: 20s, gracefulStop: 30s)
+
+
+running (0m00.9s), 100/200 VUs, 10 complete and 0 interrupted iterations
+lists     [   3% ] 100 VUs  00.7s/20s
+details • [   0% ] waiting  19.3s
+
+running (0m01.9s), 100/200 VUs, 155 complete and 0 interrupted iterations
+lists     [   8% ] 100 VUs  01.7s/20s
+details • [   0% ] waiting  18.3s
+
+running (0m02.9s), 100/200 VUs, 379 complete and 0 interrupted iterations
+lists     [  13% ] 100 VUs  02.7s/20s
+details • [   0% ] waiting  17.3s
+
+running (0m03.9s), 100/200 VUs, 608 complete and 0 interrupted iterations
+lists     [  18% ] 100 VUs  03.7s/20s
+details • [   0% ] waiting  16.3s
+
+running (0m04.9s), 100/200 VUs, 720 complete and 0 interrupted iterations
+lists     [  23% ] 100 VUs  04.7s/20s
+details • [   0% ] waiting  15.3s
+
+running (0m05.9s), 100/200 VUs, 952 complete and 0 interrupted iterations
+lists     [  28% ] 100 VUs  05.7s/20s
+details • [   0% ] waiting  14.3s
+
+running (0m06.9s), 100/200 VUs, 1071 complete and 0 interrupted iterations
+lists     [  33% ] 100 VUs  06.7s/20s
+details • [   0% ] waiting  13.3s
+
+running (0m07.9s), 100/200 VUs, 1295 complete and 0 interrupted iterations
+lists     [  38% ] 100 VUs  07.7s/20s
+details • [   0% ] waiting  12.3s
+
+running (0m08.9s), 100/200 VUs, 1400 complete and 0 interrupted iterations
+lists     [  43% ] 100 VUs  08.7s/20s
+details • [   0% ] waiting  11.3s
+
+running (0m09.9s), 100/200 VUs, 1613 complete and 0 interrupted iterations
+lists     [  48% ] 100 VUs  09.7s/20s
+details • [   0% ] waiting  10.3s
+
+running (0m10.9s), 100/200 VUs, 1736 complete and 0 interrupted iterations
+lists     [  53% ] 100 VUs  10.7s/20s
+details • [   0% ] waiting  09.3s
+
+running (0m11.9s), 100/200 VUs, 1899 complete and 0 interrupted iterations
+lists     [  58% ] 100 VUs  11.7s/20s
+details • [   0% ] waiting  08.3s
+
+running (0m12.9s), 100/200 VUs, 2086 complete and 0 interrupted iterations
+lists     [  63% ] 100 VUs  12.7s/20s
+details • [   0% ] waiting  07.3s
+
+running (0m13.9s), 100/200 VUs, 2326 complete and 0 interrupted iterations
+lists     [  68% ] 100 VUs  13.7s/20s
+details • [   0% ] waiting  06.3s
+
+running (0m14.9s), 100/200 VUs, 2471 complete and 0 interrupted iterations
+lists     [  73% ] 100 VUs  14.7s/20s
+details • [   0% ] waiting  05.3s
+
+running (0m15.9s), 100/200 VUs, 2705 complete and 0 interrupted iterations
+lists     [  78% ] 100 VUs  15.7s/20s
+details • [   0% ] waiting  04.3s
+
+running (0m16.9s), 100/200 VUs, 2827 complete and 0 interrupted iterations
+lists     [  83% ] 100 VUs  16.7s/20s
+details • [   0% ] waiting  03.3s
+
+running (0m17.9s), 100/200 VUs, 3056 complete and 0 interrupted iterations
+lists     [  88% ] 100 VUs  17.7s/20s
+details • [   0% ] waiting  02.3s
+
+running (0m18.9s), 100/200 VUs, 3251 complete and 0 interrupted iterations
+lists     [  93% ] 100 VUs  18.7s/20s
+details • [   0% ] waiting  01.3s
+
+running (0m19.9s), 100/200 VUs, 3437 complete and 0 interrupted iterations
+lists     [  98% ] 100 VUs  19.7s/20s
+details • [   0% ] waiting  00.3s
+
+running (0m20.9s), 179/200 VUs, 3565 complete and 0 interrupted iterations
+lists   ↓ [ 100% ] 100 VUs  20s
+details   [   4% ] 100 VUs  00.7s/20s
+
+running (0m21.9s), 100/200 VUs, 3844 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [   8% ] 100 VUs  01.7s/20s
+
+running (0m22.9s), 100/200 VUs, 4033 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  13% ] 100 VUs  02.7s/20s
+
+running (0m23.9s), 100/200 VUs, 4197 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  18% ] 100 VUs  03.7s/20s
+
+running (0m24.9s), 100/200 VUs, 4407 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  23% ] 100 VUs  04.7s/20s
+
+running (0m25.9s), 100/200 VUs, 4591 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  28% ] 100 VUs  05.7s/20s
+
+running (0m26.9s), 100/200 VUs, 4797 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  33% ] 100 VUs  06.7s/20s
+
+running (0m27.9s), 100/200 VUs, 4968 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  38% ] 100 VUs  07.7s/20s
+
+running (0m28.9s), 100/200 VUs, 5146 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  43% ] 100 VUs  08.7s/20s
+
+running (0m29.9s), 100/200 VUs, 5351 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  48% ] 100 VUs  09.7s/20s
+
+running (0m30.9s), 100/200 VUs, 5526 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  53% ] 100 VUs  10.7s/20s
+
+running (0m31.9s), 100/200 VUs, 5704 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  58% ] 100 VUs  11.7s/20s
+
+running (0m32.9s), 100/200 VUs, 5910 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  63% ] 100 VUs  12.7s/20s
+
+running (0m33.9s), 100/200 VUs, 6077 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  68% ] 100 VUs  13.7s/20s
+
+running (0m34.9s), 100/200 VUs, 6294 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  73% ] 100 VUs  14.7s/20s
+
+running (0m35.9s), 100/200 VUs, 6474 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  78% ] 100 VUs  15.7s/20s
+
+running (0m36.9s), 100/200 VUs, 6654 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  83% ] 100 VUs  16.7s/20s
+
+running (0m37.9s), 100/200 VUs, 6861 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  88% ] 100 VUs  17.7s/20s
+
+running (0m38.9s), 100/200 VUs, 7049 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  93% ] 100 VUs  18.7s/20s
+
+running (0m39.9s), 100/200 VUs, 7237 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details   [  98% ] 100 VUs  19.7s/20s
+
+
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate>0.99' rate=100.00%
+
+    http_req_duration{kind:detail}
+    ✓ 'p(95)<400' p(95)=339.04ms
+
+    http_req_duration{kind:list}
+    ✓ 'p(95)<500' p(95)=205.81ms
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 33153   815.744254/s
+    checks_succeeded...: 100.00% 33153 out of 33153
+    checks_failed......: 0.00%   0 out of 33153
+
+    ✓ list returned 200
+    ✓ detail returned 200
+
+    HTTP
+    http_req_duration..............: avg=78.35ms  min=1.94ms   med=47.65ms  p(90)=194.95ms p(95)=271.85ms max=789.54ms
+      { expected_response:true }...: avg=78.35ms  min=1.94ms   med=47.65ms  p(90)=194.95ms p(95)=271.85ms max=789.54ms
+      { kind:detail }..............: avg=111.79ms min=3.19ms   med=75.97ms  p(90)=279.45ms p(95)=339.04ms max=678.82ms
+      { kind:list }................: avg=61.09ms  min=1.94ms   med=41.96ms  p(90)=136.99ms p(95)=205.81ms max=789.54ms
+    http_req_failed................: 0.00% 0 out of 33157
+    http_reqs......................: 33157 815.842676/s
+
+    EXECUTION
+    iteration_duration.............: avg=553.88ms min=224.67ms med=565.78ms p(90)=715.44ms p(95)=787.63ms max=1.14s   
+    iterations.....................: 7407  182.252517/s
+    vus............................: 100   min=100        max=179
+    vus_max........................: 200   min=200        max=200
+
+    NETWORK
+    data_received..................: 84 MB 2.1 MB/s
+    data_sent......................: 26 MB 649 kB/s
+
+
+
+
+running (0m40.6s), 000/200 VUs, 7407 complete and 0 interrupted iterations
+lists   ✓ [ 100% ] 100 VUs  20s
+details ✓ [ 100% ] 100 VUs  20s

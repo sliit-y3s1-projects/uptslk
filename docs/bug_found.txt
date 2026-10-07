@@ -1,0 +1,529 @@
+UPTS - BUGS FOUND DURING BACKEND TESTING
+=========================================
+
+Found by    : automated backend tests in apps/api.Tests (xUnit + WebApplicationFactory; the database
+              tests run against a real PostgreSQL 17 container started with Testcontainers)
+Branch      : backend-tests
+Run date    : 2026-10-07
+Evidence    : API / SQLite suite (DEF-1, DEF-2)
+                docs/testing/evidence/backend-before-fix.log   (233 run: 216 passed, 17 failed)
+                docs/testing/evidence/before-fix.trx
+                docs/testing/evidence/backend-after-fix.log    (233 run: 233 passed, 0 failed)
+                docs/testing/evidence/after-fix.trx
+              PostgreSQL suite (DEF-3 .. DEF-6)
+                docs/testing/evidence/database-before-fix.log  (60 run: 56 passed, 4 failed)
+                docs/testing/evidence/database-before-fix.trx
+                docs/testing/evidence/database-after-fix.log   (60 run: 60 passed, 0 failed)
+                docs/testing/evidence/database-after-fix.trx
+              DEF-1 second pass (fares, payments, support requests, drivers)
+                docs/testing/evidence/def1b-before-fix.log     (13 run: 8 failed)
+                docs/testing/evidence/def1b-before-fix.trx
+                docs/testing/evidence/full-suite-after-def1b.log (301 run: 301 passed)
+                docs/testing/evidence/full-suite-after-def1b.trx
+              Full suite after the database fixes
+                docs/testing/evidence/full-suite-after-database.log (293 run: 293 passed)
+                docs/testing/evidence/full-suite-after-database.trx
+              Coverage round (DEF-7 .. DEF-13)
+                docs/testing/evidence/def7-before-fix.log / def7-after-fix.log
+                docs/testing/evidence/def8-before-fix.log / def8-after-fix.log
+                docs/testing/evidence/def9-10-before-fix.log (+ .trx), def10b-before-fix.log
+                docs/testing/evidence/def11-before-fix.txt
+                docs/testing/evidence/def12-before-fix.log (+ .trx)
+                docs/testing/evidence/def13-before-fix.log
+                docs/testing/evidence/full-suite-final.log (501 run: 501 passed) and full-suite-final.trx
+                docs/testing/coverage-report/  (HTML code coverage report, open index.html; Summary.txt)
+How found   : tests were written against the INTENDED behaviour (documented CRUD rules
+              and role rules). Tests that failed on the unmodified code exposed the bugs
+              below. The fixes were then applied and the full suite re-run (retest).
+
+SUMMARY
+-------
+ID     Title                                                    Severity  Priority  Status
+DEF-1  Write endpoints have no authentication/authorization      High      P1        Fixed, retested - Pass
+DEF-2  Updating a route or direction crashes (HTTP 500)          Medium    P2        Fixed, retested - Pass
+DEF-3  Parallel bookings oversell a trip (capacity ignored)      High      P1        Fixed, retested - Pass
+DEF-4  Parallel bookings spend the same wallet balance twice     High      P1        Fixed, retested - Pass
+DEF-5  Parallel cancellations refund one booking several times   High      P1        Fixed, retested - Pass
+DEF-6  Trip time without a timezone crashes on PostgreSQL        Medium    P2        Fixed, retested - Pass
+DEF-7  Malformed refresh cookie returns HTTP 500                 Low       P3        Fixed, retested - Pass
+DEF-8  Stripe webhook without signature header returns HTTP 500  Low       P3        Fixed, retested - Pass
+DEF-9  Card checkout can hold more seats than the vehicle has    High      P1        Fixed, retested - Pass
+DEF-10 Parallel refund requests ask Stripe to refund repeatedly  High      P1        Fixed, retested - Pass
+DEF-11 Timetable ending near midnight loops forever              High      P1        Fixed, retested - Pass
+DEF-12 A manager can change another centre's data                High      P1        Fixed, retested - Pass
+DEF-13 Parallel wallet top-ups lose money                        High      P1        Fixed, retested - Pass
+
+Totals: 13 defects identified, 13 fixed, 13 retested and passing.
+API suite : 25 failing tests on the unfixed code (23 DEF-1, 2 DEF-2) -> 0 failing after the fix.
+DB suite  : 4 failing tests on the unfixed code (1 each for DEF-3 .. DEF-6) -> 0 failing after the fix.
+Round 3   : DEF-7 .. DEF-13 found while raising coverage from 53% to 74% (see the sections below); every one has
+            a regression test that failed on the old code and passes now. Final run: 501 passed, 0 failed.
+DEF-3 .. DEF-6 cannot be seen on the in-memory SQLite used by the API suite; they only appear on
+real PostgreSQL with parallel requests (DEF-6 only with PostgreSQL's strict timestamptz rule).
+
+
+-----------------------------------------------------------------------------------
+DEF-1  Write endpoints have no authentication / authorization
+-----------------------------------------------------------------------------------
+Components affected : A (Centres/Routes), B (Vehicles), C (Trips, Drivers), D (Passengers, Bookings, Fares, Payments, Support)
+Severity / Priority : High / P1  (security: unauthenticated data modification, money, personal data)
+Status              : FIXED - retest PASSED
+
+Description
+  CentresController, RoutesController, VehiclesController, TripsController,
+  PassengersController and most of BookingsController had no [Authorize] attribute.
+  Any anonymous caller (no login at all), or a logged-in Commuter, could change data
+  that only staff should be able to change. Only MaintenanceRecords, Drivers, Incidents,
+  Payments, AgentRecovery and the /me endpoints were protected.
+
+  Impact observed in the tests (all returned a success status on the unfixed code):
+    - Anonymous user created a centre and a bay                (201 Created)
+    - Anonymous user closed a centre                           (204 No Content)
+    - Commuter archived a route                                (204 No Content)
+    - Anonymous user created a vehicle and deactivated one     (201 / 204)
+    - Commuter updated a vehicle                               (204 No Content)
+    - Anonymous user created a trip and changed its status     (201 / 204)
+    - Commuter cancelled a trip                                (204 No Content)
+    - Anonymous user listed ALL passengers incl. phone numbers (200 OK, personal data leak)
+    - Commuter read another passenger's profile and wallet     (200 OK)
+    - Anonymous user topped up ANY wallet by any amount        (201 Created, financial risk)
+    - Anonymous user created a booking that debits another passenger's wallet (201 Created)
+    - Anonymous user cancelled a booking (reached the handler: 404 instead of 401)
+  Found in a second pass (audit of every controller for write endpoints without [Authorize]):
+    - Anonymous user created, changed or deactivated a FARE RULE (e.g. set a fare to 0.01)
+    - Anonymous user triggered a STRIPE REFUND for any booking      (POST /payments/bookings/{id}/refund)
+    - Anonymous user started a checkout on behalf of any passenger  (POST /payments/checkout)
+    - Anonymous user listed and created support requests            (passenger names, trips, descriptions)
+    - Anonymous user listed all drivers with phone and licence numbers (GET /drivers, GET /drivers/{id})
+
+Steps to reproduce (unfixed code)
+  1. Start the API with no Authorization header / cookie.
+  2. POST /api/v1/centres with {"code":"HAX","name":"Hack","city":"X","district":"Y"}
+  3. Observe 201 Created (expected 401 Unauthorized).
+  4. POST /api/v1/passengers/{id}/wallet/top-ups with {"amount":100000}
+  5. Observe 201 Created and the wallet balance increased (expected 401).
+  Automated: dotnet test apps/api.Tests/api.Tests.csproj --filter "FullyQualifiedName~AccessControl"
+
+Failing tests (23: 15 in the first pass + 8 in the second pass) - see backend-before-fix.log and def1b-before-fix.log
+  Centres/NetworkAccessControlTests : Anonymous_CannotCreateCentre, Anonymous_CannotCloseCentre,
+                                      Anonymous_CannotCreateBay, Commuter_CannotArchiveRoute
+  Fleet/FleetAccessControlTests     : Anonymous_CannotCreateVehicle, Anonymous_CannotDeactivateVehicle,
+                                      Commuter_CannotUpdateVehicle
+  Dispatch/DispatchAccessControlTests : Anonymous_CannotCreateTrip, Anonymous_CannotChangeTripStatus,
+                                      Commuter_CannotCancelTrip
+  Bookings/PassengerAccessControlTests : Anonymous_CannotListPassengers, Anonymous_CannotTopUpAWallet,
+                                      Anonymous_CannotCreateABookingOnSomeoneElsesWallet,
+                                      Commuter_CannotReadAnotherPassengersProfile,
+                                      Anonymous_CannotCancelSomeonesBooking
+  Bookings/FareAndPaymentAccessControlTests (second pass): Anonymous_CannotCreateAFareRule,
+                                      Commuter_CannotChangeAFare, Anonymous_CannotTriggerAPaymentRefund,
+                                      Commuter_CannotTriggerAPaymentRefund,
+                                      Anonymous_CannotStartACheckoutForAnotherPassenger,
+                                      Anonymous_CannotReadOrCreateSupportRequests
+  Dispatch/DispatchAccessControlTests (second pass): Anonymous_CannotListDriversOrSeeTheirLicenseNumbers,
+                                      Commuter_CannotReadADriversProfile
+
+Fix applied (apps/api/Controllers)
+  Reads that commuters/mobile need stay public (list/get centres, routes, trips, vehicles,
+  fare quote, seat availability). Writes now require a staff role:
+    CentresController     create/update/close centre, create/update/deactivate bay -> Admin, CentreManager
+    RoutesController      create/update/archive/reactivate route, directions, schedules,
+                          generate-trips                                           -> Admin, CentreManager
+    VehiclesController    create/update/deactivate vehicle                         -> Admin, CentreManager, FleetOfficer
+    TripsController       create/update/reassign/status/cancel                     -> Admin, CentreManager, Dispatcher
+    PassengersController  whole controller (personal data + wallet)                -> Admin, CentreManager, Dispatcher
+    BookingsController    list, get, create, status, cancel, manifest              -> Admin, CentreManager, Dispatcher
+    FareRulesController   create/update/deactivate fare rule                       -> Admin, CentreManager
+    PaymentsController    checkout (staff-initiated) and refund                    -> Admin, CentreManager, Dispatcher
+    SupportRequestsController  whole controller                                    -> Admin, CentreManager, Dispatcher
+    DriversController     list and get driver (licence + phone numbers)            -> Admin, CentreManager, Dispatcher
+  The commuter /me endpoints and /payments/checkout/me keep their existing [Authorize(Roles = "Commuter")];
+  the Stripe webhook stays anonymous (it is verified with the Stripe signature).
+  Compatibility check: the web app sends its login cookie on every call (credentials: "include"
+  in apps/web/src/lib/api/api-client.ts) and the mobile app only performs GET requests on the
+  now-protected controllers (plus /bookings/me), so neither should be affected.
+
+Retest result
+  All 23 tests pass. First pass: 233 passed, 0 failed (backend-after-fix.log).
+  Second pass: full suite 301 passed, 0 failed (full-suite-after-def1b.log, def1b-before-fix.log shows the 8 failures).
+  The existing positive tests (staff roles can still create/update/cancel) still pass.
+
+Residual risk / not verified
+  - Centre-level isolation (a manager of centre A changing centre B) was found and fixed afterwards: see DEF-12.
+  - Creating a NEW centre (POST /centres) is still allowed for CentreManager as well as Admin. It does not touch
+    another centre's data, but the team may want it to be Admin only ("Super Admins govern centres").
+  - The role lists above are a proposal and should be confirmed by the team.
+  - The web app was not run against the new rules during this testing session.
+
+
+-----------------------------------------------------------------------------------
+DEF-2  Updating a route or a route direction fails (HTTP 500)
+-----------------------------------------------------------------------------------
+Component affected  : A (Centres and Network - routes and ordered stops)
+Severity / Priority : Medium / P2  (the "Update route stops" operation of the feature is broken)
+Status              : FIXED - retest PASSED
+
+Description
+  PUT /api/v1/routes/{routeId} and PUT /api/v1/routes/directions/{directionId} replace the
+  stop list. The code removed the old stops and then assigned a brand-new list to the
+  navigation property (route.Stops = ToStops(...)). The new RouteStop objects already carry
+  a client-generated Guid id, so Entity Framework treats them as existing rows to UPDATE
+  instead of new rows to INSERT. The save then fails with:
+
+    DbUpdateConcurrencyException: The database operation was expected to affect 1 row(s),
+    but actually affected 0 row(s)
+
+  and the API returns HTTP 500. The route-level update also created the stops with
+  RouteId = Guid.Empty.
+
+Steps to reproduce (unfixed code)
+  1. Create a route with 3 stops: POST /api/v1/routes (stops: Stop 0, Stop 1, Stop 2).
+  2. Update it: PUT /api/v1/routes/{id} with a new name and 2 different stops.
+  3. Observe HTTP 500 (expected 204 No Content) and the stops are not replaced.
+  4. Same result for a direction: PUT /api/v1/routes/directions/{directionId} with new stops.
+  Automated: dotnet test apps/api.Tests/api.Tests.csproj --filter "FullyQualifiedName~RouteCrudTests"
+
+Failing tests (2) - see backend-before-fix.log
+  Centres/RouteCrudTests.Update_ChangesRoute_AndReplacesStops
+  Centres/RouteCrudTests.UpdateDirection_ReplacesStops_AndKeepsThemOrdered
+
+Fix applied (apps/api/Controllers/RoutesController.cs)
+  Route update : db.RouteStops.RemoveRange(old stops) then
+                 db.RouteStops.AddRange(ToStops(request.Stops, routeId: route.Id))
+                 so the new stops are explicitly INSERTed with the correct RouteId.
+  Direction update : same pattern, run inside a transaction with the delete saved before the
+                 insert, so the unique index on (RouteDirectionId, SequenceOrder) is not violated.
+
+Retest result
+  Both tests pass; the stops come back in the new order with the new names.
+  Full suite: 233 passed, 0 failed (backend-after-fix.log).
+
+
+-----------------------------------------------------------------------------------
+DEF-3  Parallel bookings oversell a trip (capacity ignored)
+-----------------------------------------------------------------------------------
+Component affected  : D (Passengers and Fares - booking, seat allocation)
+Severity / Priority : High / P1  (more passengers sold than the vehicle can carry)
+Status              : FIXED - retest PASSED
+
+Description
+  POST /api/v1/bookings checks the remaining capacity (OccupiedCapacity + requested seats <=
+  vehicle capacity) and then inserts the booking, but the check and the insert are not
+  protected against other requests running at the same moment. Several requests can read the
+  same "free seats" value, all pass the check, and all insert a booking. The only database
+  guard is a unique index on the random boarding reference, which never collides.
+
+Steps to reproduce (unfixed code, PostgreSQL)
+  1. Create a trip whose vehicle has capacity 2 and 10 passengers with enough wallet balance.
+  2. Send 10 POST /api/v1/bookings requests (1 passenger each) at the same time.
+  3. Observe that more than 2 succeed. Test run result: capacity 2, 5 seats sold (5 x 201).
+  Automated: Database/BookingConcurrencyTests.ParallelBookings_NeverExceedVehicleCapacity
+
+Fix applied (apps/api/Controllers/BookingsController.cs, Create)
+  The booking now runs in a transaction that first locks the trip row (SELECT ... FOR UPDATE)
+  and then re-reads the occupied capacity, so concurrent bookings for the same trip are
+  checked one after another. No schema change or migration was needed.
+
+Retest result
+  The test passes, 5 runs in a row, and sells at most 2 seats.
+
+
+-----------------------------------------------------------------------------------
+DEF-4  Parallel bookings spend the same wallet balance twice
+-----------------------------------------------------------------------------------
+Component affected  : D (Passengers and Fares - wallet payment)
+Severity / Priority : High / P1  (financial: tickets obtained without paying)
+Status              : FIXED - retest PASSED
+
+Description
+  The wallet balance is read, compared with the fare, reduced in memory and saved, with no
+  lock and no concurrency token. Parallel requests all read the same balance, all pass the
+  "sufficient balance" check, and each writes "balance - fare", so the later writes overwrite
+  the earlier ones (lost update).
+
+Steps to reproduce (unfixed code, PostgreSQL)
+  1. Give one passenger a wallet balance of 100 and a trip with a fare of 100.
+  2. Send 8 POST /api/v1/bookings requests for that passenger at the same time.
+  3. Observe that all 8 bookings are created while the balance only drops from 100 to 0.00:
+     8 tickets (800) were obtained for 100.
+  Automated: Database/BookingConcurrencyTests.ParallelBookings_ByOneWallet_CannotSpendMoreThanTheBalance
+  Related: Database/TransactionTests.TwoContexts_UpdatingTheSameRow_BothSucceed_LastWriteWins
+           documents that wallets have no concurrency protection at database level.
+
+Fix applied (BookingsController.cs, Create)
+  The wallet row is locked (SELECT ... FOR UPDATE) inside the same transaction and reloaded
+  before the balance check, so only one booking at a time can spend from a wallet.
+
+Retest result
+  The test passes (5 runs in a row): at most 1 booking succeeds and the balance is never negative.
+
+
+-----------------------------------------------------------------------------------
+DEF-5  Parallel cancellations refund one booking several times
+-----------------------------------------------------------------------------------
+Component affected  : D (Passengers and Fares - cancellation and refund)
+Severity / Priority : High / P1  (financial: duplicate refund records, wrong ledger)
+Status              : FIXED - retest PASSED
+
+Description
+  DELETE /api/v1/bookings/{id} checks that the booking is not already cancelled and later
+  refunds the wallet, without locking. If the request is sent twice at once (double click,
+  client retry, slow network), every request passes the "only active bookings" check and each
+  one adds a Refund transaction.
+
+Steps to reproduce (unfixed code, PostgreSQL)
+  1. Create a booking that cost 100 (wallet 100 -> 0).
+  2. Send 8 DELETE /api/v1/bookings/{id} requests at the same time.
+  3. Observe 7 Refund transaction rows for one booking (balance shows 100 only because the
+     updates overwrite each other, so the ledger and the balance disagree).
+  Automated: Database/BookingConcurrencyTests.ParallelCancellations_RefundTheBookingOnlyOnce
+
+Fix applied (BookingsController.cs, Cancel)
+  The booking and wallet rows are locked inside the refund transaction and reloaded; the
+  "already cancelled" check is repeated after the lock, so only the first request refunds.
+
+Retest result
+  Exactly 1 Refund transaction and a final balance of 100 (5 runs in a row).
+
+
+-----------------------------------------------------------------------------------
+DEF-6  Trip time without a timezone crashes on PostgreSQL (HTTP 500)
+-----------------------------------------------------------------------------------
+Component affected  : C (Scheduling and Dispatch) - affects every date field in the API
+Severity / Priority : Medium / P2
+Status              : FIXED - retest PASSED
+
+Description
+  Trip and maintenance times are stored in "timestamp with time zone" columns. Npgsql only
+  accepts UTC values for these columns. A client that sends a time without "Z" or an offset
+  (for example "2030-06-01T08:00:00") produces a DateTime of kind Unspecified, and saving it
+  throws "Cannot write DateTime with Kind=Unspecified to PostgreSQL type 'timestamp with time
+  zone', only UTC is supported", which the API returns as HTTP 500. SQLite accepts any kind, so
+  the API suite could not see this.
+
+Steps to reproduce (unfixed code, PostgreSQL)
+  1. POST /api/v1/trips with "scheduledTime": "2030-06-01T08:00:00" (valid IDs for the rest).
+  2. Observe HTTP 500 (expected 201 Created).
+  Automated: Database/BookingConcurrencyTests.Trip_WithLocalTimeWithoutTimezone_IsStoredAsUtcInstant
+
+Fix applied (apps/api/Data/AppDbContext.cs)
+  A value converter on every DateTime / DateTime? property normalizes values to UTC before
+  they are saved: local times are converted, times without a kind are treated as UTC. No
+  column type changed, so no migration is needed (the migration-drift test confirms this).
+  Assumption to confirm with the team: a time sent without an offset is interpreted as UTC.
+
+Retest result
+  The trip is created (201). Full suite: 293 passed, 0 failed.
+
+-----------------------------------------------------------------------------------
+DEF-7  Malformed refresh cookie returns HTTP 500
+-----------------------------------------------------------------------------------
+Component affected  : Shared foundation (authentication)
+Severity / Priority : Low / P3
+Status              : FIXED - retest PASSED
+
+Description
+  POST /api/v1/auth/refresh catches SecurityTokenException only. A cookie that is not a JWT (for example random text)
+  makes the token handler throw SecurityTokenMalformedException, which is an ArgumentException, so the request ends
+  in an unhandled exception and HTTP 500 instead of 401. Anyone can trigger it by sending a made-up cookie.
+Steps to reproduce (unfixed code)
+  1. POST /api/v1/auth/refresh with the header "Cookie: upts_refresh_token=not-a-token".
+  2. Observe HTTP 500 (IDX12741: JWT must have three segments); expected 401.
+  Automated: Auth/AuthenticationTests.Refresh_WithoutOrWithGarbageCookie_ReturnsUnauthorized
+Fix applied (AuthController.Refresh): the catch now handles SecurityTokenException and ArgumentException.
+Retest result: returns 401; test passes (def7-before-fix.log failed, def7-after-fix.log passed).
+
+
+-----------------------------------------------------------------------------------
+DEF-8  Stripe webhook without a signature header returns HTTP 500
+-----------------------------------------------------------------------------------
+Component affected  : D (Payments)
+Severity / Priority : Low / P3
+Status              : FIXED - retest PASSED
+
+Description
+  POST /api/v1/payments/stripe/webhook passed the Stripe-Signature header straight into Stripe's verifier. With no
+  header the verifier throws a NullReferenceException (not a StripeException), so the API answers HTTP 500 instead of
+  rejecting the call with 400. It is an anonymous endpoint, so anyone can trigger it.
+Steps to reproduce (unfixed code)
+  1. POST /api/v1/payments/stripe/webhook with any JSON body and no Stripe-Signature header.
+  2. Observe HTTP 500 / NullReferenceException; expected 400.
+  Automated: Bookings/StripeWebhookTests.MissingSignatureHeader_OrStaleTimestamp_IsRejected
+Fix applied (PaymentsController.StripeWebhook): a missing or blank header returns 400 before verification.
+Retest result: returns 400; all 15 webhook tests pass (def8-before-fix.log / def8-after-fix.log).
+
+
+-----------------------------------------------------------------------------------
+DEF-9  Card checkout can hold more seats than the vehicle has
+-----------------------------------------------------------------------------------
+Component affected  : D (Passengers and Fares - card payment, the path the mobile app uses)
+Severity / Priority : High / P1
+Status              : FIXED - retest PASSED
+
+Description
+  POST /api/v1/payments/checkout/me checks the remaining capacity and then inserts a Pending booking, which holds
+  the seats while the passenger pays. The check and the insert were not protected against parallel requests, so the
+  same flaw as DEF-3 existed on the card path (DEF-3 only fixed the wallet path).
+Steps to reproduce (unfixed code, PostgreSQL)
+  1. Trip whose vehicle has capacity 2; 10 commuters.
+  2. Send 10 checkout requests at the same time.
+  3. All 10 succeed: "Capacity is 2 but 10 seats are held".
+  Automated: Database/PaymentConcurrencyTests.ParallelCheckouts_NeverHoldMoreSeatsThanTheVehicleHas
+Fix applied (BookingPaymentService.StartCheckoutAsync): capacity is re-checked and the booking inserted inside a
+  transaction that holds a row lock on the trip. The call to Stripe happens after the lock is released.
+Retest result: at most 2 seats held; stable over 3 runs (def9-10-before-fix.log failed, full-suite-final.log passed).
+
+
+-----------------------------------------------------------------------------------
+DEF-10 Parallel refund requests ask Stripe to refund repeatedly
+-----------------------------------------------------------------------------------
+Component affected  : D (Passengers and Fares - refunds)
+Severity / Priority : High / P1  (money: duplicate refund requests and duplicate refund records)
+Status              : FIXED - retest PASSED
+
+Description
+  BookingPaymentService.RequestRefundAsync loads the booking, checks it is active and then calls Stripe. Parallel
+  requests (double click, retry) all pass the check before any of them cancels the booking, so each one calls
+  Stripe and records a refund. The existing guard "A refund is already being processed" never ran because the
+  Refunds collection was not loaded. The same happens through DELETE /bookings/{id} for a paid booking.
+Steps to reproduce (unfixed code, PostgreSQL)
+  1. A confirmed booking with a successful Stripe payment.
+  2. Send 6 refund requests (POST /payments/bookings/{id}/refund) at the same time.
+  3. "Stripe was asked 6 times and 6 refund rows exist; expected exactly one."
+  The cancel-booking route showed the same: expected 1 gateway call, actual 6 (def10b-before-fix.log).
+  Automated: Database/PaymentConcurrencyTests.ParallelRefundRequests_ReachStripeOnlyOnce and
+             ParallelCancellations_OfAPaidBooking_ThroughTheBookingApi_ReachStripeOnlyOnce
+Fix applied (BookingPaymentService.RequestRefundAsync): the booking row is locked inside a transaction, the booking
+  is read again after the lock (so a booking cancelled by the first request is seen as cancelled), and the Refunds
+  collection is now loaded so the in-progress guard works. A shared helper (api/Data/DbContextLockExtensions.cs)
+  provides the lock for all of these fixes.
+Retest result: exactly one gateway call and one refund row; stable over 3 runs.
+
+
+-----------------------------------------------------------------------------------
+DEF-11 Timetable ending near midnight loops forever
+-----------------------------------------------------------------------------------
+Component affected  : A (Centres and Network - timetables / trip generation)
+Severity / Priority : High / P1  (a request that never finishes and keeps a server thread busy)
+Status              : FIXED - retest PASSED
+
+Description
+  POST /api/v1/routes/schedules/{id}/generate-trips stepped through departures with TimeOnly.AddMinutes, which wraps
+  around at midnight. For a timetable whose last departure is within one headway of midnight (for example 22:30 to
+  23:30 every 30 minutes), 23:30 + 30 minutes becomes 00:00, which still compares as "before 23:30", so the loop never
+  ends. Any schedule ending after 23:30 with a 30 minute headway is affected.
+Steps to reproduce (unfixed code)
+  1. Create a schedule 22:30 - 23:30, headway 30, Everyday, and call generate-trips for any date.
+  2. The request does not return (the test run was killed after 120 s although the client gave up after 15 s).
+  Evidence: docs/testing/evidence/def11-before-fix.txt (isolated demonstration + the hang).
+  Automated: Centres/RouteScheduleTests.Departures_* (pure-function tests, so a regression fails fast)
+Fix applied: new api/Services/ScheduleTimes.cs counts plain minutes and stops at the last departure;
+  RoutesController.GenerateTrips uses it.
+Retest result: "22:30,23:00,23:30" and 5 other timetable shapes pass; the generator tests pass.
+
+
+-----------------------------------------------------------------------------------
+DEF-12 A manager can change another centre's data
+-----------------------------------------------------------------------------------
+Components affected : A (centres, bays, routes, timetables), B (vehicles), C (trips), D (fares)
+Severity / Priority : High / P1  (broken object-level authorization: data of every centre can be changed by any manager)
+Status              : FIXED - retest PASSED
+
+Description
+  After DEF-1, the write endpoints required a staff role but not the right centre. Drivers, incidents and
+  maintenance records checked the centre_id claim; centres, bays, routes, schedules, vehicles, trips and fare rules
+  did not. A CentreManager, Dispatcher or FleetOfficer of centre A could therefore rename or close centre B, archive
+  its routes, deactivate its vehicles, cancel its trips or set its fares to 0.01.
+Steps to reproduce (unfixed code)
+  1. Log in as a CentreManager assigned to centre A.
+  2. PUT /api/v1/centres/{centre B id}, DELETE /api/v1/routes/{B route}, DELETE /api/v1/vehicles/{B vehicle},
+     DELETE /api/v1/trips/{B trip}, PUT /api/v1/fare-rules/{B fare}.
+  3. All succeed (204) instead of 403.
+  Automated: Auth/CentreIsolationTests (7 of 10 failed on the old code, def12-before-fix.log)
+Fix applied: new api/Services/CentreAccess.cs (User.CanManageCentre: Admin, or centre_id claim equals the centre)
+  applied to the write endpoints of Centres, Routes (incl. directions, schedules, generate-trips), Vehicles, Trips
+  and FareRules. Moving a vehicle or trip to another centre needs rights on both centres.
+Retest result: all 10 isolation tests pass; managers can still manage their own centre and Admin can manage any.
+Behaviour change to confirm with the team: staff accounts with NO centre assignment can no longer change
+  centre data (the same rule that already applied to drivers, incidents and maintenance).
+
+
+-----------------------------------------------------------------------------------
+DEF-13 Parallel wallet top-ups lose money
+-----------------------------------------------------------------------------------
+Component affected  : D (Passengers and Fares - wallet)
+Severity / Priority : High / P1  (financial: money recorded in the ledger but missing from the balance)
+Status              : FIXED - retest PASSED
+
+Description
+  POST /api/v1/passengers/{id}/wallet/top-ups read the wallet, added the amount in memory and saved, with no lock.
+  Parallel top-ups overwrote each other (lost update) while every top-up still created its own transaction row.
+Steps to reproduce (unfixed code, PostgreSQL)
+  1. Wallet balance 0. Send 10 top-ups of 100 at the same time; all 10 return 201.
+  2. Balance is 300.00 (expected 1000) while 10 top-up transactions exist: 700 was lost.
+  Automated: Database/BookingConcurrencyTests.ParallelTopUps_AreAllCredited_WithNoLostUpdates
+Fix applied (PassengersController.TopUp): wallet row lock inside a transaction and re-read before adding.
+Retest result: balance 1000 with 10 transactions; stable over 3 runs (def13-before-fix.log failed).
+
+
+-----------------------------------------------------------------------------------
+TOOLING AND CONFIGURATION FINDINGS (from the non-functional runs)
+-----------------------------------------------------------------------------------
+Not counted in the 6 defects above because they are tooling / configuration issues, not
+product behaviour. Evidence is in docs/testing/evidence/.
+
+T-1  k6 script ignored load settings (Low) - FIXED
+     perf/k6/read-apis.js read __ENV.K6_VUS and __ENV.K6_DURATION. These names are reserved k6
+     options, so setting them made k6 discard the scenarios and fail with
+     "function 'default' not found in exports" (exit code 104). Renamed to PERF_VUS / PERF_DURATION
+     and documented in the file header. Retest: a 100-VU run completed (k6-stress-100vu.log).
+
+T-2  Web dependencies with known vulnerabilities (Medium) - OPEN
+     pnpm audit on apps/web reports 37 advisories: 1 critical, 13 high, 18 moderate, 5 low
+     (security-pnpm-audit.txt / .json). 34 of the 37 are reachable only through the "shadcn" package
+     (including the critical one, proxy-addr, and the undici / fast-uri / js-yaml / brace-expansion /
+     braces / hono / ip-address / MCP SDK findings). shadcn is a code-generation CLI, yet it is listed
+     under "dependencies" in apps/web/package.json, which is why "pnpm audit --prod" reports the same
+     37. 2 findings are dompurify (<= 3.4.15, patched in >= 3.4.16) reached through jspdf and
+     @thunderid/react, which DO run in the browser. 1 is source-map-js, reached through the
+     @tailwindcss/vite build tool.
+     Suggested action: move shadcn to devDependencies, then update or override dompurify, and
+     re-run the audit.
+
+T-3  Vulnerable transitive package in the test project only (Low) - OPEN
+     dotnet list package --vulnerable: apps/api has none; apps/api.Tests has
+     SQLitePCLRaw.lib.e_sqlite3 2.1.6 (High, GHSA-2m69-gcr7-jv3q), pulled in by the SQLite test
+     provider. It is not part of the deployed API.
+
+T-4  Development secrets in an ignored file (Low) - OPEN
+     apps/api/appsettings.Development.json holds Stripe test keys and a JWT signing key. The file is
+     now git-ignored and untracked, but earlier commits that touched it (for example 2f2a7c3) may
+     still contain those values in history. Suggested action: rotate the Stripe test keys and the
+     JWT key, and use user-secrets or environment variables.
+
+T-5  Bootstrap admin has a well-known default password (Medium) - OPEN
+     Program.cs creates admin@upts.lk with the password "admin123" when the configuration keys
+     BootstrapAdmin:Email / BootstrapAdmin:Password are not set (used in the throwaway test
+     environment). If a deployment forgets to set them, the Super Admin account is guessable.
+     Suggested action: fail startup in non-development environments when the keys are missing.
+
+-----------------------------------------------------------------------------------
+OTHER OBSERVATIONS (not defects, recorded for the report)
+-----------------------------------------------------------------------------------
+  - Each trip/booking/centre/vehicle "delete" is a soft delete (status change) and the tests
+    confirm the record and its history are retained, as the component breakdown requires.
+  - Business rules verified working with no defects: duplicate code/plate/phone conflicts,
+    input range validation, trip conflict detection (vehicle, driver, bay window, maintenance
+    day), trip status state machine, wallet debit/refund, capacity limits, refund only once.
+  - The API suite runs on in-memory SQLite; the database suite (apps/api.Tests/Database, 60 tests)
+    runs on real PostgreSQL 17 through Testcontainers and needs Docker. It verified with no
+    defects: all migrations apply to an empty database, the model matches the migration
+    snapshot (no pending migration), migrations can be rolled back to zero and re-applied,
+    every unique/foreign-key/not-null/length/precision constraint, the restrict/cascade/set-null
+    delete rules, the partial unique index on active booking seats, and commit/rollback behaviour.
+  - Design note: FareRule has a unique index on RouteId, so a route has exactly one fare rule (the API
+    even answers "Edit the existing fare instead"). This looks intentional; it means fare history
+    cannot be kept by adding new rules. Confirm with the team if history is ever required.
+  - Row locks now protect booking create and cancel (wallet path), card checkout, refunds and wallet top-ups.
+    Not covered by a parallel-request test: the Stripe webhook handlers (they are idempotent through the stored
+    event id, but that was only tested with sequential replays) and the recovery-workflow approval actions.

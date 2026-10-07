@@ -35,14 +35,22 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
             Amount = booking.Fare, Currency = "LKR", Status = PaymentStatus.Initiated
         };
 
-        try
+        // The pending booking holds the seats, so the capacity check and the insert must happen under a trip lock.
+        // Otherwise parallel checkouts all see the same free seats and oversell the trip.
+        await using (var transaction = await db.Database.BeginTransactionAsync(cancellationToken))
         {
-            db.Payments.Add(payment);
-            await db.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException)
-        {
-            return (null, "This departure was just filled. Please choose another departure.", StatusCodes.Status409Conflict);
+            await db.LockRowAsync("Trips", trip.Id, cancellationToken);
+            if (await OccupiedCapacity(trip.Id, cancellationToken) + request.PassengerCount > trip.Vehicle.Capacity) return (null, "This departure does not have enough remaining spaces for every passenger.", StatusCodes.Status409Conflict);
+            try
+            {
+                db.Payments.Add(payment);
+                await db.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch (DbUpdateException)
+            {
+                return (null, "This departure was just filled. Please choose another departure.", StatusCodes.Status409Conflict);
+            }
         }
 
         try
@@ -161,7 +169,12 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
 
     public async Task<(string? Error, int StatusCode)> RequestRefundAsync(Guid bookingId, string reason, CancellationToken cancellationToken)
     {
-        var booking = await db.Bookings.Include(item => item.Payments).SingleOrDefaultAsync(item => item.Id == bookingId, cancellationToken);
+        // Lock the booking first, then read it, so two refund requests for the same booking run one after another and
+        // the second one sees the cancelled booking instead of asking the payment provider for a second refund.
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await db.LockRowAsync("Bookings", bookingId, cancellationToken);
+        db.ChangeTracker.Clear(); // the caller may already have loaded this booking; read it again now that the lock is held
+        var booking = await db.Bookings.Include(item => item.Payments).ThenInclude(item => item.Refunds).SingleOrDefaultAsync(item => item.Id == bookingId, cancellationToken);
         if (booking is null) return ("Booking not found.", StatusCodes.Status404NotFound);
         if (booking.Status is BookingStatus.Cancelled or BookingStatus.Completed) return ("Only active bookings can be cancelled.", StatusCodes.Status400BadRequest);
         var payment = booking.Payments.OrderByDescending(item => item.CreatedAt).FirstOrDefault(item => item.Status == PaymentStatus.Succeeded);
@@ -176,6 +189,7 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
         if (!result.IsAccepted)
         {
             await db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
             return (result.FailureReason ?? "The payment provider rejected the refund.", StatusCodes.Status502BadGateway);
         }
         payment.Status = PaymentStatus.RefundPending;
@@ -185,6 +199,7 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
         booking.RefundAmount = payment.Amount;
         booking.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return (null, StatusCodes.Status204NoContent);
     }
 

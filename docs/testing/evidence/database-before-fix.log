@@ -1,0 +1,221 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  api -> /home/chamal/dev/uptslk/apps/api/bin/Debug/net8.0/api.dll
+  api.Evaluation -> /home/chamal/dev/uptslk/apps/api.Evaluation/bin/Debug/net8.0/api.Evaluation.dll
+/home/chamal/dev/uptslk/apps/api.Tests/Database/PostgresFixture.cs(17,55): warning CS0618: 'PostgreSqlBuilder.PostgreSqlBuilder()' is obsolete: 'This parameterless constructor is obsolete and will be removed. Use the constructor with the image parameter instead: https://github.com/testcontainers/testcontainers-dotnet/discussions/1470#discussioncomment-15185721.' [/home/chamal/dev/uptslk/apps/api.Tests/api.Tests.csproj]
+  api.Tests -> /home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll
+Test run for /home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll (.NETCoreApp,Version=v8.0)
+Microsoft (R) Test Execution Command Line Tool Version 17.8.0 (x64)
+Copyright (c) Microsoft Corporation.  All rights reserved.
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.01] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 8.0.30)
+[xUnit.net 00:00:00.56]   Discovering: api.Tests
+[xUnit.net 00:00:00.95]   Discovered:  api.Tests
+[xUnit.net 00:00:01.05]   Starting:    api.Tests
+[testcontainers.org 00:00:00.61] Connected to Docker:
+  Host: unix:///var/run/docker.sock
+  Server Version: 29.8.1
+  Kernel Version: 7.2.5-200.fc44.x86_64
+  API Version: 1.56
+  Operating System: Fedora Linux 44 (Workstation Edition)
+  Total Memory: 15.42 GB
+[testcontainers.org 00:00:02.19] Docker container 0946b20c06c8 created
+[testcontainers.org 00:00:02.31] Start Docker container 0946b20c06c8
+[testcontainers.org 00:00:02.62] Wait for Docker container 0946b20c06c8 to complete readiness checks
+[testcontainers.org 00:00:03.67] Docker container 0946b20c06c8 ready
+[testcontainers.org 00:00:03.98] Docker container d32508899eb8 created
+[testcontainers.org 00:00:03.99] Start Docker container d32508899eb8
+[testcontainers.org 00:00:04.30] Wait for Docker container d32508899eb8 to complete readiness checks
+[testcontainers.org 00:00:04.32] Execute "pg_isready --host localhost --dbname postgres --username upts_test" at Docker container d32508899eb8
+[testcontainers.org 00:00:05.55] Execute "pg_isready --host localhost --dbname postgres --username upts_test" at Docker container d32508899eb8
+[testcontainers.org 00:00:06.72] Execute "pg_isready --host localhost --dbname postgres --username upts_test" at Docker container d32508899eb8
+[testcontainers.org 00:00:06.84] Docker container d32508899eb8 ready
+  Passed api.Tests.Database.TransactionTests.RolledBackTransaction_LeavesNoRows [1 s]
+  Passed api.Tests.Database.TransactionTests.FailureInsideTransaction_CanRollBackEarlierSaves [1 s]
+  Passed api.Tests.Database.TransactionTests.TwoContexts_UpdatingTheSameRow_BothSucceed_LastWriteWins [204 ms]
+  Passed api.Tests.Database.TransactionTests.UncommittedRows_AreInvisibleToOtherConnections [148 ms]
+  Passed api.Tests.Database.TransactionTests.CommittedTransaction_PersistsRows_ForOtherConnections [121 ms]
+  Passed api.Tests.Database.TransactionTests.SaveChanges_IsAtomic_WhenOneRowViolatesAConstraint [125 ms]
+  Passed api.Tests.Database.RelationshipTests.SecondWallet_ForTheSamePassenger_IsRejected [138 ms]
+  Passed api.Tests.Database.RelationshipTests.DeletingARoute_CascadesToItsStopsAndSchedules_ButNotItsTrips [486 ms]
+  Passed api.Tests.Database.RelationshipTests.Trip_LoadsItsFullAssignmentGraph [426 ms]
+  Passed api.Tests.Database.RelationshipTests.Centre_ExposesItsBaysRoutesAndVehicles [345 ms]
+  Passed api.Tests.Database.RelationshipTests.DeletingATrip_KeepsItsIncidents_WithNullTripId [284 ms]
+  Passed api.Tests.Database.RelationshipTests.UtcDateTimes_RoundTripUnchanged_ThroughTimestamptz [146 ms]
+  Passed api.Tests.Database.RelationshipTests.MaintenanceRecord_RequiresAnExistingVehicle [191 ms]
+  Passed api.Tests.Database.RelationshipTests.DeletingAPassengerWithoutBookings_CascadesToWalletAndTransactions [234 ms]
+  Passed api.Tests.Database.RelationshipTests.Passenger_And_Wallet_AreOneToOne [159 ms]
+  Passed api.Tests.Database.RelationshipTests.DeletingABooking_KeepsItsWalletTransaction_WithNullBookingId [328 ms]
+  Passed api.Tests.Database.RelationshipTests.Enums_AreStoredAndReadBack [157 ms]
+  Passed api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: "AgentSteps", column: "ToolCallsJson", expectedType: "jsonb") [128 ms]
+  Passed api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: "AgentWorkflows", column: "ValidationJson", expectedType: "jsonb") [160 ms]
+  Passed api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: "Bookings", column: "Fare", expectedType: "numeric") [158 ms]
+  Passed api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: "Wallets", column: "Balance", expectedType: "numeric") [129 ms]
+  Passed api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: "Trips", column: "ScheduledTime", expectedType: "timestamp with time zone") [208 ms]
+  Passed api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: "AgentWorkflows", column: "PlanJson", expectedType: "jsonb") [148 ms]
+  Passed api.Tests.Database.MigrationTests.Migrate_OnEmptyDatabase_AppliesEveryMigration [1 s]
+  Passed api.Tests.Database.MigrationTests.ActiveBookingSeatIndex_IsAPartialUniqueIndex [186 ms]
+  Passed api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: "Transactions", column: "Amount", precision: 12, scale: 2) [207 ms]
+  Passed api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: "FareRules", column: "Amount", precision: 12, scale: 2) [172 ms]
+  Passed api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: "Bookings", column: "Fare", precision: 12, scale: 2) [128 ms]
+  Passed api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: "Wallets", column: "Balance", precision: 12, scale: 2) [166 ms]
+  Passed api.Tests.Database.MigrationTests.Model_MatchesTheLatestMigrationSnapshot [560 ms]
+  Passed api.Tests.Database.MigrationTests.Migrate_BackToZero_AndForwardAgain_Works [3 s]
+  Passed api.Tests.Database.MigrationTests.Migrate_CreatesTheCoreTables [1 s]
+  Passed api.Tests.Database.MigrationTests.Migrate_CanBeRunTwice_WithoutError [1 s]
+  Passed api.Tests.Database.ConstraintTests.CancelledBooking_FreesItsSeatForANewBooking [138 ms]
+  Passed api.Tests.Database.ConstraintTests.Vehicle_WithTrips_CannotBeDeleted [215 ms]
+  Passed api.Tests.Database.ConstraintTests.Trip_WithUnknownVehicle_IsRejected [217 ms]
+  Passed api.Tests.Database.ConstraintTests.Vehicle_WithUnknownCentre_IsRejected [141 ms]
+  Passed api.Tests.Database.ConstraintTests.Centre_Code_MustBeUnique [121 ms]
+  Passed api.Tests.Database.ConstraintTests.Centre_Name_LongerThan160Characters_IsRejected [159 ms]
+  Passed api.Tests.Database.ConstraintTests.Vehicle_PlateNumber_MustBeUnique [150 ms]
+  Passed api.Tests.Database.ConstraintTests.Driver_LicenseNumber_MustBeUnique [133 ms]
+  Passed api.Tests.Database.ConstraintTests.Centre_Name_Of160Characters_IsAccepted [170 ms]
+  Passed api.Tests.Database.ConstraintTests.Passenger_WithBookings_CannotBeDeleted [143 ms]
+  Passed api.Tests.Database.ConstraintTests.Centre_WithBays_CannotBeDeleted [154 ms]
+  Passed api.Tests.Database.ConstraintTests.Route_Number_IsUniquePerCentre [165 ms]
+  Passed api.Tests.Database.ConstraintTests.Booking_WithUnknownPassenger_IsRejected [196 ms]
+  Passed api.Tests.Database.ConstraintTests.Trip_WithBookings_CannotBeDeleted [145 ms]
+  Passed api.Tests.Database.ConstraintTests.Money_IsRoundedToTwoDecimalPlaces [129 ms]
+  Passed api.Tests.Database.ConstraintTests.Wallet_Balance_AboveNumeric12x2Range_IsRejected [164 ms]
+  Passed api.Tests.Database.ConstraintTests.FareRule_AllowsOnlyOneRulePerRoute [154 ms]
+  Passed api.Tests.Database.ConstraintTests.ActiveBookings_CannotShareASeatOnTheSameTrip [199 ms]
+  Passed api.Tests.Database.ConstraintTests.Passenger_PhoneNumber_MustBeUnique [150 ms]
+  Passed api.Tests.Database.ConstraintTests.Bay_Code_IsUniquePerCentre_ButReusableAtAnotherCentre [196 ms]
+  Passed api.Tests.Database.ConstraintTests.Centre_Name_CannotBeNull [116 ms]
+[xUnit.net 00:00:36.24]     api.Tests.Database.BookingConcurrencyTests.ParallelBookings_ByOneWallet_CannotSpendMoreThanTheBalance [FAIL]
+[xUnit.net 00:00:36.25]       Wallet held 100 and each ticket costs 100, but 8 bookings succeeded and the balance is 0.00.
+[xUnit.net 00:00:36.25]       Stack Trace:
+[xUnit.net 00:00:36.25]         /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs(97,0): at api.Tests.Database.BookingConcurrencyTests.ParallelBookings_ByOneWallet_CannotSpendMoreThanTheBalance()
+[xUnit.net 00:00:36.25]         --- End of stack trace from previous location ---
+  Failed api.Tests.Database.BookingConcurrencyTests.ParallelBookings_ByOneWallet_CannotSpendMoreThanTheBalance [2 s]
+  Error Message:
+   Wallet held 100 and each ticket costs 100, but 8 bookings succeeded and the balance is 0.00.
+  Stack Trace:
+     at api.Tests.Database.BookingConcurrencyTests.ParallelBookings_ByOneWallet_CannotSpendMoreThanTheBalance() in /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs:line 97
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:36.87]     api.Tests.Database.BookingConcurrencyTests.ParallelCancellations_RefundTheBookingOnlyOnce [FAIL]
+[xUnit.net 00:00:36.87]       Expected one refund of 100, but balance is 100.00 with 3 refund transactions.
+[xUnit.net 00:00:36.87]       Stack Trace:
+[xUnit.net 00:00:36.87]         /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs(118,0): at api.Tests.Database.BookingConcurrencyTests.ParallelCancellations_RefundTheBookingOnlyOnce()
+[xUnit.net 00:00:36.87]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:37.27]     api.Tests.Database.BookingConcurrencyTests.Trip_WithLocalTimeWithoutTimezone_IsStoredAsUtcInstant [FAIL]
+[xUnit.net 00:00:37.27]       Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+[xUnit.net 00:00:37.27]       ---- System.ArgumentException : Cannot write DateTime with Kind=Unspecified to PostgreSQL type 'timestamp with time zone', only UTC is supported. Note that it's not possible to mix DateTimes with different Kinds in an array, range, or multirange. (Parameter 'value')
+[xUnit.net 00:00:37.27]       Stack Trace:
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]         /home/chamal/dev/uptslk/apps/api/Controllers/TripsController.cs(111,0): at api.Controllers.TripsController.Create(CreateTripRequest request)
+[xUnit.net 00:00:37.27]            at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+[xUnit.net 00:00:37.27]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+[xUnit.net 00:00:37.27]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+[xUnit.net 00:00:37.27]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+[xUnit.net 00:00:37.27]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+[xUnit.net 00:00:37.27]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+[xUnit.net 00:00:37.27]            at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+[xUnit.net 00:00:37.28]            at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+[xUnit.net 00:00:37.28]            at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+[xUnit.net 00:00:37.28]            at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+[xUnit.net 00:00:37.28]            at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+[xUnit.net 00:00:37.28]            at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+[xUnit.net 00:00:37.28]            at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+[xUnit.net 00:00:37.28]            at Microsoft.AspNetCore.TestHost.HttpContextBuilder.<>c__DisplayClass23_0.<<SendAsync>g__RunRequestAsync|0>d.MoveNext()
+[xUnit.net 00:00:37.28]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:37.28]            at Microsoft.AspNetCore.TestHost.ClientHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.28]            at Microsoft.AspNetCore.Mvc.Testing.Handlers.CookieContainerHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.28]            at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+[xUnit.net 00:00:37.28]         /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs(128,0): at api.Tests.Database.BookingConcurrencyTests.Trip_WithLocalTimeWithoutTimezone_IsStoredAsUtcInstant()
+[xUnit.net 00:00:37.28]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:37.28]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:37.28]            at Npgsql.Internal.Converters.DateTimeConverterResolver`1.Get(DateTime value, Nullable`1 expectedPgTypeId, Boolean validateOnly)
+[xUnit.net 00:00:37.28]            at Npgsql.Internal.PgTypeInfo.GetObjectResolution(Object value)
+[xUnit.net 00:00:37.28]            at Npgsql.NpgsqlParameterCollection.ProcessParameters(PgSerializerOptions options, Boolean validateValues, CommandType commandType)
+[xUnit.net 00:00:37.28]            at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.28]            at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.28]            at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.28]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.28]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.28]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+  Failed api.Tests.Database.BookingConcurrencyTests.ParallelCancellations_RefundTheBookingOnlyOnce [628 ms]
+  Error Message:
+   Expected one refund of 100, but balance is 100.00 with 3 refund transactions.
+  Stack Trace:
+     at api.Tests.Database.BookingConcurrencyTests.ParallelCancellations_RefundTheBookingOnlyOnce() in /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs:line 118
+--- End of stack trace from previous location ---
+  Failed api.Tests.Database.BookingConcurrencyTests.Trip_WithLocalTimeWithoutTimezone_IsStoredAsUtcInstant [398 ms]
+  Error Message:
+   Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- System.ArgumentException : Cannot write DateTime with Kind=Unspecified to PostgreSQL type 'timestamp with time zone', only UTC is supported. Note that it's not possible to mix DateTimes with different Kinds in an array, range, or multirange. (Parameter 'value')
+  Stack Trace:
+     at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at api.Controllers.TripsController.Create(CreateTripRequest request) in /home/chamal/dev/uptslk/apps/api/Controllers/TripsController.cs:line 111
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.TestHost.HttpContextBuilder.<>c__DisplayClass23_0.<<SendAsync>g__RunRequestAsync|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.TestHost.ClientHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Mvc.Testing.Handlers.CookieContainerHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at api.Tests.Database.BookingConcurrencyTests.Trip_WithLocalTimeWithoutTimezone_IsStoredAsUtcInstant() in /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs:line 128
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Npgsql.Internal.Converters.DateTimeConverterResolver`1.Get(DateTime value, Nullable`1 expectedPgTypeId, Boolean validateOnly)
+   at Npgsql.Internal.PgTypeInfo.GetObjectResolution(Object value)
+   at Npgsql.NpgsqlParameterCollection.ProcessParameters(PgSerializerOptions options, Boolean validateValues, CommandType commandType)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+  Passed api.Tests.Database.BookingConcurrencyTests.RejectedBooking_LeavesWalletAndTablesUntouched [339 ms]
+[xUnit.net 00:00:38.52]     api.Tests.Database.BookingConcurrencyTests.ParallelBookings_NeverExceedVehicleCapacity [FAIL]
+[xUnit.net 00:00:38.52]       Capacity is 2 but 7 seats were sold (7 x 201).
+[xUnit.net 00:00:38.52]       Stack Trace:
+[xUnit.net 00:00:38.52]         /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs(80,0): at api.Tests.Database.BookingConcurrencyTests.ParallelBookings_NeverExceedVehicleCapacity()
+[xUnit.net 00:00:38.52]         --- End of stack trace from previous location ---
+[testcontainers.org 00:00:37.18] Delete Docker container d32508899eb8
+  Passed api.Tests.Database.BookingConcurrencyTests.Booking_CommitsBookingTransactionAndWalletDebitTogether [414 ms]
+  Failed api.Tests.Database.BookingConcurrencyTests.ParallelBookings_NeverExceedVehicleCapacity [491 ms]
+  Error Message:
+   Capacity is 2 but 7 seats were sold (7 x 201).
+  Stack Trace:
+     at api.Tests.Database.BookingConcurrencyTests.ParallelBookings_NeverExceedVehicleCapacity() in /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs:line 80
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:41.70]   Finished:    api.Tests
+Results File: /home/chamal/dev/uptslk/apps/api.Tests/TestResults/database-before-fix.trx
+
+Test Run Failed.
+Total tests: 60
+     Passed: 56
+     Failed: 4
+ Total time: 43.1642 Seconds

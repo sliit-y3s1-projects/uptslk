@@ -1,0 +1,528 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="c2b34925-7bfe-4cdc-a4f4-ae31c00ca4fe" name="@chamalsena 2026-10-07 18:03:57" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-07T18:03:57.6728345+05:30" queuing="2026-10-07T18:03:57.6728346+05:30" start="2026-10-07T18:03:40.4372621+05:30" finish="2026-10-07T18:04:23.6314309+05:30" />
+  <TestSettings name="default" id="a57a7d6c-1634-481c-9cb9-d1c9510d92f5">
+    <Deployment runDeploymentRoot="_chamalsena_2026-10-07_18_03_57" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="7140de0a-bb60-4cfe-9f6f-33e79e23186b" testId="fcdcd6e1-1a43-fa95-dd65-c9c58bb52b35" testName="api.Tests.Database.RelationshipTests.Trip_LoadsItsFullAssignmentGraph" computerName="chamalsena" duration="00:00:00.4265252" startTime="2026-10-07T18:03:59.4197625+05:30" endTime="2026-10-07T18:03:59.8462390+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7140de0a-bb60-4cfe-9f6f-33e79e23186b" />
+    <UnitTestResult executionId="e135e967-7f19-4d68-9a28-d878953edac4" testId="7a40184e-3068-aa7a-2f2d-1eae3a3acc2b" testName="api.Tests.Database.MigrationTests.Migrate_CanBeRunTwice_WithoutError" computerName="chamalsena" duration="00:00:01.2694630" startTime="2026-10-07T18:04:10.4303220+05:30" endTime="2026-10-07T18:04:11.6998886+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e135e967-7f19-4d68-9a28-d878953edac4" />
+    <UnitTestResult executionId="c414e2de-1b4c-4360-97d0-f80a3d8845a6" testId="2107bd4c-b9eb-3ed2-ad44-9f424fee1d8e" testName="api.Tests.Database.ConstraintTests.Vehicle_PlateNumber_MustBeUnique" computerName="chamalsena" duration="00:00:00.1504823" startTime="2026-10-07T18:04:12.6990638+05:30" endTime="2026-10-07T18:04:12.8495048+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c414e2de-1b4c-4360-97d0-f80a3d8845a6" />
+    <UnitTestResult executionId="6838170e-dad5-430a-b843-749c574b6d97" testId="93f67bd8-8c02-86d1-d6ec-474e4d55cdfd" testName="api.Tests.Database.ConstraintTests.Route_Number_IsUniquePerCentre" computerName="chamalsena" duration="00:00:00.1650849" startTime="2026-10-07T18:04:13.4555339+05:30" endTime="2026-10-07T18:04:13.6207882+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6838170e-dad5-430a-b843-749c574b6d97" />
+    <UnitTestResult executionId="1b610ffe-c70b-458f-855e-3e2a9dc7cd30" testId="e5bc8019-6aff-04ab-28a7-03dbc2b21fd9" testName="api.Tests.Database.ConstraintTests.Vehicle_WithUnknownCentre_IsRejected" computerName="chamalsena" duration="00:00:00.1414576" startTime="2026-10-07T18:04:12.2745005+05:30" endTime="2026-10-07T18:04:12.4161874+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1b610ffe-c70b-458f-855e-3e2a9dc7cd30" />
+    <UnitTestResult executionId="5b11a79e-3bc5-4098-bc57-b111617c516e" testId="dad89dd6-3e6b-1085-7471-c309001f1edb" testName="api.Tests.Database.ConstraintTests.Centre_Name_CannotBeNull" computerName="chamalsena" duration="00:00:00.1165381" startTime="2026-10-07T18:04:14.9637985+05:30" endTime="2026-10-07T18:04:15.0804842+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5b11a79e-3bc5-4098-bc57-b111617c516e" />
+    <UnitTestResult executionId="bd4074a8-0180-48b9-8310-cc7137c76f94" testId="15f8af10-8f8f-b314-8524-a61fad2f36ec" testName="api.Tests.Database.TransactionTests.UncommittedRows_AreInvisibleToOtherConnections" computerName="chamalsena" duration="00:00:00.1486027" startTime="2026-10-07T18:03:58.3921908+05:30" endTime="2026-10-07T18:03:58.5385807+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bd4074a8-0180-48b9-8310-cc7137c76f94" />
+    <UnitTestResult executionId="2d401bf4-7634-464c-abf6-18f83a40bae8" testId="500201db-101c-16ae-de24-3bd133be9e4b" testName="api.Tests.Database.BookingConcurrencyTests.ParallelCancellations_RefundTheBookingOnlyOnce" computerName="chamalsena" duration="00:00:00.6283549" startTime="2026-10-07T18:04:18.0434715+05:30" endTime="2026-10-07T18:04:18.6573788+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2d401bf4-7634-464c-abf6-18f83a40bae8">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected one refund of 100, but balance is 100.00 with 3 refund transactions.</Message>
+          <StackTrace>   at api.Tests.Database.BookingConcurrencyTests.ParallelCancellations_RefundTheBookingOnlyOnce() in /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs:line 118
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d78090ef-cae9-43d3-add8-be78d777ae10" testId="a1ecc8fa-edb5-ad7a-5e27-02179f0a787b" testName="api.Tests.Database.MigrationTests.ActiveBookingSeatIndex_IsAPartialUniqueIndex" computerName="chamalsena" duration="00:00:00.1860348" startTime="2026-10-07T18:04:04.1878856+05:30" endTime="2026-10-07T18:04:04.3733961+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d78090ef-cae9-43d3-add8-be78d777ae10" />
+    <UnitTestResult executionId="8433eaa4-089e-4450-8071-a941194152b3" testId="d0b50606-bdf3-c0c7-9d50-52af497d45ec" testName="api.Tests.Database.RelationshipTests.DeletingABooking_KeepsItsWalletTransaction_WithNullBookingId" computerName="chamalsena" duration="00:00:00.3287713" startTime="2026-10-07T18:04:01.2154545+05:30" endTime="2026-10-07T18:04:01.5441277+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8433eaa4-089e-4450-8071-a941194152b3" />
+    <UnitTestResult executionId="93ca6b17-b6b1-43a7-9eb7-f17ef0b7f3ef" testId="789fdfd1-c85c-0cf0-3c0b-9747b597a0fd" testName="api.Tests.Database.ConstraintTests.Driver_LicenseNumber_MustBeUnique" computerName="chamalsena" duration="00:00:00.1339979" startTime="2026-10-07T18:04:12.8499120+05:30" endTime="2026-10-07T18:04:12.9840943+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="93ca6b17-b6b1-43a7-9eb7-f17ef0b7f3ef" />
+    <UnitTestResult executionId="dd8227d0-3c5c-4bef-9844-c3bbe7a347ab" testId="e0f91f57-1c49-4306-66d2-e585c070154a" testName="api.Tests.Database.BookingConcurrencyTests.ParallelBookings_NeverExceedVehicleCapacity" computerName="chamalsena" duration="00:00:00.4911151" startTime="2026-10-07T18:04:19.8200066+05:30" endTime="2026-10-07T18:04:20.3118398+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dd8227d0-3c5c-4bef-9844-c3bbe7a347ab">
+      <Output>
+        <ErrorInfo>
+          <Message>Capacity is 2 but 7 seats were sold (7 x 201).</Message>
+          <StackTrace>   at api.Tests.Database.BookingConcurrencyTests.ParallelBookings_NeverExceedVehicleCapacity() in /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs:line 80
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="b919b70f-8282-4d96-a125-43c04866d5c3" testId="8bfd9d44-d116-e1af-388b-1a85ea273b6b" testName="api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: &quot;FareRules&quot;, column: &quot;Amount&quot;, precision: 12, scale: 2)" computerName="chamalsena" duration="00:00:00.1721934" startTime="2026-10-07T18:04:04.5830249+05:30" endTime="2026-10-07T18:04:04.7551145+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b919b70f-8282-4d96-a125-43c04866d5c3" />
+    <UnitTestResult executionId="540d0c07-ce70-4428-a2c5-35a04acd8c25" testId="d01a83df-ec5f-f5be-17d3-5a9dd12892d5" testName="api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: &quot;AgentSteps&quot;, column: &quot;ToolCallsJson&quot;, expectedType: &quot;jsonb&quot;)" computerName="chamalsena" duration="00:00:00.1289082" startTime="2026-10-07T18:04:01.7035418+05:30" endTime="2026-10-07T18:04:01.8330496+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="540d0c07-ce70-4428-a2c5-35a04acd8c25" />
+    <UnitTestResult executionId="f34fa19c-b319-4944-b16e-579e55eae8de" testId="aaa227a3-682b-5bb3-5d69-cfa90510294c" testName="api.Tests.Database.RelationshipTests.Enums_AreStoredAndReadBack" computerName="chamalsena" duration="00:00:00.1571162" startTime="2026-10-07T18:04:01.5445829+05:30" endTime="2026-10-07T18:04:01.7019076+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f34fa19c-b319-4944-b16e-579e55eae8de" />
+    <UnitTestResult executionId="ad83c670-5e45-46cb-8a50-c0c2dd3a7599" testId="f20cf52b-af7c-8e7f-7438-f5ad53bcb97c" testName="api.Tests.Database.RelationshipTests.DeletingAPassengerWithoutBookings_CascadesToWalletAndTransactions" computerName="chamalsena" duration="00:00:00.2348536" startTime="2026-10-07T18:04:00.8186204+05:30" endTime="2026-10-07T18:04:01.0532532+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ad83c670-5e45-46cb-8a50-c0c2dd3a7599" />
+    <UnitTestResult executionId="f284e24f-d0e2-4f84-9fb0-7912c6f66244" testId="b1c5498a-96e9-1cc0-1bfe-36adcc32683a" testName="api.Tests.Database.MigrationTests.Migrate_BackToZero_AndForwardAgain_Works" computerName="chamalsena" duration="00:00:03.4123871" startTime="2026-10-07T18:04:05.6133607+05:30" endTime="2026-10-07T18:04:09.0259769+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f284e24f-d0e2-4f84-9fb0-7912c6f66244" />
+    <UnitTestResult executionId="3bec7d7f-7404-46fd-830b-6fb4d9b34a24" testId="4914f8cf-adea-f9ec-948e-9f05490a7385" testName="api.Tests.Database.ConstraintTests.Centre_Name_LongerThan160Characters_IsRejected" computerName="chamalsena" duration="00:00:00.1590624" startTime="2026-10-07T18:04:12.5392722+05:30" endTime="2026-10-07T18:04:12.6984562+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3bec7d7f-7404-46fd-830b-6fb4d9b34a24" />
+    <UnitTestResult executionId="f837cb26-ce48-4853-b902-7145bfd58f65" testId="94300e19-1594-1b5a-b4fb-3f91e50c9069" testName="api.Tests.Database.ConstraintTests.Centre_Code_MustBeUnique" computerName="chamalsena" duration="00:00:00.1216770" startTime="2026-10-07T18:04:12.4167254+05:30" endTime="2026-10-07T18:04:12.5386243+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f837cb26-ce48-4853-b902-7145bfd58f65" />
+    <UnitTestResult executionId="80ce0f64-0d37-47a2-a69f-164ada8367ce" testId="f0ae9830-c38e-39d4-4d3a-331c4a04cbf4" testName="api.Tests.Database.ConstraintTests.Booking_WithUnknownPassenger_IsRejected" computerName="chamalsena" duration="00:00:00.1967754" startTime="2026-10-07T18:04:13.6213373+05:30" endTime="2026-10-07T18:04:13.8188853+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="80ce0f64-0d37-47a2-a69f-164ada8367ce" />
+    <UnitTestResult executionId="fce9d47f-cf50-4ec3-b1de-921c233c84fe" testId="01348ea3-748d-17d8-a9e0-f987aa938174" testName="api.Tests.Database.ConstraintTests.FareRule_AllowsOnlyOneRulePerRoute" computerName="chamalsena" duration="00:00:00.1541108" startTime="2026-10-07T18:04:14.2590924+05:30" endTime="2026-10-07T18:04:14.4136319+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fce9d47f-cf50-4ec3-b1de-921c233c84fe" />
+    <UnitTestResult executionId="38e85e08-2b3f-4472-a749-eef5f60ce346" testId="0fe235be-9924-2380-c763-1be98349e2ee" testName="api.Tests.Database.ConstraintTests.Trip_WithBookings_CannotBeDeleted" computerName="chamalsena" duration="00:00:00.1450382" startTime="2026-10-07T18:04:13.8193115+05:30" endTime="2026-10-07T18:04:13.9641049+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="38e85e08-2b3f-4472-a749-eef5f60ce346" />
+    <UnitTestResult executionId="07db8c32-9218-4157-a9bb-e316216cb04e" testId="6fd8cb1e-0bd2-dfda-05b2-0bdf7ea17fb9" testName="api.Tests.Database.ConstraintTests.Money_IsRoundedToTwoDecimalPlaces" computerName="chamalsena" duration="00:00:00.1291059" startTime="2026-10-07T18:04:13.9646086+05:30" endTime="2026-10-07T18:04:14.0938188+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="07db8c32-9218-4157-a9bb-e316216cb04e" />
+    <UnitTestResult executionId="ffeb94df-72e6-4416-b90f-e5912539530a" testId="df0350fb-9e13-c0ea-c9bd-d7b36d4d97d9" testName="api.Tests.Database.RelationshipTests.Passenger_And_Wallet_AreOneToOne" computerName="chamalsena" duration="00:00:00.1597183" startTime="2026-10-07T18:04:01.0537033+05:30" endTime="2026-10-07T18:04:01.2145609+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ffeb94df-72e6-4416-b90f-e5912539530a" />
+    <UnitTestResult executionId="1bf872cb-7f84-4f19-81da-d78451649b08" testId="71c3404c-bb8d-cbae-0162-e781de789428" testName="api.Tests.Database.ConstraintTests.CancelledBooking_FreesItsSeatForANewBooking" computerName="chamalsena" duration="00:00:00.1381079" startTime="2026-10-07T18:04:11.7003796+05:30" endTime="2026-10-07T18:04:11.8387134+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1bf872cb-7f84-4f19-81da-d78451649b08" />
+    <UnitTestResult executionId="1f5714f1-9d51-4286-9e9c-33f59689904c" testId="b0d7f573-89f7-f7f4-798d-1b4b7bdcba99" testName="api.Tests.Database.MigrationTests.Model_MatchesTheLatestMigrationSnapshot" computerName="chamalsena" duration="00:00:00.5604111" startTime="2026-10-07T18:04:05.0523016+05:30" endTime="2026-10-07T18:04:05.6129001+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1f5714f1-9d51-4286-9e9c-33f59689904c" />
+    <UnitTestResult executionId="16b70fc3-1cab-46ba-bc23-73d042bc2d00" testId="3dd0b53d-f403-0b01-d274-ffa47eb31f6b" testName="api.Tests.Database.ConstraintTests.ActiveBookings_CannotShareASeatOnTheSameTrip" computerName="chamalsena" duration="00:00:00.1999347" startTime="2026-10-07T18:04:14.4139567+05:30" endTime="2026-10-07T18:04:14.6144927+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="16b70fc3-1cab-46ba-bc23-73d042bc2d00" />
+    <UnitTestResult executionId="29a2b753-0a85-47cd-8dd4-ab52f1f4906b" testId="5bd318a1-660f-a5c0-47f0-cae65394b150" testName="api.Tests.Database.ConstraintTests.Passenger_WithBookings_CannotBeDeleted" computerName="chamalsena" duration="00:00:00.1432035" startTime="2026-10-07T18:04:13.1560670+05:30" endTime="2026-10-07T18:04:13.2995908+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="29a2b753-0a85-47cd-8dd4-ab52f1f4906b" />
+    <UnitTestResult executionId="e36538b1-c6b9-4788-9183-17ecd5b52413" testId="157c18c1-c118-78dd-d479-e99937700087" testName="api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: &quot;Transactions&quot;, column: &quot;Amount&quot;, precision: 12, scale: 2)" computerName="chamalsena" duration="00:00:00.2079303" startTime="2026-10-07T18:04:04.3740993+05:30" endTime="2026-10-07T18:04:04.5823066+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e36538b1-c6b9-4788-9183-17ecd5b52413" />
+    <UnitTestResult executionId="0a15a331-2baf-463d-96a7-18b028c01089" testId="3ed65cf0-be2c-1aeb-250d-1ed1b2e8ae60" testName="api.Tests.Database.ConstraintTests.Wallet_Balance_AboveNumeric12x2Range_IsRejected" computerName="chamalsena" duration="00:00:00.1641964" startTime="2026-10-07T18:04:14.0942560+05:30" endTime="2026-10-07T18:04:14.2587756+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0a15a331-2baf-463d-96a7-18b028c01089" />
+    <UnitTestResult executionId="556d3f87-83d6-469f-ae14-eb196fd908ff" testId="e0074bc1-b785-a7e0-d513-2282a98c0752" testName="api.Tests.Database.BookingConcurrencyTests.ParallelBookings_ByOneWallet_CannotSpendMoreThanTheBalance" computerName="chamalsena" duration="00:00:02.9379480" startTime="2026-10-07T18:04:15.0813496+05:30" endTime="2026-10-07T18:04:18.0297502+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="556d3f87-83d6-469f-ae14-eb196fd908ff">
+      <Output>
+        <ErrorInfo>
+          <Message>Wallet held 100 and each ticket costs 100, but 8 bookings succeeded and the balance is 0.00.</Message>
+          <StackTrace>   at api.Tests.Database.BookingConcurrencyTests.ParallelBookings_ByOneWallet_CannotSpendMoreThanTheBalance() in /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs:line 97
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d673b026-bfde-4dda-9f42-cdadc8f8d70b" testId="3832c9ac-eb52-5343-3646-a7d78142b701" testName="api.Tests.Database.TransactionTests.TwoContexts_UpdatingTheSameRow_BothSucceed_LastWriteWins" computerName="chamalsena" duration="00:00:00.2043617" startTime="2026-10-07T18:03:58.1848667+05:30" endTime="2026-10-07T18:03:58.3893012+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d673b026-bfde-4dda-9f42-cdadc8f8d70b" />
+    <UnitTestResult executionId="a0dcc9cb-e5ed-4312-8faa-f5614db3a48d" testId="25ea74c0-1ad4-0c66-1bd6-5ed0b228c91d" testName="api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: &quot;Wallets&quot;, column: &quot;Balance&quot;, expectedType: &quot;numeric&quot;)" computerName="chamalsena" duration="00:00:00.1294324" startTime="2026-10-07T18:04:02.1542149+05:30" endTime="2026-10-07T18:04:02.2838886+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a0dcc9cb-e5ed-4312-8faa-f5614db3a48d" />
+    <UnitTestResult executionId="6cfba6e3-bf39-4381-ae13-313661d8dec2" testId="0cc42d5d-e87a-01e5-58af-55a2b00bb14f" testName="api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: &quot;AgentWorkflows&quot;, column: &quot;PlanJson&quot;, expectedType: &quot;jsonb&quot;)" computerName="chamalsena" duration="00:00:00.1486259" startTime="2026-10-07T18:04:02.4939080+05:30" endTime="2026-10-07T18:04:02.6428982+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6cfba6e3-bf39-4381-ae13-313661d8dec2" />
+    <UnitTestResult executionId="205fe9c7-b5e9-4a13-87bd-205f9178a056" testId="4b9b601f-326a-ac97-b93e-b40ed189a3d1" testName="api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: &quot;Bookings&quot;, column: &quot;Fare&quot;, expectedType: &quot;numeric&quot;)" computerName="chamalsena" duration="00:00:00.1581276" startTime="2026-10-07T18:04:01.9952572+05:30" endTime="2026-10-07T18:04:02.1537005+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="205fe9c7-b5e9-4a13-87bd-205f9178a056" />
+    <UnitTestResult executionId="8f42773c-3f9f-425c-bc7e-6f60525fc9d4" testId="d8139fb2-86f9-3586-6af2-d2ccad03991a" testName="api.Tests.Database.ConstraintTests.Centre_WithBays_CannotBeDeleted" computerName="chamalsena" duration="00:00:00.1546240" startTime="2026-10-07T18:04:13.3012310+05:30" endTime="2026-10-07T18:04:13.4549941+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8f42773c-3f9f-425c-bc7e-6f60525fc9d4" />
+    <UnitTestResult executionId="655624ae-04ee-4cae-92ee-9dbd88d27807" testId="53f15f22-bc9c-30b2-bf79-d07ca9acfc53" testName="api.Tests.Database.ConstraintTests.Passenger_PhoneNumber_MustBeUnique" computerName="chamalsena" duration="00:00:00.1509925" startTime="2026-10-07T18:04:14.6151327+05:30" endTime="2026-10-07T18:04:14.7662689+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="655624ae-04ee-4cae-92ee-9dbd88d27807" />
+    <UnitTestResult executionId="e8a49656-0c61-452c-834e-e4a21c1086af" testId="f922bc06-6cd5-5b78-caaf-4909ec9b843d" testName="api.Tests.Database.RelationshipTests.MaintenanceRecord_RequiresAnExistingVehicle" computerName="chamalsena" duration="00:00:00.1910049" startTime="2026-10-07T18:04:00.6260173+05:30" endTime="2026-10-07T18:04:00.8177560+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e8a49656-0c61-452c-834e-e4a21c1086af" />
+    <UnitTestResult executionId="c42be581-1ff9-4257-b4a3-ef4980038804" testId="dc049bb4-6e95-47f7-f190-2aa18132a73b" testName="api.Tests.Database.RelationshipTests.DeletingATrip_KeepsItsIncidents_WithNullTripId" computerName="chamalsena" duration="00:00:00.2843268" startTime="2026-10-07T18:04:00.1931163+05:30" endTime="2026-10-07T18:04:00.4777845+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c42be581-1ff9-4257-b4a3-ef4980038804" />
+    <UnitTestResult executionId="21d66b37-963f-46da-8190-b6f6b192c711" testId="bbee089b-c983-bda4-8d13-3d051949b4d8" testName="api.Tests.Database.TransactionTests.FailureInsideTransaction_CanRollBackEarlierSaves" computerName="chamalsena" duration="00:00:01.0008871" startTime="2026-10-07T18:03:57.2091179+05:30" endTime="2026-10-07T18:03:58.1830654+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="21d66b37-963f-46da-8190-b6f6b192c711" />
+    <UnitTestResult executionId="525ac0b6-6db6-4daf-b36a-ef93d48111ba" testId="fd79bd53-7851-b790-e81c-c7e2b26a6454" testName="api.Tests.Database.BookingConcurrencyTests.Booking_CommitsBookingTransactionAndWalletDebitTogether" computerName="chamalsena" duration="00:00:00.4144783" startTime="2026-10-07T18:04:19.4045353+05:30" endTime="2026-10-07T18:04:19.8195313+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="525ac0b6-6db6-4daf-b36a-ef93d48111ba" />
+    <UnitTestResult executionId="b3dc412c-f9c5-4489-82f7-df7a8a8b6b5b" testId="b79c6e0f-0e32-8a1a-86a8-e0a2476c8d27" testName="api.Tests.Database.RelationshipTests.Centre_ExposesItsBaysRoutesAndVehicles" computerName="chamalsena" duration="00:00:00.3454552" startTime="2026-10-07T18:03:59.8467975+05:30" endTime="2026-10-07T18:04:00.1925861+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b3dc412c-f9c5-4489-82f7-df7a8a8b6b5b" />
+    <UnitTestResult executionId="7de63f79-e5ca-4d6f-9a08-a05abb5141f2" testId="b864c19f-7d94-fa33-222b-4ae4a981ff76" testName="api.Tests.Database.ConstraintTests.Trip_WithUnknownVehicle_IsRejected" computerName="chamalsena" duration="00:00:00.2178888" startTime="2026-10-07T18:04:12.0561020+05:30" endTime="2026-10-07T18:04:12.2740702+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7de63f79-e5ca-4d6f-9a08-a05abb5141f2" />
+    <UnitTestResult executionId="0923557d-b101-4298-a6bd-ae7237577caf" testId="a166d197-f9c1-2a24-9984-40c2d660a356" testName="api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: &quot;Bookings&quot;, column: &quot;Fare&quot;, precision: 12, scale: 2)" computerName="chamalsena" duration="00:00:00.1286131" startTime="2026-10-07T18:04:04.7555263+05:30" endTime="2026-10-07T18:04:04.8845103+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0923557d-b101-4298-a6bd-ae7237577caf" />
+    <UnitTestResult executionId="439154f3-3326-4887-944e-78c77857befb" testId="f571f111-38b0-b739-8cd8-234550de1934" testName="api.Tests.Database.TransactionTests.RolledBackTransaction_LeavesNoRows" computerName="chamalsena" duration="00:00:01.1212214" startTime="2026-10-07T18:03:56.1023645+05:30" endTime="2026-10-07T18:03:57.1778488+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="439154f3-3326-4887-944e-78c77857befb" />
+    <UnitTestResult executionId="d5cc477d-6c2c-4f8d-bed8-083ec80115ee" testId="1c382f6e-61d8-cedb-469c-756112e0a1b3" testName="api.Tests.Database.MigrationTests.Migrate_OnEmptyDatabase_AppliesEveryMigration" computerName="chamalsena" duration="00:00:01.5421433" startTime="2026-10-07T18:04:02.6433554+05:30" endTime="2026-10-07T18:04:04.1863618+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d5cc477d-6c2c-4f8d-bed8-083ec80115ee" />
+    <UnitTestResult executionId="3aadbc18-f6bc-426e-800f-2a5b3db6c1f5" testId="8d05e10f-3c3f-2171-243d-e30360522a5c" testName="api.Tests.Database.ConstraintTests.Centre_Name_Of160Characters_IsAccepted" computerName="chamalsena" duration="00:00:00.1707020" startTime="2026-10-07T18:04:12.9844246+05:30" endTime="2026-10-07T18:04:13.1555185+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3aadbc18-f6bc-426e-800f-2a5b3db6c1f5" />
+    <UnitTestResult executionId="464aa20a-e1c2-471f-bd12-11eab279bae8" testId="85d6703a-14c1-afe4-d503-166a83984355" testName="api.Tests.Database.RelationshipTests.SecondWallet_ForTheSamePassenger_IsRejected" computerName="chamalsena" duration="00:00:00.1381887" startTime="2026-10-07T18:03:58.7926676+05:30" endTime="2026-10-07T18:03:58.9308058+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="464aa20a-e1c2-471f-bd12-11eab279bae8" />
+    <UnitTestResult executionId="38c29ff7-8e1c-4bb1-9453-76d14b0db4b5" testId="e41ae035-3ace-b06f-fe28-e984b4f9b3e0" testName="api.Tests.Database.MigrationTests.Migrate_CreatesTheCoreTables" computerName="chamalsena" duration="00:00:01.4023572" startTime="2026-10-07T18:04:09.0280841+05:30" endTime="2026-10-07T18:04:10.4292426+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="38c29ff7-8e1c-4bb1-9453-76d14b0db4b5" />
+    <UnitTestResult executionId="3a84dcaa-c9c8-4cb8-898d-060d674f23a9" testId="71fdd8c1-2e28-eb8d-81cd-fdfaca04c602" testName="api.Tests.Database.TransactionTests.CommittedTransaction_PersistsRows_ForOtherConnections" computerName="chamalsena" duration="00:00:00.1219617" startTime="2026-10-07T18:03:58.5393108+05:30" endTime="2026-10-07T18:03:58.6612721+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3a84dcaa-c9c8-4cb8-898d-060d674f23a9" />
+    <UnitTestResult executionId="330f27e0-25ee-4874-9366-6e5f5dd9bfd8" testId="ff246be3-0450-f25c-c86c-9d6a79622f63" testName="api.Tests.Database.ConstraintTests.Bay_Code_IsUniquePerCentre_ButReusableAtAnotherCentre" computerName="chamalsena" duration="00:00:00.1961580" startTime="2026-10-07T18:04:14.7681062+05:30" endTime="2026-10-07T18:04:14.9632656+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="330f27e0-25ee-4874-9366-6e5f5dd9bfd8" />
+    <UnitTestResult executionId="e6ae4d7c-e805-44bf-aadb-8d96f6cb226a" testId="7a1d2d13-d48e-98b8-2f04-4f2c051c9f22" testName="api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: &quot;AgentWorkflows&quot;, column: &quot;ValidationJson&quot;, expectedType: &quot;jsonb&quot;)" computerName="chamalsena" duration="00:00:00.1609086" startTime="2026-10-07T18:04:01.8335180+05:30" endTime="2026-10-07T18:04:01.9947183+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e6ae4d7c-e805-44bf-aadb-8d96f6cb226a" />
+    <UnitTestResult executionId="6cd99316-b693-4020-b8f2-81e8f532fc90" testId="bdb454b7-f9c2-2b59-e176-e3d1b8de9825" testName="api.Tests.Database.RelationshipTests.UtcDateTimes_RoundTripUnchanged_ThroughTimestamptz" computerName="chamalsena" duration="00:00:00.1469129" startTime="2026-10-07T18:04:00.4782255+05:30" endTime="2026-10-07T18:04:00.6255431+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6cd99316-b693-4020-b8f2-81e8f532fc90" />
+    <UnitTestResult executionId="cb9bfb44-7ef2-40a6-82e4-73cb339b4809" testId="4eecf3cd-7c8b-271f-056a-a2ceffcda26e" testName="api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: &quot;Wallets&quot;, column: &quot;Balance&quot;, precision: 12, scale: 2)" computerName="chamalsena" duration="00:00:00.1664726" startTime="2026-10-07T18:04:04.8849586+05:30" endTime="2026-10-07T18:04:05.0518101+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cb9bfb44-7ef2-40a6-82e4-73cb339b4809" />
+    <UnitTestResult executionId="8eb24592-52c7-4167-97ba-08b19fca3dba" testId="8d71ab71-8408-4b62-65aa-9cb858e508a6" testName="api.Tests.Database.RelationshipTests.DeletingARoute_CascadesToItsStopsAndSchedules_ButNotItsTrips" computerName="chamalsena" duration="00:00:00.4867861" startTime="2026-10-07T18:03:58.9313130+05:30" endTime="2026-10-07T18:03:59.4190144+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8eb24592-52c7-4167-97ba-08b19fca3dba" />
+    <UnitTestResult executionId="dc459313-2396-4aa9-824d-6206f3068c2a" testId="179b161b-cf98-00a5-700e-07c2d5414726" testName="api.Tests.Database.BookingConcurrencyTests.RejectedBooking_LeavesWalletAndTablesUntouched" computerName="chamalsena" duration="00:00:00.3396314" startTime="2026-10-07T18:04:19.0692159+05:30" endTime="2026-10-07T18:04:19.4042166+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dc459313-2396-4aa9-824d-6206f3068c2a" />
+    <UnitTestResult executionId="91dc730c-5898-4547-a84a-7acbd40480b9" testId="eb8909fd-c565-c1a4-2868-45436d2f98f5" testName="api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: &quot;Trips&quot;, column: &quot;ScheduledTime&quot;, expectedType: &quot;timestamp with time zone&quot;)" computerName="chamalsena" duration="00:00:00.2088632" startTime="2026-10-07T18:04:02.2844777+05:30" endTime="2026-10-07T18:04:02.4934686+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="91dc730c-5898-4547-a84a-7acbd40480b9" />
+    <UnitTestResult executionId="5eaebce7-66e6-4118-bbc3-c145ef1b849d" testId="84931df7-2fbb-93e2-3378-a0a6d6a67f26" testName="api.Tests.Database.BookingConcurrencyTests.Trip_WithLocalTimeWithoutTimezone_IsStoredAsUtcInstant" computerName="chamalsena" duration="00:00:00.3981082" startTime="2026-10-07T18:04:18.6592102+05:30" endTime="2026-10-07T18:04:19.0638320+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5eaebce7-66e6-4118-bbc3-c145ef1b849d">
+      <Output>
+        <ErrorInfo>
+          <Message>Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- System.ArgumentException : Cannot write DateTime with Kind=Unspecified to PostgreSQL type 'timestamp with time zone', only UTC is supported. Note that it's not possible to mix DateTimes with different Kinds in an array, range, or multirange. (Parameter 'value')</Message>
+          <StackTrace>   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at api.Controllers.TripsController.Create(CreateTripRequest request) in /home/chamal/dev/uptslk/apps/api/Controllers/TripsController.cs:line 111
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeActionMethodAsync&gt;g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeNextActionFilterAsync&gt;g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeInnerFilterAsync&gt;g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeFilterPipelineAsync&gt;g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.TestHost.HttpContextBuilder.&lt;&gt;c__DisplayClass23_0.&lt;&lt;SendAsync&gt;g__RunRequestAsync|0&gt;d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.TestHost.ClientHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Mvc.Testing.Handlers.CookieContainerHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at api.Tests.Database.BookingConcurrencyTests.Trip_WithLocalTimeWithoutTimezone_IsStoredAsUtcInstant() in /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs:line 128
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Npgsql.Internal.Converters.DateTimeConverterResolver`1.Get(DateTime value, Nullable`1 expectedPgTypeId, Boolean validateOnly)
+   at Npgsql.Internal.PgTypeInfo.GetObjectResolution(Object value)
+   at Npgsql.NpgsqlParameterCollection.ProcessParameters(PgSerializerOptions options, Boolean validateValues, CommandType commandType)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d65f487b-ac3c-4528-9856-382de4ca2651" testId="a25b0351-8773-9f7b-9fc2-1021c88ffa37" testName="api.Tests.Database.ConstraintTests.Vehicle_WithTrips_CannotBeDeleted" computerName="chamalsena" duration="00:00:00.2156853" startTime="2026-10-07T18:04:11.8391626+05:30" endTime="2026-10-07T18:04:12.0555434+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d65f487b-ac3c-4528-9856-382de4ca2651" />
+    <UnitTestResult executionId="52d8d713-ae23-4976-a7c0-790350be2e26" testId="91c68d40-e191-719a-755f-91f7125d92c8" testName="api.Tests.Database.TransactionTests.SaveChanges_IsAtomic_WhenOneRowViolatesAConstraint" computerName="chamalsena" duration="00:00:00.1251748" startTime="2026-10-07T18:03:58.6617799+05:30" endTime="2026-10-07T18:03:58.7872194+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="52d8d713-ae23-4976-a7c0-790350be2e26" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="api.Tests.Database.RelationshipTests.DeletingABooking_KeepsItsWalletTransaction_WithNullBookingId" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="d0b50606-bdf3-c0c7-9d50-52af497d45ec">
+      <Execution id="8433eaa4-089e-4450-8071-a941194152b3" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.RelationshipTests" name="DeletingABooking_KeepsItsWalletTransaction_WithNullBookingId" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Trip_WithBookings_CannotBeDeleted" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="0fe235be-9924-2380-c763-1be98349e2ee">
+      <Execution id="38e85e08-2b3f-4472-a749-eef5f60ce346" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Trip_WithBookings_CannotBeDeleted" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Centre_Name_Of160Characters_IsAccepted" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="8d05e10f-3c3f-2171-243d-e30360522a5c">
+      <Execution id="3aadbc18-f6bc-426e-800f-2a5b3db6c1f5" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Centre_Name_Of160Characters_IsAccepted" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.BookingConcurrencyTests.RejectedBooking_LeavesWalletAndTablesUntouched" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="179b161b-cf98-00a5-700e-07c2d5414726">
+      <Execution id="dc459313-2396-4aa9-824d-6206f3068c2a" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.BookingConcurrencyTests" name="RejectedBooking_LeavesWalletAndTablesUntouched" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Vehicle_WithTrips_CannotBeDeleted" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="a25b0351-8773-9f7b-9fc2-1021c88ffa37">
+      <Execution id="d65f487b-ac3c-4528-9856-382de4ca2651" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Vehicle_WithTrips_CannotBeDeleted" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Route_Number_IsUniquePerCentre" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="93f67bd8-8c02-86d1-d6ec-474e4d55cdfd">
+      <Execution id="6838170e-dad5-430a-b843-749c574b6d97" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Route_Number_IsUniquePerCentre" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: &quot;Transactions&quot;, column: &quot;Amount&quot;, precision: 12, scale: 2)" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="157c18c1-c118-78dd-d479-e99937700087">
+      <Execution id="e36538b1-c6b9-4788-9183-17ecd5b52413" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="MoneyColumns_UseNumeric12x2" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.BookingConcurrencyTests.ParallelCancellations_RefundTheBookingOnlyOnce" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="500201db-101c-16ae-de24-3bd133be9e4b">
+      <Execution id="2d401bf4-7634-464c-abf6-18f83a40bae8" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.BookingConcurrencyTests" name="ParallelCancellations_RefundTheBookingOnlyOnce" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: &quot;AgentSteps&quot;, column: &quot;ToolCallsJson&quot;, expectedType: &quot;jsonb&quot;)" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="d01a83df-ec5f-f5be-17d3-5a9dd12892d5">
+      <Execution id="540d0c07-ce70-4428-a2c5-35a04acd8c25" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="Column_HasTheExpectedPostgresType" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: &quot;FareRules&quot;, column: &quot;Amount&quot;, precision: 12, scale: 2)" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="8bfd9d44-d116-e1af-388b-1a85ea273b6b">
+      <Execution id="b919b70f-8282-4d96-a125-43c04866d5c3" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="MoneyColumns_UseNumeric12x2" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.TransactionTests.CommittedTransaction_PersistsRows_ForOtherConnections" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="71fdd8c1-2e28-eb8d-81cd-fdfaca04c602">
+      <Execution id="3a84dcaa-c9c8-4cb8-898d-060d674f23a9" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.TransactionTests" name="CommittedTransaction_PersistsRows_ForOtherConnections" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.TransactionTests.UncommittedRows_AreInvisibleToOtherConnections" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="15f8af10-8f8f-b314-8524-a61fad2f36ec">
+      <Execution id="bd4074a8-0180-48b9-8310-cc7137c76f94" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.TransactionTests" name="UncommittedRows_AreInvisibleToOtherConnections" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.TransactionTests.RolledBackTransaction_LeavesNoRows" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="f571f111-38b0-b739-8cd8-234550de1934">
+      <Execution id="439154f3-3326-4887-944e-78c77857befb" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.TransactionTests" name="RolledBackTransaction_LeavesNoRows" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Vehicle_PlateNumber_MustBeUnique" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="2107bd4c-b9eb-3ed2-ad44-9f424fee1d8e">
+      <Execution id="c414e2de-1b4c-4360-97d0-f80a3d8845a6" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Vehicle_PlateNumber_MustBeUnique" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Centre_Code_MustBeUnique" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="94300e19-1594-1b5a-b4fb-3f91e50c9069">
+      <Execution id="f837cb26-ce48-4853-b902-7145bfd58f65" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Centre_Code_MustBeUnique" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Money_IsRoundedToTwoDecimalPlaces" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="6fd8cb1e-0bd2-dfda-05b2-0bdf7ea17fb9">
+      <Execution id="07db8c32-9218-4157-a9bb-e316216cb04e" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Money_IsRoundedToTwoDecimalPlaces" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.Migrate_CreatesTheCoreTables" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="e41ae035-3ace-b06f-fe28-e984b4f9b3e0">
+      <Execution id="38c29ff7-8e1c-4bb1-9453-76d14b0db4b5" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="Migrate_CreatesTheCoreTables" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.RelationshipTests.Trip_LoadsItsFullAssignmentGraph" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="fcdcd6e1-1a43-fa95-dd65-c9c58bb52b35">
+      <Execution id="7140de0a-bb60-4cfe-9f6f-33e79e23186b" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.RelationshipTests" name="Trip_LoadsItsFullAssignmentGraph" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Wallet_Balance_AboveNumeric12x2Range_IsRejected" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="3ed65cf0-be2c-1aeb-250d-1ed1b2e8ae60">
+      <Execution id="0a15a331-2baf-463d-96a7-18b028c01089" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Wallet_Balance_AboveNumeric12x2Range_IsRejected" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.TransactionTests.SaveChanges_IsAtomic_WhenOneRowViolatesAConstraint" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="91c68d40-e191-719a-755f-91f7125d92c8">
+      <Execution id="52d8d713-ae23-4976-a7c0-790350be2e26" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.TransactionTests" name="SaveChanges_IsAtomic_WhenOneRowViolatesAConstraint" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Centre_WithBays_CannotBeDeleted" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="d8139fb2-86f9-3586-6af2-d2ccad03991a">
+      <Execution id="8f42773c-3f9f-425c-bc7e-6f60525fc9d4" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Centre_WithBays_CannotBeDeleted" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.RelationshipTests.Enums_AreStoredAndReadBack" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="aaa227a3-682b-5bb3-5d69-cfa90510294c">
+      <Execution id="f34fa19c-b319-4944-b16e-579e55eae8de" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.RelationshipTests" name="Enums_AreStoredAndReadBack" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.BookingConcurrencyTests.ParallelBookings_ByOneWallet_CannotSpendMoreThanTheBalance" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="e0074bc1-b785-a7e0-d513-2282a98c0752">
+      <Execution id="556d3f87-83d6-469f-ae14-eb196fd908ff" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.BookingConcurrencyTests" name="ParallelBookings_ByOneWallet_CannotSpendMoreThanTheBalance" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Driver_LicenseNumber_MustBeUnique" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="789fdfd1-c85c-0cf0-3c0b-9747b597a0fd">
+      <Execution id="93ca6b17-b6b1-43a7-9eb7-f17ef0b7f3ef" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Driver_LicenseNumber_MustBeUnique" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.ActiveBookingSeatIndex_IsAPartialUniqueIndex" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="a1ecc8fa-edb5-ad7a-5e27-02179f0a787b">
+      <Execution id="d78090ef-cae9-43d3-add8-be78d777ae10" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="ActiveBookingSeatIndex_IsAPartialUniqueIndex" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.ActiveBookings_CannotShareASeatOnTheSameTrip" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="3dd0b53d-f403-0b01-d274-ffa47eb31f6b">
+      <Execution id="16b70fc3-1cab-46ba-bc23-73d042bc2d00" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="ActiveBookings_CannotShareASeatOnTheSameTrip" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.RelationshipTests.DeletingATrip_KeepsItsIncidents_WithNullTripId" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="dc049bb4-6e95-47f7-f190-2aa18132a73b">
+      <Execution id="c42be581-1ff9-4257-b4a3-ef4980038804" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.RelationshipTests" name="DeletingATrip_KeepsItsIncidents_WithNullTripId" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.RelationshipTests.SecondWallet_ForTheSamePassenger_IsRejected" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="85d6703a-14c1-afe4-d503-166a83984355">
+      <Execution id="464aa20a-e1c2-471f-bd12-11eab279bae8" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.RelationshipTests" name="SecondWallet_ForTheSamePassenger_IsRejected" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.RelationshipTests.UtcDateTimes_RoundTripUnchanged_ThroughTimestamptz" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="bdb454b7-f9c2-2b59-e176-e3d1b8de9825">
+      <Execution id="6cd99316-b693-4020-b8f2-81e8f532fc90" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.RelationshipTests" name="UtcDateTimes_RoundTripUnchanged_ThroughTimestamptz" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.RelationshipTests.DeletingAPassengerWithoutBookings_CascadesToWalletAndTransactions" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="f20cf52b-af7c-8e7f-7438-f5ad53bcb97c">
+      <Execution id="ad83c670-5e45-46cb-8a50-c0c2dd3a7599" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.RelationshipTests" name="DeletingAPassengerWithoutBookings_CascadesToWalletAndTransactions" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.FareRule_AllowsOnlyOneRulePerRoute" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="01348ea3-748d-17d8-a9e0-f987aa938174">
+      <Execution id="fce9d47f-cf50-4ec3-b1de-921c233c84fe" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="FareRule_AllowsOnlyOneRulePerRoute" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.TransactionTests.TwoContexts_UpdatingTheSameRow_BothSucceed_LastWriteWins" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="3832c9ac-eb52-5343-3646-a7d78142b701">
+      <Execution id="d673b026-bfde-4dda-9f42-cdadc8f8d70b" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.TransactionTests" name="TwoContexts_UpdatingTheSameRow_BothSucceed_LastWriteWins" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: &quot;AgentWorkflows&quot;, column: &quot;PlanJson&quot;, expectedType: &quot;jsonb&quot;)" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="0cc42d5d-e87a-01e5-58af-55a2b00bb14f">
+      <Execution id="6cfba6e3-bf39-4381-ae13-313661d8dec2" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="Column_HasTheExpectedPostgresType" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.Migrate_BackToZero_AndForwardAgain_Works" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="b1c5498a-96e9-1cc0-1bfe-36adcc32683a">
+      <Execution id="f284e24f-d0e2-4f84-9fb0-7912c6f66244" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="Migrate_BackToZero_AndForwardAgain_Works" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: &quot;AgentWorkflows&quot;, column: &quot;ValidationJson&quot;, expectedType: &quot;jsonb&quot;)" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="7a1d2d13-d48e-98b8-2f04-4f2c051c9f22">
+      <Execution id="e6ae4d7c-e805-44bf-aadb-8d96f6cb226a" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="Column_HasTheExpectedPostgresType" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.TransactionTests.FailureInsideTransaction_CanRollBackEarlierSaves" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="bbee089b-c983-bda4-8d13-3d051949b4d8">
+      <Execution id="21d66b37-963f-46da-8190-b6f6b192c711" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.TransactionTests" name="FailureInsideTransaction_CanRollBackEarlierSaves" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Trip_WithUnknownVehicle_IsRejected" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="b864c19f-7d94-fa33-222b-4ae4a981ff76">
+      <Execution id="7de63f79-e5ca-4d6f-9a08-a05abb5141f2" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Trip_WithUnknownVehicle_IsRejected" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Bay_Code_IsUniquePerCentre_ButReusableAtAnotherCentre" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="ff246be3-0450-f25c-c86c-9d6a79622f63">
+      <Execution id="330f27e0-25ee-4874-9366-6e5f5dd9bfd8" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Bay_Code_IsUniquePerCentre_ButReusableAtAnotherCentre" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.RelationshipTests.Passenger_And_Wallet_AreOneToOne" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="df0350fb-9e13-c0ea-c9bd-d7b36d4d97d9">
+      <Execution id="ffeb94df-72e6-4416-b90f-e5912539530a" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.RelationshipTests" name="Passenger_And_Wallet_AreOneToOne" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.BookingConcurrencyTests.Trip_WithLocalTimeWithoutTimezone_IsStoredAsUtcInstant" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="84931df7-2fbb-93e2-3378-a0a6d6a67f26">
+      <Execution id="5eaebce7-66e6-4118-bbc3-c145ef1b849d" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.BookingConcurrencyTests" name="Trip_WithLocalTimeWithoutTimezone_IsStoredAsUtcInstant" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: &quot;Bookings&quot;, column: &quot;Fare&quot;, precision: 12, scale: 2)" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="a166d197-f9c1-2a24-9984-40c2d660a356">
+      <Execution id="0923557d-b101-4298-a6bd-ae7237577caf" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="MoneyColumns_UseNumeric12x2" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.RelationshipTests.MaintenanceRecord_RequiresAnExistingVehicle" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="f922bc06-6cd5-5b78-caaf-4909ec9b843d">
+      <Execution id="e8a49656-0c61-452c-834e-e4a21c1086af" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.RelationshipTests" name="MaintenanceRecord_RequiresAnExistingVehicle" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: &quot;Bookings&quot;, column: &quot;Fare&quot;, expectedType: &quot;numeric&quot;)" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="4b9b601f-326a-ac97-b93e-b40ed189a3d1">
+      <Execution id="205fe9c7-b5e9-4a13-87bd-205f9178a056" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="Column_HasTheExpectedPostgresType" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.Model_MatchesTheLatestMigrationSnapshot" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="b0d7f573-89f7-f7f4-798d-1b4b7bdcba99">
+      <Execution id="1f5714f1-9d51-4286-9e9c-33f59689904c" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="Model_MatchesTheLatestMigrationSnapshot" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.RelationshipTests.DeletingARoute_CascadesToItsStopsAndSchedules_ButNotItsTrips" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="8d71ab71-8408-4b62-65aa-9cb858e508a6">
+      <Execution id="8eb24592-52c7-4167-97ba-08b19fca3dba" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.RelationshipTests" name="DeletingARoute_CascadesToItsStopsAndSchedules_ButNotItsTrips" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: &quot;Wallets&quot;, column: &quot;Balance&quot;, expectedType: &quot;numeric&quot;)" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="25ea74c0-1ad4-0c66-1bd6-5ed0b228c91d">
+      <Execution id="a0dcc9cb-e5ed-4312-8faa-f5614db3a48d" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="Column_HasTheExpectedPostgresType" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.Column_HasTheExpectedPostgresType(table: &quot;Trips&quot;, column: &quot;ScheduledTime&quot;, expectedType: &quot;timestamp with time zone&quot;)" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="eb8909fd-c565-c1a4-2868-45436d2f98f5">
+      <Execution id="91dc730c-5898-4547-a84a-7acbd40480b9" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="Column_HasTheExpectedPostgresType" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.BookingConcurrencyTests.ParallelBookings_NeverExceedVehicleCapacity" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="e0f91f57-1c49-4306-66d2-e585c070154a">
+      <Execution id="dd8227d0-3c5c-4bef-9844-c3bbe7a347ab" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.BookingConcurrencyTests" name="ParallelBookings_NeverExceedVehicleCapacity" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.CancelledBooking_FreesItsSeatForANewBooking" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="71c3404c-bb8d-cbae-0162-e781de789428">
+      <Execution id="1bf872cb-7f84-4f19-81da-d78451649b08" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="CancelledBooking_FreesItsSeatForANewBooking" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Passenger_WithBookings_CannotBeDeleted" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="5bd318a1-660f-a5c0-47f0-cae65394b150">
+      <Execution id="29a2b753-0a85-47cd-8dd4-ab52f1f4906b" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Passenger_WithBookings_CannotBeDeleted" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Vehicle_WithUnknownCentre_IsRejected" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="e5bc8019-6aff-04ab-28a7-03dbc2b21fd9">
+      <Execution id="1b610ffe-c70b-458f-855e-3e2a9dc7cd30" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Vehicle_WithUnknownCentre_IsRejected" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Centre_Name_LongerThan160Characters_IsRejected" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="4914f8cf-adea-f9ec-948e-9f05490a7385">
+      <Execution id="3bec7d7f-7404-46fd-830b-6fb4d9b34a24" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Centre_Name_LongerThan160Characters_IsRejected" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Booking_WithUnknownPassenger_IsRejected" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="f0ae9830-c38e-39d4-4d3a-331c4a04cbf4">
+      <Execution id="80ce0f64-0d37-47a2-a69f-164ada8367ce" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Booking_WithUnknownPassenger_IsRejected" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.Migrate_CanBeRunTwice_WithoutError" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="7a40184e-3068-aa7a-2f2d-1eae3a3acc2b">
+      <Execution id="e135e967-7f19-4d68-9a28-d878953edac4" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="Migrate_CanBeRunTwice_WithoutError" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.MoneyColumns_UseNumeric12x2(table: &quot;Wallets&quot;, column: &quot;Balance&quot;, precision: 12, scale: 2)" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="4eecf3cd-7c8b-271f-056a-a2ceffcda26e">
+      <Execution id="cb9bfb44-7ef2-40a6-82e4-73cb339b4809" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="MoneyColumns_UseNumeric12x2" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Passenger_PhoneNumber_MustBeUnique" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="53f15f22-bc9c-30b2-bf79-d07ca9acfc53">
+      <Execution id="655624ae-04ee-4cae-92ee-9dbd88d27807" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Passenger_PhoneNumber_MustBeUnique" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.RelationshipTests.Centre_ExposesItsBaysRoutesAndVehicles" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="b79c6e0f-0e32-8a1a-86a8-e0a2476c8d27">
+      <Execution id="b3dc412c-f9c5-4489-82f7-df7a8a8b6b5b" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.RelationshipTests" name="Centre_ExposesItsBaysRoutesAndVehicles" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.BookingConcurrencyTests.Booking_CommitsBookingTransactionAndWalletDebitTogether" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="fd79bd53-7851-b790-e81c-c7e2b26a6454">
+      <Execution id="525ac0b6-6db6-4daf-b36a-ef93d48111ba" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.BookingConcurrencyTests" name="Booking_CommitsBookingTransactionAndWalletDebitTogether" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.ConstraintTests.Centre_Name_CannotBeNull" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="dad89dd6-3e6b-1085-7471-c309001f1edb">
+      <Execution id="5b11a79e-3bc5-4098-bc57-b111617c516e" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.ConstraintTests" name="Centre_Name_CannotBeNull" />
+    </UnitTest>
+    <UnitTest name="api.Tests.Database.MigrationTests.Migrate_OnEmptyDatabase_AppliesEveryMigration" storage="/home/chamal/dev/uptslk/apps/api.tests/bin/debug/net8.0/api.tests.dll" id="1c382f6e-61d8-cedb-469c-756112e0a1b3">
+      <Execution id="d5cc477d-6c2c-4f8d-bed8-083ec80115ee" />
+      <TestMethod codeBase="/home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="api.Tests.Database.MigrationTests" name="Migrate_OnEmptyDatabase_AppliesEveryMigration" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="fcdcd6e1-1a43-fa95-dd65-c9c58bb52b35" executionId="7140de0a-bb60-4cfe-9f6f-33e79e23186b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7a40184e-3068-aa7a-2f2d-1eae3a3acc2b" executionId="e135e967-7f19-4d68-9a28-d878953edac4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2107bd4c-b9eb-3ed2-ad44-9f424fee1d8e" executionId="c414e2de-1b4c-4360-97d0-f80a3d8845a6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="93f67bd8-8c02-86d1-d6ec-474e4d55cdfd" executionId="6838170e-dad5-430a-b843-749c574b6d97" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e5bc8019-6aff-04ab-28a7-03dbc2b21fd9" executionId="1b610ffe-c70b-458f-855e-3e2a9dc7cd30" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="dad89dd6-3e6b-1085-7471-c309001f1edb" executionId="5b11a79e-3bc5-4098-bc57-b111617c516e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="15f8af10-8f8f-b314-8524-a61fad2f36ec" executionId="bd4074a8-0180-48b9-8310-cc7137c76f94" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="500201db-101c-16ae-de24-3bd133be9e4b" executionId="2d401bf4-7634-464c-abf6-18f83a40bae8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a1ecc8fa-edb5-ad7a-5e27-02179f0a787b" executionId="d78090ef-cae9-43d3-add8-be78d777ae10" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d0b50606-bdf3-c0c7-9d50-52af497d45ec" executionId="8433eaa4-089e-4450-8071-a941194152b3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="789fdfd1-c85c-0cf0-3c0b-9747b597a0fd" executionId="93ca6b17-b6b1-43a7-9eb7-f17ef0b7f3ef" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e0f91f57-1c49-4306-66d2-e585c070154a" executionId="dd8227d0-3c5c-4bef-9844-c3bbe7a347ab" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8bfd9d44-d116-e1af-388b-1a85ea273b6b" executionId="b919b70f-8282-4d96-a125-43c04866d5c3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d01a83df-ec5f-f5be-17d3-5a9dd12892d5" executionId="540d0c07-ce70-4428-a2c5-35a04acd8c25" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="aaa227a3-682b-5bb3-5d69-cfa90510294c" executionId="f34fa19c-b319-4944-b16e-579e55eae8de" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f20cf52b-af7c-8e7f-7438-f5ad53bcb97c" executionId="ad83c670-5e45-46cb-8a50-c0c2dd3a7599" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b1c5498a-96e9-1cc0-1bfe-36adcc32683a" executionId="f284e24f-d0e2-4f84-9fb0-7912c6f66244" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4914f8cf-adea-f9ec-948e-9f05490a7385" executionId="3bec7d7f-7404-46fd-830b-6fb4d9b34a24" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="94300e19-1594-1b5a-b4fb-3f91e50c9069" executionId="f837cb26-ce48-4853-b902-7145bfd58f65" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f0ae9830-c38e-39d4-4d3a-331c4a04cbf4" executionId="80ce0f64-0d37-47a2-a69f-164ada8367ce" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="01348ea3-748d-17d8-a9e0-f987aa938174" executionId="fce9d47f-cf50-4ec3-b1de-921c233c84fe" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0fe235be-9924-2380-c763-1be98349e2ee" executionId="38e85e08-2b3f-4472-a749-eef5f60ce346" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6fd8cb1e-0bd2-dfda-05b2-0bdf7ea17fb9" executionId="07db8c32-9218-4157-a9bb-e316216cb04e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="df0350fb-9e13-c0ea-c9bd-d7b36d4d97d9" executionId="ffeb94df-72e6-4416-b90f-e5912539530a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="71c3404c-bb8d-cbae-0162-e781de789428" executionId="1bf872cb-7f84-4f19-81da-d78451649b08" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b0d7f573-89f7-f7f4-798d-1b4b7bdcba99" executionId="1f5714f1-9d51-4286-9e9c-33f59689904c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3dd0b53d-f403-0b01-d274-ffa47eb31f6b" executionId="16b70fc3-1cab-46ba-bc23-73d042bc2d00" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5bd318a1-660f-a5c0-47f0-cae65394b150" executionId="29a2b753-0a85-47cd-8dd4-ab52f1f4906b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="157c18c1-c118-78dd-d479-e99937700087" executionId="e36538b1-c6b9-4788-9183-17ecd5b52413" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3ed65cf0-be2c-1aeb-250d-1ed1b2e8ae60" executionId="0a15a331-2baf-463d-96a7-18b028c01089" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e0074bc1-b785-a7e0-d513-2282a98c0752" executionId="556d3f87-83d6-469f-ae14-eb196fd908ff" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3832c9ac-eb52-5343-3646-a7d78142b701" executionId="d673b026-bfde-4dda-9f42-cdadc8f8d70b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="25ea74c0-1ad4-0c66-1bd6-5ed0b228c91d" executionId="a0dcc9cb-e5ed-4312-8faa-f5614db3a48d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0cc42d5d-e87a-01e5-58af-55a2b00bb14f" executionId="6cfba6e3-bf39-4381-ae13-313661d8dec2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4b9b601f-326a-ac97-b93e-b40ed189a3d1" executionId="205fe9c7-b5e9-4a13-87bd-205f9178a056" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d8139fb2-86f9-3586-6af2-d2ccad03991a" executionId="8f42773c-3f9f-425c-bc7e-6f60525fc9d4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="53f15f22-bc9c-30b2-bf79-d07ca9acfc53" executionId="655624ae-04ee-4cae-92ee-9dbd88d27807" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f922bc06-6cd5-5b78-caaf-4909ec9b843d" executionId="e8a49656-0c61-452c-834e-e4a21c1086af" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="dc049bb4-6e95-47f7-f190-2aa18132a73b" executionId="c42be581-1ff9-4257-b4a3-ef4980038804" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bbee089b-c983-bda4-8d13-3d051949b4d8" executionId="21d66b37-963f-46da-8190-b6f6b192c711" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fd79bd53-7851-b790-e81c-c7e2b26a6454" executionId="525ac0b6-6db6-4daf-b36a-ef93d48111ba" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b79c6e0f-0e32-8a1a-86a8-e0a2476c8d27" executionId="b3dc412c-f9c5-4489-82f7-df7a8a8b6b5b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b864c19f-7d94-fa33-222b-4ae4a981ff76" executionId="7de63f79-e5ca-4d6f-9a08-a05abb5141f2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a166d197-f9c1-2a24-9984-40c2d660a356" executionId="0923557d-b101-4298-a6bd-ae7237577caf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f571f111-38b0-b739-8cd8-234550de1934" executionId="439154f3-3326-4887-944e-78c77857befb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1c382f6e-61d8-cedb-469c-756112e0a1b3" executionId="d5cc477d-6c2c-4f8d-bed8-083ec80115ee" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8d05e10f-3c3f-2171-243d-e30360522a5c" executionId="3aadbc18-f6bc-426e-800f-2a5b3db6c1f5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="85d6703a-14c1-afe4-d503-166a83984355" executionId="464aa20a-e1c2-471f-bd12-11eab279bae8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e41ae035-3ace-b06f-fe28-e984b4f9b3e0" executionId="38c29ff7-8e1c-4bb1-9453-76d14b0db4b5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="71fdd8c1-2e28-eb8d-81cd-fdfaca04c602" executionId="3a84dcaa-c9c8-4cb8-898d-060d674f23a9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ff246be3-0450-f25c-c86c-9d6a79622f63" executionId="330f27e0-25ee-4874-9366-6e5f5dd9bfd8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7a1d2d13-d48e-98b8-2f04-4f2c051c9f22" executionId="e6ae4d7c-e805-44bf-aadb-8d96f6cb226a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bdb454b7-f9c2-2b59-e176-e3d1b8de9825" executionId="6cd99316-b693-4020-b8f2-81e8f532fc90" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4eecf3cd-7c8b-271f-056a-a2ceffcda26e" executionId="cb9bfb44-7ef2-40a6-82e4-73cb339b4809" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8d71ab71-8408-4b62-65aa-9cb858e508a6" executionId="8eb24592-52c7-4167-97ba-08b19fca3dba" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="179b161b-cf98-00a5-700e-07c2d5414726" executionId="dc459313-2396-4aa9-824d-6206f3068c2a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="eb8909fd-c565-c1a4-2868-45436d2f98f5" executionId="91dc730c-5898-4547-a84a-7acbd40480b9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="84931df7-2fbb-93e2-3378-a0a6d6a67f26" executionId="5eaebce7-66e6-4118-bbc3-c145ef1b849d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a25b0351-8773-9f7b-9fc2-1021c88ffa37" executionId="d65f487b-ac3c-4528-9856-382de4ca2651" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="91c68d40-e191-719a-755f-91f7125d92c8" executionId="52d8d713-ae23-4976-a7c0-790350be2e26" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="60" executed="60" passed="56" failed="4" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.01] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 8.0.30)
+[xUnit.net 00:00:00.56]   Discovering: api.Tests
+[xUnit.net 00:00:00.95]   Discovered:  api.Tests
+[xUnit.net 00:00:01.05]   Starting:    api.Tests
+[xUnit.net 00:00:36.25]       Wallet held 100 and each ticket costs 100, but 8 bookings succeeded and the balance is 0.00.
+[xUnit.net 00:00:36.25]       Stack Trace:
+[xUnit.net 00:00:36.25]         /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs(97,0): at api.Tests.Database.BookingConcurrencyTests.ParallelBookings_ByOneWallet_CannotSpendMoreThanTheBalance()
+[xUnit.net 00:00:36.25]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:36.87]       Expected one refund of 100, but balance is 100.00 with 3 refund transactions.
+[xUnit.net 00:00:36.87]       Stack Trace:
+[xUnit.net 00:00:36.87]         /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs(118,0): at api.Tests.Database.BookingConcurrencyTests.ParallelCancellations_RefundTheBookingOnlyOnce()
+[xUnit.net 00:00:36.87]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:37.27]       Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+[xUnit.net 00:00:37.27]       ---- System.ArgumentException : Cannot write DateTime with Kind=Unspecified to PostgreSQL type 'timestamp with time zone', only UTC is supported. Note that it's not possible to mix DateTimes with different Kinds in an array, range, or multirange. (Parameter 'value')
+[xUnit.net 00:00:37.27]       Stack Trace:
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.27]         /home/chamal/dev/uptslk/apps/api/Controllers/TripsController.cs(111,0): at api.Controllers.TripsController.Create(CreateTripRequest request)
+[xUnit.net 00:00:37.27]            at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+[xUnit.net 00:00:37.27]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeActionMethodAsync&gt;g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+[xUnit.net 00:00:37.27]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeNextActionFilterAsync&gt;g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+[xUnit.net 00:00:37.27]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+[xUnit.net 00:00:37.27]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)
+[xUnit.net 00:00:37.27]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeInnerFilterAsync&gt;g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+[xUnit.net 00:00:37.27]            at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeFilterPipelineAsync&gt;g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+[xUnit.net 00:00:37.28]            at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+[xUnit.net 00:00:37.28]            at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+[xUnit.net 00:00:37.28]            at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+[xUnit.net 00:00:37.28]            at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+[xUnit.net 00:00:37.28]            at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+[xUnit.net 00:00:37.28]            at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+[xUnit.net 00:00:37.28]            at Microsoft.AspNetCore.TestHost.HttpContextBuilder.&lt;&gt;c__DisplayClass23_0.&lt;&lt;SendAsync&gt;g__RunRequestAsync|0&gt;d.MoveNext()
+[xUnit.net 00:00:37.28]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:37.28]            at Microsoft.AspNetCore.TestHost.ClientHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.28]            at Microsoft.AspNetCore.Mvc.Testing.Handlers.CookieContainerHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.28]            at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+[xUnit.net 00:00:37.28]         /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs(128,0): at api.Tests.Database.BookingConcurrencyTests.Trip_WithLocalTimeWithoutTimezone_IsStoredAsUtcInstant()
+[xUnit.net 00:00:37.28]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:37.28]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:37.28]            at Npgsql.Internal.Converters.DateTimeConverterResolver`1.Get(DateTime value, Nullable`1 expectedPgTypeId, Boolean validateOnly)
+[xUnit.net 00:00:37.28]            at Npgsql.Internal.PgTypeInfo.GetObjectResolution(Object value)
+[xUnit.net 00:00:37.28]            at Npgsql.NpgsqlParameterCollection.ProcessParameters(PgSerializerOptions options, Boolean validateValues, CommandType commandType)
+[xUnit.net 00:00:37.28]            at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.28]            at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.28]            at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.28]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.28]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:37.28]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:38.52]       Capacity is 2 but 7 seats were sold (7 x 201).
+[xUnit.net 00:00:38.52]       Stack Trace:
+[xUnit.net 00:00:38.52]         /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs(80,0): at api.Tests.Database.BookingConcurrencyTests.ParallelBookings_NeverExceedVehicleCapacity()
+[xUnit.net 00:00:38.52]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:41.70]   Finished:    api.Tests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="chamalsena" outcome="Error" timestamp="2026-10-07T18:04:18.0373294+05:30">
+        <Text>[xUnit.net 00:00:36.24]     api.Tests.Database.BookingConcurrencyTests.ParallelBookings_ByOneWallet_CannotSpendMoreThanTheBalance [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="chamalsena" outcome="Error" timestamp="2026-10-07T18:04:18.6579385+05:30">
+        <Text>[xUnit.net 00:00:36.87]     api.Tests.Database.BookingConcurrencyTests.ParallelCancellations_RefundTheBookingOnlyOnce [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="chamalsena" outcome="Error" timestamp="2026-10-07T18:04:19.0649505+05:30">
+        <Text>[xUnit.net 00:00:37.27]     api.Tests.Database.BookingConcurrencyTests.Trip_WithLocalTimeWithoutTimezone_IsStoredAsUtcInstant [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="chamalsena" outcome="Error" timestamp="2026-10-07T18:04:20.3123108+05:30">
+        <Text>[xUnit.net 00:00:38.52]     api.Tests.Database.BookingConcurrencyTests.ParallelBookings_NeverExceedVehicleCapacity [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

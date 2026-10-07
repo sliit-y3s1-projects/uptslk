@@ -1,0 +1,50 @@
+Resolving dependencies...
+Downloading packages...
+  code_assets 1.2.1 (2.1.0 available)
+  cross_file 0.3.5+5 (0.4.0 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  flutter_secure_storage 10.3.4 (11.2.0 available)
+  flutter_secure_storage_darwin 0.3.2 (0.4.3 available)
+  hooks 2.0.2 (2.2.0 available)
+  image_picker 1.2.3 (1.2.4 available)
+  image_picker_android 0.8.13+23 (0.8.13+25 available)
+  image_picker_ios 0.8.13+8 (0.8.13+9 available)
+  image_picker_platform_interface 2.11.1 (2.11.2 available)
+  jni 1.0.3 (1.1.0 available)
+  jni_flutter 1.0.3 (1.0.4+1 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.3 (1.19.0 available)
+  objective_c 9.5.0 (9.6.2 available)
+  qr 3.0.2 (4.0.0 available)
+  record_use 0.6.0 (1.1.1 available)
+  test_api 0.7.12 (0.7.14 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  vector_math 2.4.0 (2.4.3 available)
+Got dependencies!
+20 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading /home/chamal/dev/uptslk/apps/mobile/test/services/auth_api_service_test.dart
+00:00 +0: /home/chamal/dev/uptslk/apps/mobile/test/services/auth_api_service_test.dart: AuthApiService signs in and maps the API user response
+00:00 +1: /home/chamal/dev/uptslk/apps/mobile/test/services/auth_api_service_test.dart: AuthApiService returns the API error message for invalid credentials
+00:00 +2: /home/chamal/dev/uptslk/apps/mobile/test/services/booking_api_service_test.dart: BookingApiService loads the current passenger fare quote
+00:00 +3: /home/chamal/dev/uptslk/apps/mobile/test/services/driver_api_service_test.dart: DriverApiService requests the seven-day duty window
+00:00 +4: /home/chamal/dev/uptslk/apps/mobile/test/services/driver_api_service_test.dart: DriverApiService requests the seven-day duty window
+00:00 +5: /home/chamal/dev/uptslk/apps/mobile/test/services/booking_api_service_test.dart: BookingApiService starts checkout and retains the order used for reconciliation
+00:00 +6: /home/chamal/dev/uptslk/apps/mobile/test/services/driver_api_service_test.dart: DriverApiService sends a reason when marking a trip delayed
+00:00 +7: /home/chamal/dev/uptslk/apps/mobile/test/services/booking_api_service_test.dart: BookingApiService loads API-backed tickets and maps the QR code
+00:00 +8: /home/chamal/dev/uptslk/apps/mobile/test/services/driver_api_service_test.dart: DriverApiService reports an incident against the assigned trip
+00:00 +9: /home/chamal/dev/uptslk/apps/mobile/test/services/driver_api_service_test.dart: groups duties by Sri Lankan service date
+00:00 +10: /home/chamal/dev/uptslk/apps/mobile/test/widget_test.dart: App starts on the sign-in screen
+00:01 +11: /home/chamal/dev/uptslk/apps/mobile/test/widget_test.dart: App starts on the sign-in screen
+00:01 +12: /home/chamal/dev/uptslk/apps/mobile/test/widget_test.dart: App starts on the sign-in screen
+00:01 +13: /home/chamal/dev/uptslk/apps/mobile/test/widget_test.dart: App starts on the sign-in screen
+00:01 +14: /home/chamal/dev/uptslk/apps/mobile/test/widget_test.dart: App starts on the sign-in screen
+00:01 +15: /home/chamal/dev/uptslk/apps/mobile/test/widget_test.dart: App starts on the sign-in screen
+00:01 +16: /home/chamal/dev/uptslk/apps/mobile/test/widget_test.dart: App starts on the sign-in screen
+00:01 +17: /home/chamal/dev/uptslk/apps/mobile/test/widget_test.dart: App starts on the sign-in screen
+00:02 +18: /home/chamal/dev/uptslk/apps/mobile/test/journey_search_widget_test.dart: Journey controls and routes fit at width 320.0, scale 1.0
+00:03 +19: /home/chamal/dev/uptslk/apps/mobile/test/profile_edit_test.dart: Profile editing retains API gender and uses styled inputs
+00:03 +20: /home/chamal/dev/uptslk/apps/mobile/test/profile_edit_test.dart: Profile editing retains API gender and uses styled inputs
+00:03 +21: /home/chamal/dev/uptslk/apps/mobile/test/profile_edit_test.dart: Profile editing retains API gender and uses styled inputs
+00:04 +22: /home/chamal/dev/uptslk/apps/mobile/test/profile_edit_test.dart: Profile editing retains API gender and uses styled inputs
+00:04 +23: All tests passed!

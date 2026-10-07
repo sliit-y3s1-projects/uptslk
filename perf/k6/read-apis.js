@@ -2,14 +2,15 @@
 //   Targets: common list endpoints p95 < 500 ms, detail endpoints p95 < 400 ms.
 // Run (API on :5250):
 //   k6 run perf/k6/read-apis.js
+// Load level: PERF_VUS=100 PERF_DURATION=20s (the names K6_VUS / K6_DURATION are reserved by k6 and override the scenarios).
 // Optional authenticated run (sends a Bearer token and also covers /incidents):
 //   K6_EMAIL=manager.kadawatha@upts.lk K6_PASSWORD=... k6 run perf/k6/read-apis.js
 import http from "k6/http";
 import { check, sleep } from "k6";
 
 const BASE_URL = __ENV.K6_BASE_URL || "http://localhost:5250";
-const VUS = Number(__ENV.K6_VUS || 10);
-const DURATION = __ENV.K6_DURATION || "30s";
+const VUS = Number(__ENV.PERF_VUS || 10);
+const DURATION = __ENV.PERF_DURATION || "30s";
 
 export const options = {
   scenarios: {

@@ -1,3 +1,4 @@
+using api.Services;
 using api.Data;
 using api.DTOs;
 using api.Models;
@@ -86,10 +87,13 @@ public class FareRulesController(AppDbContext db) : ControllerBase
         });
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpPost]
     public async Task<IActionResult> Create(CreateFareRuleRequest request)
     {
-        if (!await db.Routes.AnyAsync(route => route.Id == request.RouteId && route.IsActive)) return BadRequest(new { error = "The selected active route does not exist." });
+        var routeCentreId = await db.Routes.Where(route => route.Id == request.RouteId && route.IsActive).Select(route => (Guid?)route.CentreId).SingleOrDefaultAsync();
+        if (routeCentreId is null) return BadRequest(new { error = "The selected active route does not exist." });
+        if (!User.CanManageCentre(routeCentreId.Value)) return Forbid();
         if (await db.FareRules.AnyAsync(rule => rule.RouteId == request.RouteId)) return Conflict(new { error = "A standard fare already exists for this route. Edit the existing fare instead." });
 
         var rule = new FareRule { RouteId = request.RouteId, Amount = request.Amount };
@@ -98,11 +102,13 @@ public class FareRulesController(AppDbContext db) : ControllerBase
         return CreatedAtAction(nameof(Get), new { fareRuleId = rule.Id }, new { rule.Id, rule.RouteId, rule.Amount, rule.IsActive });
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpPut("{fareRuleId:guid}")]
     public async Task<IActionResult> Update(Guid fareRuleId, UpdateFareRuleRequest request)
     {
-        var rule = await db.FareRules.FindAsync(fareRuleId);
+        var rule = await db.FareRules.Include(item => item.Route).SingleOrDefaultAsync(item => item.Id == fareRuleId);
         if (rule is null) return NotFound();
+        if (!User.CanManageCentre(rule.Route.CentreId)) return Forbid();
 
         rule.Amount = request.Amount;
         rule.IsActive = request.IsActive;
@@ -111,11 +117,13 @@ public class FareRulesController(AppDbContext db) : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpDelete("{fareRuleId:guid}")]
     public async Task<IActionResult> Deactivate(Guid fareRuleId)
     {
-        var rule = await db.FareRules.FindAsync(fareRuleId);
+        var rule = await db.FareRules.Include(item => item.Route).SingleOrDefaultAsync(item => item.Id == fareRuleId);
         if (rule is null) return NotFound();
+        if (!User.CanManageCentre(rule.Route.CentreId)) return Forbid();
         rule.IsActive = false;
         rule.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();

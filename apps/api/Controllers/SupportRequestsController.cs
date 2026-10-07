@@ -2,12 +2,14 @@ using api.Data;
 using api.DTOs;
 using api.Enums;
 using api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Controllers;
 
 [ApiController]
+[Authorize(Roles = "Admin,CentreManager,Dispatcher")]
 [Route("api/v1/support-requests")]
 public class SupportRequestsController(AppDbContext db) : ControllerBase
 {

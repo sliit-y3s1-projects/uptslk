@@ -73,9 +73,11 @@ public class VehiclesController(
         });
     }
 
+    [Authorize(Roles = "Admin,CentreManager,FleetOfficer")]
     [HttpPost]
     public async Task<IActionResult> Create(CreateVehicleRequest request)
     {
+        if (!User.CanManageCentre(request.CentreId)) return Forbid();
         if (!await db.Centres.AnyAsync(centre => centre.Id == request.CentreId)) return BadRequest(new { error = "The selected centre does not exist." });
 
         var plateNumber = NormalizePlate(request.PlateNumber);
@@ -97,11 +99,13 @@ public class VehiclesController(
         return CreatedAtAction(nameof(Get), new { vehicleId = vehicle.Id }, new { vehicle.Id, vehicle.CentreId, vehicle.PlateNumber, vehicle.Model, vehicle.Status, vehicle.ImageUrl });
     }
 
+    [Authorize(Roles = "Admin,CentreManager,FleetOfficer")]
     [HttpPut("{vehicleId:guid}")]
     public async Task<IActionResult> Update(Guid vehicleId, UpdateVehicleRequest request)
     {
         var vehicle = await db.Vehicles.FindAsync(vehicleId);
         if (vehicle is null) return NotFound();
+        if (!User.CanManageCentre(vehicle.CentreId) || !User.CanManageCentre(request.CentreId)) return Forbid();
         if (!await db.Centres.AnyAsync(centre => centre.Id == request.CentreId)) return BadRequest(new { error = "The selected centre does not exist." });
 
         var plateNumber = NormalizePlate(request.PlateNumber);
@@ -119,11 +123,13 @@ public class VehiclesController(
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin,CentreManager,FleetOfficer")]
     [HttpDelete("{vehicleId:guid}")]
     public async Task<IActionResult> Deactivate(Guid vehicleId)
     {
         var vehicle = await db.Vehicles.FindAsync(vehicleId);
         if (vehicle is null) return NotFound();
+        if (!User.CanManageCentre(vehicle.CentreId)) return Forbid();
 
         vehicle.Status = VehicleStatus.Inactive;
         vehicle.UpdatedAt = DateTime.UtcNow;

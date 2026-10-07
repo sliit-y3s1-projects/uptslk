@@ -1,0 +1,9 @@
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+Project `api.Tests` has the following vulnerable packages
+   [net8.0]: 
+   Transitive Package                Resolved   Severity   Advisory URL                                     
+   > SQLitePCLRaw.lib.e_sqlite3      2.1.6      High       https://github.com/advisories/GHSA-2m69-gcr7-jv3q
+

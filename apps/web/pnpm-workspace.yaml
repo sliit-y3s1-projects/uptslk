@@ -1,2 +1,3 @@
 allowBuilds:
   core-js: false
+  msw: false # test mock server; its install script only matters for browser mode, not Node tests

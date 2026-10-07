@@ -1,0 +1,45 @@
+Test run for /home/chamal/dev/uptslk/apps/api.Tests/bin/Debug/net8.0/api.Tests.dll (.NETCoreApp,Version=v8.0)
+Microsoft (R) Test Execution Command Line Tool Version 17.8.0 (x64)
+Copyright (c) Microsoft Corporation.  All rights reserved.
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 8.0.30)
+[xUnit.net 00:00:00.13]   Discovering: api.Tests
+[xUnit.net 00:00:00.29]   Discovered:  api.Tests
+[xUnit.net 00:00:00.32]   Starting:    api.Tests
+[testcontainers.org 00:00:00.23] Connected to Docker:
+  Host: unix:///var/run/docker.sock
+  Server Version: 29.8.1
+  Kernel Version: 7.2.5-200.fc44.x86_64
+  API Version: 1.56
+  Operating System: Fedora Linux 44 (Workstation Edition)
+  Total Memory: 15.42 GB
+[testcontainers.org 00:00:00.64] Docker container 9bbae05345bf created
+[testcontainers.org 00:00:00.69] Start Docker container 9bbae05345bf
+[testcontainers.org 00:00:00.86] Wait for Docker container 9bbae05345bf to complete readiness checks
+[testcontainers.org 00:00:01.89] Docker container 9bbae05345bf ready
+[testcontainers.org 00:00:02.05] Docker container d497063ff4a5 created
+[testcontainers.org 00:00:02.06] Start Docker container d497063ff4a5
+[testcontainers.org 00:00:02.23] Wait for Docker container d497063ff4a5 to complete readiness checks
+[testcontainers.org 00:00:02.23] Execute "pg_isready --host localhost --dbname postgres --username upts_test" at Docker container d497063ff4a5
+[testcontainers.org 00:00:03.38] Execute "pg_isready --host localhost --dbname postgres --username upts_test" at Docker container d497063ff4a5
+[testcontainers.org 00:00:03.45] Docker container d497063ff4a5 ready
+[xUnit.net 00:00:10.27]     api.Tests.Database.BookingConcurrencyTests.ParallelTopUps_AreAllCredited_WithNoLostUpdates [FAIL]
+[xUnit.net 00:00:10.27]       10 top-ups of 100 were accepted, but the balance is 300.00 with 10 top-up transactions (expected 1000 and 10).
+[xUnit.net 00:00:10.27]       Stack Trace:
+[xUnit.net 00:00:10.27]         /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs(150,0): at api.Tests.Database.BookingConcurrencyTests.ParallelTopUps_AreAllCredited_WithNoLostUpdates()
+[xUnit.net 00:00:10.27]         --- End of stack trace from previous location ---
+[testcontainers.org 00:00:09.84] Delete Docker container d497063ff4a5
+[xUnit.net 00:00:10.62]   Finished:    api.Tests
+  Failed api.Tests.Database.BookingConcurrencyTests.ParallelTopUps_AreAllCredited_WithNoLostUpdates [2 s]
+  Error Message:
+   10 top-ups of 100 were accepted, but the balance is 300.00 with 10 top-up transactions (expected 1000 and 10).
+  Stack Trace:
+     at api.Tests.Database.BookingConcurrencyTests.ParallelTopUps_AreAllCredited_WithNoLostUpdates() in /home/chamal/dev/uptslk/apps/api.Tests/Database/BookingConcurrencyTests.cs:line 150
+--- End of stack trace from previous location ---
+
+Test Run Failed.
+Total tests: 1
+     Failed: 1
+ Total time: 11.2419 Seconds

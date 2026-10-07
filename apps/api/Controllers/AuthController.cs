@@ -138,7 +138,9 @@ public class AuthController : ControllerBase
             SetAuthCookies(user);
             return NoContent();
         }
-        catch (SecurityTokenException) { return Unauthorized(); }
+        // A malformed token (for example random text in the cookie) throws SecurityTokenMalformedException, which is an
+        // ArgumentException and not a SecurityTokenException, so both must map to 401 instead of an HTTP 500.
+        catch (Exception exception) when (exception is SecurityTokenException or ArgumentException) { return Unauthorized(); }
     }
 
     [HttpPost("change-password")]

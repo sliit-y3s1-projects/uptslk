@@ -4,11 +4,13 @@ using api.Enums;
 using api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 
 namespace api.Controllers;
 
 [ApiController]
+[Authorize(Roles = "Admin,CentreManager,Dispatcher")]
 [Route("api/v1/passengers")]
 public class PassengersController(AppDbContext db, UserManager<User> userManager) : ControllerBase
 {
@@ -160,14 +162,20 @@ public class PassengersController(AppDbContext db, UserManager<User> userManager
     [HttpPost("{passengerId:guid}/wallet/top-ups")]
     public async Task<IActionResult> TopUp(Guid passengerId, TopUpWalletRequest request)
     {
-        var wallet = await db.Wallets.SingleOrDefaultAsync(item => item.PassengerId == passengerId);
-        if (wallet is null) return NotFound();
+        var walletId = await db.Wallets.Where(item => item.PassengerId == passengerId).Select(item => (Guid?)item.Id).SingleOrDefaultAsync();
+        if (walletId is null) return NotFound();
 
+        // Lock the wallet and read it again so parallel top-ups add up instead of overwriting each other.
+        await using var dbTransaction = await db.Database.BeginTransactionAsync();
+        await db.LockRowAsync("Wallets", walletId.Value);
+        db.ChangeTracker.Clear();
+        var wallet = await db.Wallets.SingleAsync(item => item.Id == walletId.Value);
         wallet.Balance += request.Amount;
         wallet.UpdatedAt = DateTime.UtcNow;
         var transaction = new Transaction { WalletId = wallet.Id, Type = TransactionType.Topup, Amount = request.Amount };
         db.Transactions.Add(transaction);
         await db.SaveChangesAsync();
+        await dbTransaction.CommitAsync();
         return CreatedAtAction(nameof(Get), new { passengerId }, new { transaction.Id, wallet.Balance, transaction.Type, transaction.Amount, transaction.CreatedAt });
     }
 

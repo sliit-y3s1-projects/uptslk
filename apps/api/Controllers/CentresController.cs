@@ -1,3 +1,5 @@
+using api.Services;
+using Microsoft.AspNetCore.Authorization;
 using api.Data;
 using api.DTOs;
 using api.Enums;
@@ -68,6 +70,7 @@ public class CentresController(AppDbContext db) : ControllerBase
         });
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpPost]
     public async Task<IActionResult> Create(CreateCentreRequest request)
     {
@@ -89,11 +92,13 @@ public class CentresController(AppDbContext db) : ControllerBase
         return CreatedAtAction(nameof(Get), new { centreId = centre.Id }, new { centre.Id, centre.Code, centre.Name, centre.Status });
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpPut("{centreId:guid}")]
     public async Task<IActionResult> Update(Guid centreId, UpdateCentreRequest request)
     {
         var centre = await db.Centres.FindAsync(centreId);
         if (centre is null) return NotFound();
+        if (!User.CanManageCentre(centre.Id)) return Forbid();
 
         centre.Name = request.Name.Trim();
         centre.City = request.City.Trim();
@@ -106,11 +111,13 @@ public class CentresController(AppDbContext db) : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpDelete("{centreId:guid}")]
     public async Task<IActionResult> Close(Guid centreId)
     {
         var centre = await db.Centres.FindAsync(centreId);
         if (centre is null) return NotFound();
+        if (!User.CanManageCentre(centre.Id)) return Forbid();
 
         centre.Status = CentreStatus.Closed;
         centre.UpdatedAt = DateTime.UtcNow;
@@ -132,10 +139,12 @@ public class CentresController(AppDbContext db) : ControllerBase
         return Ok(bays);
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpPost("{centreId:guid}/bays")]
     public async Task<IActionResult> CreateBay(Guid centreId, CreateBayRequest request)
     {
         if (!await db.Centres.AnyAsync(centre => centre.Id == centreId)) return NotFound();
+        if (!User.CanManageCentre(centreId)) return Forbid();
 
         var code = NormalizeCode(request.Code);
         if (await db.Bays.AnyAsync(bay => bay.CentreId == centreId && bay.Code == code)) return Conflict(new { error = "A bay with this code already exists at this centre." });
@@ -154,11 +163,13 @@ public class CentresController(AppDbContext db) : ControllerBase
         return Ok(new { bay.Id, bay.CentreId, bay.Code, bay.Name, bay.Status });
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpPut("bays/{bayId:guid}")]
     public async Task<IActionResult> UpdateBay(Guid bayId, UpdateBayRequest request)
     {
         var bay = await db.Bays.FindAsync(bayId);
         if (bay is null) return NotFound();
+        if (!User.CanManageCentre(bay.CentreId)) return Forbid();
 
         var code = NormalizeCode(request.Code);
         if (await db.Bays.AnyAsync(item => item.Id != bayId && item.CentreId == bay.CentreId && item.Code == code)) return Conflict(new { error = "A bay with this code already exists at this centre." });
@@ -171,11 +182,13 @@ public class CentresController(AppDbContext db) : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin,CentreManager")]
     [HttpDelete("bays/{bayId:guid}")]
     public async Task<IActionResult> DeactivateBay(Guid bayId)
     {
         var bay = await db.Bays.FindAsync(bayId);
         if (bay is null) return NotFound();
+        if (!User.CanManageCentre(bay.CentreId)) return Forbid();
 
         bay.Status = BayStatus.OutOfService;
         bay.UpdatedAt = DateTime.UtcNow;

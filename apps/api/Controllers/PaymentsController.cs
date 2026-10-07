@@ -18,6 +18,7 @@ public class PaymentsController(
     BookingPaymentService bookingPayments,
     IConfiguration configuration) : ControllerBase
 {
+    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpPost("checkout")]
     public async Task<IActionResult> StartCheckout(StartCheckoutRequest request, CancellationToken cancellationToken)
     {
@@ -57,10 +58,13 @@ public class PaymentsController(
         var webhookSecret = configuration["Payments:Stripe:WebhookSecret"];
         if (string.IsNullOrWhiteSpace(webhookSecret)) return StatusCode(StatusCodes.Status503ServiceUnavailable);
 
+        // Without the header Stripe's verifier throws a NullReferenceException (HTTP 500) instead of rejecting the call.
+        if (!Request.Headers.TryGetValue("Stripe-Signature", out var signature) || string.IsNullOrWhiteSpace(signature)) return BadRequest();
+
         var json = await new StreamReader(Request.Body).ReadToEndAsync(cancellationToken);
         try
         {
-            var stripeEvent = EventUtility.ConstructEvent(json, Request.Headers["Stripe-Signature"], webhookSecret);
+            var stripeEvent = EventUtility.ConstructEvent(json, signature, webhookSecret);
             switch (stripeEvent.Type)
             {
                 case EventTypes.CheckoutSessionCompleted when stripeEvent.Data.Object is Session session:
@@ -113,6 +117,7 @@ public class PaymentsController(
         return Redirect(MobileAppUrl("payment-cancel", orderId));
     }
 
+    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpPost("bookings/{bookingId:guid}/refund")]
     public async Task<IActionResult> Refund(Guid bookingId, RequestPaymentRefundRequest request, CancellationToken cancellationToken)
     {
