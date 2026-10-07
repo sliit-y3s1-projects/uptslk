@@ -1,5 +1,5 @@
-﻿import { screen, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { screen, waitFor } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
 import { http, HttpResponse } from "msw";
 import { Route, Routes } from "react-router";
 import userEvent from "@testing-library/user-event";
@@ -30,7 +30,7 @@ describe("CentreFormPage", () => {
 
   it("sends a POST request and navigates on successful creation", async () => {
     const user = userEvent.setup();
-    let requestBody: any;
+    let requestBody: unknown;
     
     server.use(
       http.post(apiUrl("/api/v1/centres"), async ({ request }) => {

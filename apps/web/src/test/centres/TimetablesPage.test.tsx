@@ -1,8 +1,8 @@
-﻿import { screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { http, HttpResponse } from "msw";
 import { Route, Routes } from "react-router";
-import userEvent from "@testing-library/user-event";
+
 import { renderWithProviders } from "@/test/render";
 import { server } from "@/test/server";
 import { apiUrl } from "@/test/handlers";
@@ -29,7 +29,7 @@ describe("TimetablesPage", () => {
   });
 
   it("shows an error message if the timetable generation API fails", async () => {
-    const user = userEvent.setup();
+    
     server.use(
       http.get(apiUrl("/api/v1/routes"), () => new HttpResponse(null, { status: 500 })),
       http.get(apiUrl("/api/v1/centres"), () => HttpResponse.json([])),

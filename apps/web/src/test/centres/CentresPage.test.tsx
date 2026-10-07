@@ -1,6 +1,6 @@
-﻿import { screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { http, HttpResponse, delay } from "msw";
+import { http, HttpResponse } from "msw";
 import { Route, Routes } from "react-router";
 import { renderWithProviders } from "@/test/render";
 import { server } from "@/test/server";
