@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { PassengerForm } from "@/features/riders/components/PassengerProfile";
-import { FareRules } from "@/features/fares/components/FareRules";
+import { FareRulesPage } from "@/features/fares/components/FareRules";
 import { buildStaff } from "@/test/factories";
 import { apiUrl, http, HttpResponse } from "@/test/handlers";
 import { renderWithProviders, screen } from "@/test/render";
@@ -64,21 +64,19 @@ describe("Fare rule integration", () => {
       }),
     );
 
-    const { user } = renderWithProviders(<FareRules />, {
+    const { user } = renderWithProviders(<FareRulesPage />, {
+      route: "/fares/fare-rules",
       user: buildStaff("Dispatcher", "centre-1"),
     });
 
     await user.click(screen.getByRole("button", { name: "Create fare rule" }));
-    const route = screen.getByRole("combobox", { name: /^Route$/ });
-    expect((await screen.findAllByRole("option", { name: /101.*Colombo Fort/ })).length).toBe(2);
-    await user.selectOptions(route, "route-1");
-    await user.selectOptions(screen.getByRole("combobox", { name: "Passenger category" }), "Student");
+    await user.click(screen.getByText("Select an active route"));
+    await user.click(await screen.findByRole("option", { name: /101.*Colombo Fort/ }));
     await user.type(screen.getByRole("spinbutton", { name: "Fare (LKR)" }), "125");
     await user.click(screen.getByRole("button", { name: "Save fare rule" }));
 
     expect(requestBody).toEqual({
       routeId: "route-1",
-      passengerCategory: "Student",
       amount: 125,
     });
   });

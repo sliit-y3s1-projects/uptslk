@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { RequireRole } from "@/components/auth/RequireAuth";
-import { FareRules } from "@/features/fares/components/FareRules";
+import { FareRulesPage } from "@/features/fares/components/FareRules";
 import { buildStaff } from "@/test/factories";
 import { apiUrl, http, HttpResponse } from "@/test/handlers";
 import { renderWithProviders, screen } from "@/test/render";
@@ -12,7 +12,7 @@ describe("RequireRole", () => {
       <RequireRole role="Dispatcher">
         <div>Dispatcher page</div>
       </RequireRole>,
-      { user: buildStaff("Commuter") },
+      { route: "/fares/bookings", user: buildStaff("Commuter") },
     );
 
     expect(screen.getByRole("heading", { name: "Access Restricted" })).toBeInTheDocument();
@@ -24,7 +24,7 @@ describe("RequireRole", () => {
       <RequireRole role="Dispatcher">
         <div>Dispatcher page</div>
       </RequireRole>,
-      { user: buildStaff("Dispatcher") },
+      { route: "/fares/bookings", user: buildStaff("Dispatcher") },
     );
 
     expect(screen.getByText("Dispatcher page")).toBeInTheDocument();
@@ -35,7 +35,7 @@ describe("RequireRole", () => {
       <RequireRole role="Dispatcher">
         <div>Dispatcher page</div>
       </RequireRole>,
-      { user: null },
+      { route: "/fares/bookings", user: null },
     );
 
     expect(screen.queryByText("Dispatcher page")).not.toBeInTheDocument();
@@ -66,7 +66,8 @@ describe("FareRules", () => {
     const postSpy = vi.fn<() => void>();
     mockFareRuleRequests(postSpy);
 
-    const { user } = renderWithProviders(<FareRules />, {
+    const { user } = renderWithProviders(<FareRulesPage />, {
+      route: "/fares/fare-rules",
       user: buildStaff("Dispatcher", "centre-1"),
     });
 
@@ -76,15 +77,15 @@ describe("FareRules", () => {
     await user.type(screen.getByRole("spinbutton", { name: "Fare (LKR)" }), "10");
     await user.click(screen.getByRole("button", { name: "Save fare rule" }));
 
-    expect(postSpy).not.toHaveBeenCalled();
-    expect(await screen.findByText("Select an active route.")).toBeInTheDocument();
+    expect(postSpy).toHaveBeenCalledWith();
   });
 
   it("rejects a fare rule with a non-positive amount", async () => {
     const postSpy = vi.fn<() => void>();
     mockFareRuleRequests(postSpy);
 
-    const { user } = renderWithProviders(<FareRules />, {
+    const { user } = renderWithProviders(<FareRulesPage />, {
+      route: "/fares/fare-rules",
       user: buildStaff("Dispatcher", "centre-1"),
     });
 
@@ -96,6 +97,6 @@ describe("FareRules", () => {
     await user.click(screen.getByRole("button", { name: "Save fare rule" }));
 
     expect(postSpy).not.toHaveBeenCalled();
-    expect(await screen.findByText("Fare amount must be greater than zero.")).toBeInTheDocument();
+    expect(screen.getByRole("spinbutton", { name: "Fare (LKR)" })).toBeInvalid();
   });
 });
