@@ -1,0 +1,39 @@
+$ vitest run src/test/fleet --reporter=verbose
+
+ RUN  v5.0.3 /home/chamal/dev/uptslk/apps/web
+
+ ✓ src/test/fleet/MaintenancePage.test.tsx > MaintenancePage and MaintenanceDetailPage > MaintenancePage renders scheduled and completed maintenance records and filters them by the search box 854ms
+ ✓ src/test/fleet/MaintenancePage.test.tsx > MaintenancePage and MaintenanceDetailPage > MaintenanceDetailPage renders the maintenance record reference, vehicle details, schedule timestamps, and description 131ms
+ ✓ src/test/fleet/VehiclesPage.test.tsx > VehiclesPage and VehicleProfilePage > VehiclesPage renders the list of vehicles with plate number, model, capacity, accessibility, centre, and status from the API 404ms
+ ✓ src/test/fleet/FleetRoutes.test.tsx > Fleet protected routes (RequireRole) > RequireRole allows FleetOfficer, CentreManager, and Admin to view VehiclesPage and MaintenancePage 808ms
+ ✓ src/test/fleet/FleetRoutes.test.tsx > Fleet protected routes (RequireRole) > RequireRole blocks a Commuter and a Driver from /fleet/vehicles and /fleet/maintenance with the Access Restricted message 82ms
+ ✓ src/test/fleet/FleetRoutes.test.tsx > Fleet protected routes (RequireRole) > RequireRole renders nothing for an anonymous visitor (user: null) on /fleet/vehicles 9ms
+ ✓ src/test/fleet/MaintenancePage.test.tsx > MaintenancePage and MaintenanceDetailPage > MaintenanceDetailPage sends DELETE /api/v1/maintenance-records/:recordId when cancellation is confirmed and navigates back to /fleet/maintenance 254ms
+ ✓ src/test/fleet/MaintenancePage.test.tsx > MaintenancePage and MaintenanceDetailPage > MaintenancePage shows an empty state when no records exist and an error banner when GET /api/v1/maintenance-records returns 500 94ms
+ ✓ src/test/fleet/VehiclesPage.test.tsx > VehiclesPage and VehicleProfilePage > VehiclesPage narrows the list when searching by registration or model 706ms
+ ✓ src/test/fleet/VehiclesPage.test.tsx > VehiclesPage and VehicleProfilePage > VehiclesPage hides the Register vehicle action when rendered in read-only mode 100ms
+ ✓ src/test/fleet/MaintenanceForm.test.tsx > MaintenanceFormPage > MaintenanceFormPage shows 'Please select a vehicle.' when submitted without a selected vehicle and sends no POST request 1686ms
+ ✓ src/test/fleet/VehiclesPage.test.tsx > VehiclesPage and VehicleProfilePage > VehicleProfilePage renders the vehicle details, assigned centre code, and maintenance history from the API 184ms
+ ✓ src/test/fleet/VehiclesPage.test.tsx > VehiclesPage and VehicleProfilePage > VehicleProfilePage sends DELETE /api/v1/vehicles/:vehicleId when deactivation is confirmed and returns to the vehicle list 219ms
+ ✓ src/test/fleet/VehiclesPage.test.tsx > VehiclesPage and VehicleProfilePage > VehiclesPage shows a loading indicator while fetching and an empty-state message when the centre has no vehicles 41ms
+ ✓ src/test/fleet/VehiclesPage.test.tsx > VehiclesPage and VehicleProfilePage > VehiclesPage shows the error banner when GET /api/v1/vehicles fails with 500 and reloads when Retry is clicked 85ms
+ ✓ src/test/fleet/VehiclesPage.test.tsx > VehiclesPage and VehicleProfilePage > VehicleProfilePage displays a 403 Forbidden error message when a FleetOfficer tries to deactivate another centre's vehicle 106ms
+ ✓ src/test/fleet/VehicleForm.test.tsx > VehicleFormPage > VehicleFormPage shows an error when registration number or model is blank and does not send a POST request 2183ms
+ ✓ src/test/fleet/MaintenanceForm.test.tsx > MaintenanceFormPage > MaintenanceFormPage shows validation errors when maintenance type or description is whitespace and sends no POST request 921ms
+ ✓ src/test/fleet/MaintenanceForm.test.tsx > MaintenanceFormPage > MaintenanceFormPage in edit mode requires a completion time when status is set to Completed and sends no PUT request 692ms
+ ✓ src/test/fleet/VehicleForm.test.tsx > VehicleFormPage > VehicleFormPage rejects a zero or negative passenger capacity and does not send a POST request 803ms
+ ✓ src/test/fleet/VehicleForm.test.tsx > VehicleFormPage > VehicleFormPage rejects a passenger capacity above 200 and does not send a POST request 702ms
+ ✓ src/test/fleet/VehicleForm.test.tsx > VehicleFormPage > VehicleFormPage rejects an unsupported image file type with 'Choose a JPG, PNG, or WebP vehicle image.' 73ms
+ ✓ src/test/fleet/MaintenanceForm.test.tsx > MaintenanceFormPage > MaintenanceFormPage sends POST /api/v1/maintenance-records with the selected vehicle, type, description, and ISO timestamp, then navigates to the detail page 743ms
+ ✓ src/test/fleet/VehicleForm.test.tsx > VehicleFormPage > VehicleFormPage rejects an image file over 5 MB and sends no image upload 126ms
+ ✓ src/test/fleet/MaintenanceForm.test.tsx > MaintenanceFormPage > MaintenanceFormPage in edit mode sends PUT /api/v1/maintenance-records/:recordId with Completed status and completedAt timestamp 493ms
+ ✓ src/test/fleet/MaintenanceForm.test.tsx > MaintenanceFormPage > MaintenanceFormPage displays the 409 Conflict message when POST /api/v1/maintenance-records returns a trip clash with conflictingTripIds and disables buttons while submitting 465ms
+ ✓ src/test/fleet/VehicleForm.test.tsx > VehicleFormPage > VehicleFormPage sends a normalized uppercase plate number in POST /api/v1/vehicles, uploads the selected image, and navigates to the new vehicle profile 911ms
+ ✓ src/test/fleet/VehicleForm.test.tsx > VehicleFormPage > VehicleFormPage in edit mode loads existing data, sends PUT /api/v1/vehicles/:vehicleId with updated fields, and navigates back to the profile 418ms
+ ✓ src/test/fleet/VehicleForm.test.tsx > VehicleFormPage > VehicleFormPage displays the 409 Conflict message (A vehicle with this plate number already exists.) and disables the submit button while saving 608ms
+
+ Test Files  5 passed (5)
+      Tests  29 passed (29)
+   Start at  16:57:23
+   Duration  11.23s (tests 38%, environment 29%, import 19%, setup 9%, transform 4%)
+

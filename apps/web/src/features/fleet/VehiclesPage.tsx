@@ -557,13 +557,13 @@ function VehicleFormInner({
 
     const numericCapacity = parseInt(capacity, 10);
     if (isNaN(numericCapacity) || numericCapacity <= 0) {
-    setFormError("Passenger capacity must be a positive number.");
-    return;
+      setFormError("Passenger capacity must be a positive number.");
+      return;
     }
 
     if (numericCapacity > 200) {
-    setFormError("Passenger capacity must be 200 or fewer.");
-    return;
+      setFormError("Passenger capacity must be 200 or fewer.");
+      return;
     }
 
     const payload = {

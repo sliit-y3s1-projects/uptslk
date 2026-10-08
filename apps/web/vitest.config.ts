@@ -15,6 +15,9 @@ export default defineConfig({
     // Only TypeScript tests. The Node test-runner file src/features/fares/tests/contracts.test.mjs is not picked up.
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     css: false,
+    // Rendering whole pages is slow on a busy machine, with coverage on, or in CI; the defaults (5 s test, 1 s wait) are too tight.
+    testTimeout: 20000,
+    hookTimeout: 20000,
     clearMocks: true,
     restoreMocks: true,
     // A fixed API address, so mock handlers do not depend on a developer's .env file.

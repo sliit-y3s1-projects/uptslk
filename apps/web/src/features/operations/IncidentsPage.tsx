@@ -28,6 +28,14 @@ export function IncidentsPage() {
           </Button>
         }
       />
+      {updateMutation.error && (
+        <p
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {updateMutation.error.message}
+        </p>
+      )}
       <section className="grid gap-3 lg:grid-cols-3">
         {["Open", "InProgress", "Resolved"].map((status) => (
           <article key={status} className="rounded-lg border bg-card">

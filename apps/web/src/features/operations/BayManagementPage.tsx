@@ -246,6 +246,14 @@ export function BayManagementPage() {
           )}
         </DialogContent>
       </Dialog>
+      {(updateBay.error || deactivateBay.error) && (
+        <p
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {(updateBay.error ?? deactivateBay.error)?.message}
+        </p>
+      )}
       <section className="grid gap-3 sm:grid-cols-3">
         <Metric
           label="Active bays"

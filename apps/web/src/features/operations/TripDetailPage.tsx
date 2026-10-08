@@ -76,6 +76,14 @@ export function TripDetailPage() {
           </div>
         }
       />
+      {statusMutation.error && (
+        <p
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {statusMutation.error.message}
+        </p>
+      )}
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_360px]">
         <article className="rounded-lg border bg-card p-5">
           <div className="flex items-center justify-between">
@@ -187,6 +195,11 @@ export function TripDetailPage() {
             value={reason}
             onChange={(event) => setReason(event.target.value)}
           />
+          {cancelMutation.error && (
+            <p role="alert" className="text-sm text-red-700">
+              {cancelMutation.error.message}
+            </p>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel>Keep trip</AlertDialogCancel>
             <AlertDialogAction

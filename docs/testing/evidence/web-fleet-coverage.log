@@ -1,0 +1,19 @@
+$ vitest run src/test/fleet --coverage '--coverage.include=src/features/fleet/**' --coverage.reportsDirectory=coverage/fleet
+
+ RUN  v5.0.3 /home/chamal/dev/uptslk/apps/web
+      Coverage enabled with v8
+
+
+ Test Files  5 passed (5)
+      Tests  29 passed (29)
+   Start at  16:57:35
+   Duration  14.11s (tests 48%, environment 21%, import 16%, setup 9%, transform 4%, worker 1%)
+
+ % Coverage report from v8
+
+=============================== Coverage summary ===============================
+Statements   : 63.34% ( 299/472 )
+Branches     : 54.86% ( 282/514 )
+Functions    : 62.58% ( 92/147 )
+Lines        : 65.01% ( 288/443 )
+================================================================================

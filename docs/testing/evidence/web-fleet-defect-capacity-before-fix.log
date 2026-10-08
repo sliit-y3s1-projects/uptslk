@@ -1,0 +1,277 @@
+$ vitest run src/test/fleet/VehicleForm
+
+ RUN  v5.0.3 /home/chamal/dev/uptslk/apps/web
+
+ ❯ src/test/fleet/VehicleForm.test.tsx (8 tests | 1 failed) 6630ms
+   ❯ VehicleFormPage (8)
+     × VehicleFormPage rejects a passenger capacity above 200 and does not send a POST request 2023ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/test/fleet/VehicleForm.test.tsx > VehicleFormPage > VehicleFormPage rejects a passenger capacity above 200 and does not send a POST request
+TestingLibraryElementError: Unable to find an element with the text: /capacity.*between 1 and 200|capacity.*200/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <main
+      class="flex flex-1 flex-col gap-4 bg-muted/20 p-4"
+    >
+      <div
+        class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
+      >
+        <div>
+          <h1
+            class="text-xl font-semibold tracking-tight"
+          >
+            Register vehicle
+          </h1>
+          <p
+            class="mt-1 text-sm text-muted-foreground"
+          >
+            All fields map directly to the backend Vehicle create and update APIs.
+          </p>
+        </div>
+        <div
+          class="flex items-center gap-2"
+        />
+      </div>
+      <form
+        class="max-w-3xl rounded-lg border bg-card p-5"
+      >
+        <div
+          class="mb-5 border-b pb-5"
+        >
+          <p
+            class="text-sm font-medium"
+          >
+            Primary vehicle image
+          </p>
+          <p
+            class="mb-2 text-xs text-muted-foreground"
+          >
+            Optional · JPG, PNG, or WebP · up to 5 MB
+          </p>
+          <label
+            class="group relative flex min-h-40 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed bg-muted/30 p-4 text-center transition-colors hover:border-primary/50 hover:bg-muted/60 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 "
+          >
+            <svg
+              class="size-9 text-muted-foreground transition-colors group-hover:text-primary"
+              color="currentColor"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 16L7.46967 11.5303C7.80923 11.1908 8.26978 11 8.75 11C9.23022 11 9.69077 11.1908 10.0303 11.5303L14 15.5M15.5 17L14 15.5M21 16L18.5303 13.5303C18.1908 13.1908 17.7302 13 17.25 13C16.7698 13 16.3092 13.1908 15.9697 13.5303L14 15.5"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+              />
+              <path
+                d="M12 2.5C7.77027 2.5 5.6554 2.5 4.25276 3.69797C4.05358 3.86808 3.86808 4.05358 3.69797 4.25276C2.5 5.6554 2.5 7.77027 2.5 12C2.5 16.2297 2.5 18.3446 3.69797 19.7472C3.86808 19.9464 4.05358 20.1319 4.25276 20.302C5.6554 21.5 7.77027 21.5 12 21.5C16.2297 21.5 18.3446 21.5 19.7472 20.302C19.9464 20.1319 20.1319 19.9464 20.302 19.7472C21.5 18.3446 21.5 16.2297 21.5 12"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+              />
+              <path
+                d="M15.5 5.5C16.0898 4.89316 17.6597 2.5 18.5 2.5C19.3403 2.5 20.9102 4.89316 21.5 5.5M18.5 3V9.5"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+              />
+            </svg>
+            <span
+              class="text-sm font-medium"
+            >
+              Click to upload a vehicle image
+            </span>
+            <span
+              class="text-xs text-muted-foreground"
+            >
+              JPG, PNG or WebP
+            </span>
+            <input
+              accept="image/jpeg,image/png,image/webp"
+              class="sr-only"
+              type="file"
+            />
+          </label>
+        </div>
+        <div
+          class="grid gap-4 sm:grid-cols-2"
+        >
+          <label
+            class="grid gap-1.5 text-sm font-medium"
+          >
+            Registration number
+            <input
+              class="h-9 w-full min-w-0 rounded-xl border border-input bg-muted/60 px-2.5 py-1 text-base outline-none transition-colors duration-500 ease-out file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-primary disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive md:text-sm dark:bg-input/30 dark:aria-invalid:border-destructive/50"
+              data-slot="input"
+              id="base-ui-_r_u_"
+              placeholder="WP CAB-4821"
+              required=""
+              value="WP NB-4821"
+            />
+          </label>
+          <label
+            class="grid gap-1.5 text-sm font-medium"
+          >
+            Vehicle model
+            <input
+              class="h-9 w-full min-w-0 rounded-xl border border-input bg-muted/60 px-2.5 py-1 text-base outline-none transition-colors duration-500 ease-out file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-primary disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive md:text-sm dark:bg-input/30 dark:aria-invalid:border-destructive/50"
+              data-slot="input"
+              id="base-ui-_r_v_"
+              placeholder="Ashok Leyland Viking"
+              required=""
+              value="Ashok Leyland Viking"
+            [36...
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <main
+      class="flex flex-1 flex-col gap-4 bg-muted/20 p-4"
+    >
+      <div
+        class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
+      >
+        <div>
+          <h1
+            class="text-xl font-semibold tracking-tight"
+          >
+            Register vehicle
+          </h1>
+          <p
+            class="mt-1 text-sm text-muted-foreground"
+          >
+            All fields map directly to the backend Vehicle create and update APIs.
+          </p>
+        </div>
+        <div
+          class="flex items-center gap-2"
+        />
+      </div>
+      <form
+        class="max-w-3xl rounded-lg border bg-card p-5"
+      >
+        <div
+          class="mb-5 border-b pb-5"
+        >
+          <p
+            class="text-sm font-medium"
+          >
+            Primary vehicle image
+          </p>
+          <p
+            class="mb-2 text-xs text-muted-foreground"
+          >
+            Optional · JPG, PNG, or WebP · up to 5 MB
+          </p>
+          <label
+            class="group relative flex min-h-40 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed bg-muted/30 p-4 text-center transition-colors hover:border-primary/50 hover:bg-muted/60 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 "
+          >
+            <svg
+              class="size-9 text-muted-foreground transition-colors group-hover:text-primary"
+              color="currentColor"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 16L7.46967 11.5303C7.80923 11.1908 8.26978 11 8.75 11C9.23022 11 9.69077 11.1908 10.0303 11.5303L14 15.5M15.5 17L14 15.5M21 16L18.5303 13.5303C18.1908 13.1908 17.7302 13 17.25 13C16.7698 13 16.3092 13.1908 15.9697 13.5303L14 15.5"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+              />
+              <path
+                d="M12 2.5C7.77027 2.5 5.6554 2.5 4.25276 3.69797C4.05358 3.86808 3.86808 4.05358 3.69797 4.25276C2.5 5.6554 2.5 7.77027 2.5 12C2.5 16.2297 2.5 18.3446 3.69797 19.7472C3.86808 19.9464 4.05358 20.1319 4.25276 20.302C5.6554 21.5 7.77027 21.5 12 21.5C16.2297 21.5 18.3446 21.5 19.7472 20.302C19.9464 20.1319 20.1319 19.9464 20.302 19.7472C21.5 18.3446 21.5 16.2297 21.5 12"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+              />
+              <path
+                d="M15.5 5.5C16.0898 4.89316 17.6597 2.5 18.5 2.5C19.3403 2.5 20.9102 4.89316 21.5 5.5M18.5 3V9.5"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+              />
+            </svg>
+            <span
+              class="text-sm font-medium"
+            >
+              Click to upload a vehicle image
+            </span>
+            <span
+              class="text-xs text-muted-foreground"
+            >
+              JPG, PNG or WebP
+            </span>
+            <input
+              accept="image/jpeg,image/png,image/webp"
+              class="sr-only"
+              type="file"
+            />
+          </label>
+        </div>
+        <div
+          class="grid gap-4 sm:grid-cols-2"
+        >
+          <label
+            class="grid gap-1.5 text-sm font-medium"
+          >
+            Registration number
+            <input
+              class="h-9 w-full min-w-0 rounded-xl border border-input bg-muted/60 px-2.5 py-1 text-base outline-none transition-colors duration-500 ease-out file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-primary disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive md:text-sm dark:bg-input/30 dark:aria-invalid:border-destructive/50"
+              data-slot="input"
+              id="base-ui-_r_u_"
+              placeholder="WP CAB-4821"
+              required=""
+              value="WP NB-4821"
+            />
+          </label>
+          <label
+            class="grid gap-1.5 text-sm font-medium"
+          >
+            Vehicle model
+            <input
+              class="h-9 w-full min-w-0 rounded-xl border border-input bg-muted/60 px-2.5 py-1 text-base outline-none transition-colors duration-500 ease-out file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-primary disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive md:text-sm dark:bg-input/30 dark:aria-invalid:border-destructive/50"
+              data-slot="input"
+              id="base-ui-_r_v_"
+              placeholder="Ashok Leyland Viking"
+              required=""
+              value="Ashok Leyland Viking"
+            [36...
+ ❯ waitForWrapper node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/test/fleet/VehicleForm.test.tsx:174:20
+    172|
+    173|     expect(
+    174|       await screen.findByText(/capacity.*between 1 and 200|capacity.*2…
+       |                    ^
+    175|     ).toBeInTheDocument();
+    176|     expect(postCalled).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  16:37:59
+   Duration  10.45s (tests 65%, environment 13%, import 12%, setup 5%, transform 5%)
+
+[ELIFECYCLE] Test failed. See above for more details.

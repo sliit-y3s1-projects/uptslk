@@ -1,0 +1,102 @@
+$ vitest run src/test/dispatch --reporter=verbose
+
+ RUN  v5.0.3 /home/chamal/dev/uptslk/apps/web
+
+ ✓ src/test/dispatch/Drivers.test.tsx > DriversPage > lists the centre's drivers with licence, phone and status 477ms
+ ✓ src/test/dispatch/Incidents.test.tsx > IncidentsPage > groups incidents as Open, Investigating and Resolved with counts 915ms
+ ✓ src/test/dispatch/BayManagement.test.tsx > BayManagementPage > shows each bay with its live state and the summary counts 661ms
+ ✓ src/test/dispatch/Incidents.test.tsx > IncidentsPage > shows the route of a trip incident, 'Centre-wide incident' otherwise, and who owns it 141ms
+ ✓ src/test/dispatch/TripHistory.test.tsx > TripHistoryPage > lists completed and cancelled trips, newest first, with passenger load 1071ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > shows the route, bay, vehicle, driver, capacity and notes 1302ms
+ ✓ src/test/dispatch/Incidents.test.tsx > IncidentsPage > starts an investigation with PUT /api/v1/incidents/{id}, keeping the other fields 420ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > links to the incident form for this trip, and to the edit form while the trip is active 341ms
+ ✓ src/test/dispatch/DispatchBoard.test.tsx > DispatchPage (dispatch board) > places each active trip in the column for its status and shows route, vehicle, bay and driver 1612ms
+ ✓ src/test/dispatch/BayManagement.test.tsx > BayManagementPage > shows the trip on a bay when it is selected 733ms
+ ✓ src/test/dispatch/BayManagement.test.tsx > BayManagementPage > shows a message when the centre has no bays 85ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > explains a Scheduled trip in the lifecycle panel 121ms
+ ✓ src/test/dispatch/Incidents.test.tsx > IncidentsPage > resolves an investigated incident, and offers no action on a resolved one 274ms
+ ✓ src/test/dispatch/Drivers.test.tsx > DriversPage > asks the API to search when the dispatcher types a name or licence 1114ms
+ ✓ src/test/dispatch/Drivers.test.tsx > DriversPage > shows a loading message and then an empty message 95ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > explains a Boarding trip in the lifecycle panel 117ms
+ ✓ src/test/dispatch/DispatchBoard.test.tsx > DispatchPage (dispatch board) > does not show completed or cancelled trips on the board 207ms
+ ✓ src/test/dispatch/Incidents.test.tsx > IncidentsPage > tells the dispatcher when an incident update is rejected 214ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > explains a Dispatched trip in the lifecycle panel 152ms
+ ✓ src/test/dispatch/Incidents.test.tsx > IncidentsPage > shows a loading message and an error message when the incidents cannot be loaded 46ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > explains a Completed trip in the lifecycle panel 119ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > explains a Delayed trip in the lifecycle panel 316ms
+ ✓ src/test/dispatch/Drivers.test.tsx > DriversPage > shows the error and loads the drivers again when Retry is clicked 280ms
+ ✓ src/test/dispatch/Incidents.test.tsx > IncidentFormPage > requires a summary and details before it can be submitted 416ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > explains a Cancelled trip in the lifecycle panel 97ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > offers the next step for a Scheduled trip: Mark ready 233ms
+ ✓ src/test/dispatch/DispatchBoard.test.tsx > DispatchPage (dispatch board) > narrows the board when searching by vehicle 724ms
+ ✓ src/test/dispatch/DispatchBoard.test.tsx > DispatchPage (dispatch board) > links each card to its trip details and offers to schedule a new trip 498ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > offers the next step for a Ready trip: Mark boarding 171ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > offers the next step for a Delayed trip: Mark boarding 254ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > offers the next step for a Boarding trip: Mark dispatched 141ms
+ ✓ src/test/dispatch/Incidents.test.tsx > IncidentFormPage > sends POST /api/v1/incidents linked to the trip in the link, then returns to the incident list 970ms
+ ✓ src/test/dispatch/DispatchBoard.test.tsx > DispatchPage (dispatch board) > starts boarding for the selected trip with PATCH /api/v1/trips/{id}/status 453ms
+ ✓ src/test/dispatch/TripHistory.test.tsx > TripHistoryPage > narrows the list by search and by status 2210ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > offers the next step for a Dispatched trip: Mark completed 170ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > offers no actions on a Completed trip and links back to the history 174ms
+ ✓ src/test/dispatch/BayManagement.test.tsx > BayManagementPage > sends POST /api/v1/centres/{id}/bays with the new bay and selects it 1876ms
+ ✓ src/test/dispatch/Drivers.test.tsx > DriverFormPage > rejects a driver with no licence number 1769ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > offers no actions on a Cancelled trip and links back to the history 250ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: details > shows a loading message and then 'Trip not found.' for an unknown trip 27ms
+ ✓ src/test/dispatch/TripHistory.test.tsx > TripHistoryPage > shows ten trips per page and moves between pages 745ms
+ ✓ src/test/dispatch/TripHistory.test.tsx > TripHistoryPage > opens the trip when its row is clicked 193ms
+ ✓ src/test/dispatch/TripHistory.test.tsx > TripHistoryPage > shows an empty message and an error message 130ms
+ ✓ src/test/dispatch/DispatchBoard.test.tsx > DispatchPage (dispatch board) > only allows dispatching a bus that is boarding 914ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: status changes and cancellation > sends PATCH /api/v1/trips/{id}/status with the next status when the dispatcher marks it 402ms
+ ✓ src/test/dispatch/BayManagement.test.tsx > BayManagementPage > shows the API message and keeps the dialog open when the bay code already exists 877ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: status changes and cancellation > tells the dispatcher why the API rejected a status change 253ms
+ ✓ src/test/dispatch/DispatchBoard.test.tsx > DispatchPage (dispatch board) > does not offer Flag delay or boarding actions that the trip's state forbids 346ms
+ ✓ src/test/dispatch/DispatchBoard.test.tsx > DispatchPage (dispatch board) > shows a loading message, then an empty board when there are no trips 145ms
+ ✓ src/test/dispatch/DispatchBoard.test.tsx > DispatchPage (dispatch board) > shows an error message when the trips cannot be loaded 20ms
+ ✓ src/test/dispatch/Drivers.test.tsx > DriverFormPage > rejects a driver with no email 1122ms
+ ✓ src/test/dispatch/BayManagement.test.tsx > BayManagementPage > requires a bay code to create a bay 550ms
+ ✓ src/test/dispatch/DispatchBoard.test.tsx > DispatchPage (dispatch board) > tells the dispatcher why the API rejected a status change 398ms
+ ✓ src/test/dispatch/BayManagement.test.tsx > BayManagementPage > closes the selected bay with DELETE /api/v1/centres/bays/{id} 211ms
+ ✓ src/test/dispatch/Incidents.test.tsx > IncidentFormPage > can report a centre-wide incident without a trip 1988ms
+ ✓ src/test/dispatch/BayManagement.test.tsx > BayManagementPage > releases a bay with PUT status Available 210ms
+ ✓ src/test/dispatch/BayManagement.test.tsx > BayManagementPage > tells the dispatcher when closing a bay is refused 201ms
+ ✓ src/test/dispatch/BayManagement.test.tsx > BayManagementPage > shows a loading message and an error message when the bays cannot be loaded 30ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: status changes and cancellation > requires a reason before the cancellation can be confirmed 1139ms
+ ✓ src/test/dispatch/Incidents.test.tsx > IncidentFormPage > tells the dispatcher when the incident cannot be saved and stays on the form 501ms
+ ✓ src/test/dispatch/Drivers.test.tsx > DriverFormPage > rejects a driver with a short password 1035ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: status changes and cancellation > sends DELETE /api/v1/trips/{id} with the reason and opens the trip history 672ms
+ ✓ src/test/dispatch/TripDetail.test.tsx > TripDetailPage: status changes and cancellation > keeps the dispatcher on the trip and explains why when the cancellation is refused 654ms
+ ✓ src/test/dispatch/Drivers.test.tsx > DriverFormPage > sends POST /api/v1/drivers with a lower-case email and upper-case licence, then opens the profile 985ms
+ ✓ src/test/dispatch/Drivers.test.tsx > DriverFormPage > shows the API message when the licence or email already exists 723ms
+ ✓ src/test/dispatch/Drivers.test.tsx > DriverDetailPage > shows the driver profile 47ms
+ ✓ src/test/dispatch/Drivers.test.tsx > DriverDetailPage > deactivates the driver with DELETE /api/v1/drivers/{id} after confirmation and returns to the list 59ms
+ ✓ src/test/dispatch/Drivers.test.tsx > DriverDetailPage > does nothing when the dispatcher declines the confirmation 54ms
+ ✓ src/test/dispatch/Drivers.test.tsx > DriverDetailPage > hides Deactivate for an inactive driver and shows an error for an unknown driver 56ms
+ ✓ src/test/dispatch/Drivers.test.tsx > DriverDetailPage > shows the API message when deactivation is refused 56ms
+ ✓ src/test/dispatch/DispatchAccess.test.tsx > Dispatch pages: protected routes > lets a CentreManager see the operations pages 73ms
+ ✓ src/test/dispatch/DispatchAccess.test.tsx > Dispatch pages: protected routes > lets a Dispatcher see the operations pages 10ms
+ ✓ src/test/dispatch/TripForm.test.tsx > TripFormPage: create > shows the schedule form with the first route, direction, vehicle and driver already chosen 670ms
+ ✓ src/test/dispatch/DispatchAccess.test.tsx > Dispatch pages: protected routes > lets a FleetOfficer see the operations pages 10ms
+ ✓ src/test/dispatch/DispatchAccess.test.tsx > Dispatch pages: protected routes > lets a Driver see the operations pages 7ms
+ ✓ src/test/dispatch/DispatchAccess.test.tsx > Dispatch pages: protected routes > blocks a Commuter from the centre staff area with the Access Restricted message 267ms
+ ✓ src/test/dispatch/DispatchAccess.test.tsx > Dispatch pages: protected routes > blocks a Admin from the centre staff area with the Access Restricted message 25ms
+ ✓ src/test/dispatch/DispatchAccess.test.tsx > Dispatch pages: protected routes > shows nothing to an anonymous visitor 5ms
+ ✓ src/test/dispatch/TripForm.test.tsx > TripFormPage: create > only offers bays that are available 612ms
+ ✓ src/test/dispatch/DispatchAccess.test.tsx > Dispatch pages: protected routes > shows the not-found page for an unknown address, even for a signed-in dispatcher 72ms
+ ✓ src/test/dispatch/TripForm.test.tsx > TripFormPage: create > does not save a trip without a service date and departure time, and tells the dispatcher 222ms
+ ✓ src/test/dispatch/DispatchAccess.test.tsx > Dispatch pages: protected routes > lets a dispatcher open the dispatch board in the real app 666ms
+ ✓ src/test/dispatch/DispatchAccess.test.tsx > Dispatch pages: protected routes > does not give a commuter /operations/dispatch in the real app 24ms
+ ✓ src/test/dispatch/DispatchAccess.test.tsx > Dispatch pages: protected routes > does not give a commuter /operations/incidents in the real app 21ms
+ ✓ src/test/dispatch/DispatchAccess.test.tsx > Dispatch pages: protected routes > does not give a commuter /operations/bays in the real app 25ms
+ ✓ src/test/dispatch/DispatchAccess.test.tsx > Dispatch pages: protected routes > does not give a commuter /fleet/drivers in the real app 19ms
+ ✓ src/test/dispatch/TripForm.test.tsx > TripFormPage: create > sends POST /api/v1/trips with the chosen date, time and resources, then opens the new trip 1788ms
+ ✓ src/test/dispatch/TripForm.test.tsx > TripFormPage: edit > loads the existing trip and shows its notes 96ms
+ ✓ src/test/dispatch/TripForm.test.tsx > TripFormPage: edit > sends PUT /api/v1/trips/{id} with the changed notes and returns to the trip 186ms
+ ✓ src/test/dispatch/TripForm.test.tsx > TripFormPage: edit > shows every conflict the API reports (vehicle, driver, bay) when the trip clashes 149ms
+ ✓ src/test/dispatch/TripForm.test.tsx > TripFormPage: edit > shows the API message and stays on the form when the API refuses the change 160ms
+ ✓ src/test/dispatch/TripForm.test.tsx > TripFormPage: edit > shows a loading message, and 'Trip not found.' when the trip does not exist 22ms
+
+ Test Files  8 passed (8)
+      Tests  92 passed (92)
+   Start at  16:58:24
+   Duration  17.94s (tests 45%, import 23%, environment 21%, setup 7%, transform 4%)
+

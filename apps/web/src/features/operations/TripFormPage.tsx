@@ -69,6 +69,10 @@ export function TripFormPage() {
     event.preventDefault();
     setError("");
     const form = new FormData(event.currentTarget);
+    if (!dateValue || !form.get("time")) {
+      setError("Select a service date and a departure time.");
+      return;
+    }
     const data = {
       centreId: centreId ?? "",
       routeId: selectedRoute?.id ?? String(form.get("routeId")),

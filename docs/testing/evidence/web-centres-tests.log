@@ -1,0 +1,58 @@
+$ vitest run src/test/centres --reporter=verbose
+
+ RUN  v5.0.3 /home/chamal/dev/uptslk/apps/web
+
+ ✓ src/test/centres/CentresPage.test.tsx > CentresPage > displays the names and districts of centres from the API 401ms
+ ✓ src/test/centres/CentresPage.test.tsx > CentresPage > displays an empty message when no centres are found 42ms
+ ✓ src/test/centres/CentresPage.test.tsx > CentresPage > displays an error message when the API returns a 500 error 27ms
+ ✓ src/test/centres/CentresPage.test.tsx > CentresPage > blocks access for Commuters and displays an Access Restricted message 12ms
+ ✓ src/test/centres/CentreFormPage.test.tsx > CentreFormPage > shows validation errors when required fields are empty 810ms
+ ✓ src/test/centres/RoutesPage.test.tsx > RoutesPage > displays the route numbers and names from the API 347ms
+ ✓ src/test/centres/RoutesPage.test.tsx > RoutesPage > displays an empty message when no routes are found 38ms
+ ✓ src/test/centres/RoutesPage.test.tsx > RoutesPage > displays an error message when the API returns a 500 error 27ms
+ ✓ src/test/centres/RoutesPage.test.tsx > RouteDetailPage > displays the route details and status 63ms
+stdout | src/test/centres/CentreFormPage.test.tsx > CentreFormPage > sends a POST request and navigates on successful creation
+Success
+
+ ✓ src/test/centres/RoutesPage.test.tsx > RouteFormPage > prevents form submission if required fields are missing 640ms
+ ✓ src/test/centres/CentreFormPage.test.tsx > CentreFormPage > sends a POST request and navigates on successful creation 737ms
+stderr | src/test/centres/CentreFormPage.test.tsx > CentreFormPage > displays an error message when the API returns a 409 Conflict (duplicate code)
+Error
+
+ ✓ src/test/centres/CentreFormPage.test.tsx > CentreFormPage > displays an error message when the API returns a 409 Conflict (duplicate code) 513ms
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > CentreProfilePage > shows the centre details, bay count, manager and employee count 907ms
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > CentreProfilePage > offers View operations only for an operating centre 162ms
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > CentreProfilePage > links an operating centre to its operations 90ms
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > CentreProfilePage > shows 'Unassigned' when the centre has no manager and a message when the centre cannot be loaded 107ms
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > CentreFormPage in edit mode > loads the existing centre into the form and locks the centre code 83ms
+stdout | src/test/centres/CentreProfileAndAccess.test.tsx > CentreFormPage in edit mode > sends PUT /api/v1/centres/{id} with the changed name and returns to the profile
+Success
+
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > CentreFormPage in edit mode > sends PUT /api/v1/centres/{id} with the changed name and returns to the profile 270ms
+stderr | src/test/centres/CentreProfileAndAccess.test.tsx > CentreFormPage in edit mode > shows a message and stays on the form when saving fails
+Error
+
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > CentreFormPage in edit mode > shows a message and stays on the form when saving fails 144ms
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > CentreFormPage in edit mode > shows a message when the centre to edit cannot be loaded 16ms
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > Centre pages: protected routes > shows the page to an Admin 8ms
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > Centre pages: protected routes > blocks a CentreManager with the Access Restricted message 14ms
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > Centre pages: protected routes > blocks a Dispatcher with the Access Restricted message 14ms
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > Centre pages: protected routes > blocks a FleetOfficer with the Access Restricted message 14ms
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > Centre pages: protected routes > blocks a Driver with the Access Restricted message 18ms
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > Centre pages: protected routes > blocks a Commuter with the Access Restricted message 25ms
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > Centre pages: protected routes > shows nothing to an anonymous visitor 5ms
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > Centre pages: protected routes > lets an Admin open /admin/centres in the real app 426ms
+ ✓ src/test/centres/CentreProfileAndAccess.test.tsx > Centre pages: protected routes > does not give a commuter the centres admin page in the real app 19ms
+ ✓ src/test/centres/TimetablesPage.test.tsx > TimetablesPage > displays an empty message when no routes are configured for timetables 286ms
+ ✓ src/test/centres/TimetablesPage.test.tsx > TimetablesPage > shows the route list failure as the default prompt because the page does not report the error 75ms
+ ✓ src/test/centres/TimetableActions.test.tsx > TimetablesPage actions > lists the recurring timetables of the selected route and direction 456ms
+ ✓ src/test/centres/TimetableActions.test.tsx > TimetablesPage actions > sends POST generate-trips with the service date and shows the generation summary 755ms
+ ✓ src/test/centres/TimetableActions.test.tsx > TimetablesPage actions > tells the user when trips cannot be generated and keeps the dialog open 336ms
+ ✓ src/test/centres/TimetableActions.test.tsx > TimetablesPage actions > sends DELETE for a timetable when it is deactivated 180ms
+ ✓ src/test/centres/TimetableActions.test.tsx > TimetablesPage actions > shows the timetable load error when the schedules request fails 67ms
+
+ Test Files  6 passed (6)
+      Tests  36 passed (36)
+   Start at  16:56:49
+   Duration  13.01s (import 41%, environment 25%, tests 15%, setup 11%, transform 7%)
+

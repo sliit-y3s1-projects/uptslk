@@ -67,6 +67,7 @@ function FareForm({
   const [routeId, setRouteId] = useState(rule?.routeId ?? "");
   const [amount, setAmount] = useState(rule ? String(rule.amount) : "");
   const [isActive, setActive] = useState(rule?.isActive ?? true);
+  const [routeError, setRouteError] = useState<Error | null>(null);
   const mutation = rule ? update : create;
   return (
     <form
@@ -81,6 +82,7 @@ function FareForm({
             },
             { onSuccess: onSaved },
           );
+        else if (!routeId) setRouteError(new Error("Select an active route."));
         else
           create.mutate(
             { routeId, amount: Number(amount) },
@@ -99,7 +101,10 @@ function FareForm({
               <label className="font-medium">Route</label>
               <Select
                 value={routeId || undefined}
-                onValueChange={(value) => setRouteId(String(value ?? ""))}
+                onValueChange={(value) => {
+                  setRouteId(String(value ?? ""));
+                  setRouteError(null);
+                }}
                 itemToStringLabel={(value) => {
                   const route = routes.find((item) => item.id === value);
                   return route ? `${route.routeNumber} · ${route.name}` : value;
@@ -144,7 +149,7 @@ function FareForm({
             Active fare rule
           </label>
         )}
-        <Feedback error={mutation.error} />
+        <Feedback error={routeError ?? mutation.error} />
         <div className="flex gap-2">
           <Button type="submit">
             {mutation.isPending ? "Saving..." : "Save fare rule"}

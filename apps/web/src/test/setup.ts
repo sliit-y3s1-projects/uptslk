@@ -1,7 +1,10 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll } from "vitest";
 import { server } from "./server";
+
+// Wait up to 5 s (default 1 s) for something to appear, so slow runs do not fail by timing alone.
+configure({ asyncUtilTimeout: 5000 });
 
 // Any request that is not mocked fails the test instead of silently reaching a real server.
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
@@ -41,7 +44,8 @@ class NoopObserver {
   }
 }
 globalThis.ResizeObserver ??= NoopObserver as unknown as typeof ResizeObserver;
-globalThis.IntersectionObserver ??= NoopObserver as unknown as typeof IntersectionObserver;
+globalThis.IntersectionObserver ??=
+  NoopObserver as unknown as typeof IntersectionObserver;
 
 window.scrollTo = () => {};
 Element.prototype.scrollIntoView ??= () => {};

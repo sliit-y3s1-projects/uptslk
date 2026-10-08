@@ -77,7 +77,8 @@ describe("FareRules", () => {
     await user.type(screen.getByRole("spinbutton", { name: "Fare (LKR)" }), "10");
     await user.click(screen.getByRole("button", { name: "Save fare rule" }));
 
-    expect(postSpy).toHaveBeenCalledWith();
+    expect(postSpy).not.toHaveBeenCalled();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Select an active route.");
   });
 
   it("rejects a fare rule with a non-positive amount", async () => {

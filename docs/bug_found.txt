@@ -467,6 +467,34 @@ Retest result: balance 1000 with 10 transactions; stable over 3 runs (def13-befo
 
 
 -----------------------------------------------------------------------------------
+WEB APPLICATION DEFECTS (found by the React web tests, 2026-10-08)
+-----------------------------------------------------------------------------------
+Details, steps and evidence per component: docs/testing/web-centres-defects.md, web-fleet-defects.md,
+web-bookings-defects.md and web-dispatch-defects.md. Evidence files: docs/testing/evidence/web-*.
+
+ID       Component  Title                                                                    Severity  Status
+WEB-A-1  A          Duplicate centre code is reported with a generic message                 Low       Open
+WEB-A-2  A          Timetables page does not report that the route list failed to load       Low       Open
+WEB-B-1  B          Vehicle form accepted a capacity above 200 (API allows 1 to 200)         Medium    Fixed
+WEB-C-1  C          Trip conflict reasons shown as "Request failed" (shared API client)      Medium    Fixed
+WEB-C-2  C          Saving a trip without a date or time threw an error, no message          Medium    Fixed
+WEB-C-3  C          Dispatch board hid failed status changes                                 Medium    Fixed
+WEB-C-4  C          Trip page hid failed status changes and failed cancellations             Medium    Fixed
+WEB-C-5  C          Failed incident reports were silent                                      Medium    Fixed
+WEB-C-6  C          Failed incident updates were silent                                      Low       Fixed
+WEB-C-7  C          Closing or releasing a bay failed silently                               Medium    Fixed
+WEB-D-1  D          Fare rule form sent a request without a route (the test hid the bug)     Medium    Fixed
+
+Totals: 11 web defects, 9 fixed with before/after evidence, 2 open (low, wording decisions for the owner).
+Counted with the API defects above, the project has 24 defects in total (13 API/database, 11 web).
+Retest: all 206 web tests pass after the fixes (web-full-suite.log); lint 0 errors; production build passes.
+Dispatch evidence: web-dispatch-defects-before-fix.log (8 of 92 failed) -> web-dispatch-defects-after-fix.log (92 passed).
+
+Note: WEB-C-1 is a change to the shared API client (apps/web/src/lib/api/api-client.ts). It now reads an "errors" list,
+so every page shows the API's validation messages instead of "Request failed".
+
+
+-----------------------------------------------------------------------------------
 TOOLING AND CONFIGURATION FINDINGS (from the non-functional runs)
 -----------------------------------------------------------------------------------
 Not counted in the 6 defects above because they are tooling / configuration issues, not

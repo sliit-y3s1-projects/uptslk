@@ -1,0 +1,19 @@
+$ vitest run src/test/dispatch --coverage '--coverage.include=src/features/operations/**' --coverage.include=src/features/fleet/DriversPage.tsx --coverage.include=src/features/fleet/hooks/useDrivers.ts --coverage.include=src/features/fleet/services/drivers.service.ts --coverage.reportsDirectory=coverage/dispatch
+
+ RUN  v5.0.3 /home/chamal/dev/uptslk/apps/web
+      Coverage enabled with v8
+
+
+ Test Files  8 passed (8)
+      Tests  92 passed (92)
+   Start at  16:58:43
+   Duration  22.91s (tests 52%, import 19%, environment 17%, setup 8%, transform 3%, worker 1%)
+
+ % Coverage report from v8
+
+=============================== Coverage summary ===============================
+Statements   : 84.76% ( 423/499 )
+Branches     : 73.79% ( 428/580 )
+Functions    : 80.45% ( 177/220 )
+Lines        : 85.1% ( 400/470 )
+================================================================================

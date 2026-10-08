@@ -1,0 +1,19 @@
+$ vitest run src/test/centres --coverage '--coverage.include=src/features/centres/**' '--coverage.include=src/features/network/**' --coverage.reportsDirectory=coverage/centres
+
+ RUN  v5.0.3 /home/chamal/dev/uptslk/apps/web
+      Coverage enabled with v8
+
+
+ Test Files  6 passed (6)
+      Tests  36 passed (36)
+   Start at  16:57:03
+   Duration  15.48s (import 39%, environment 21%, tests 21%, setup 11%, transform 6%, worker 1%)
+
+ % Coverage report from v8
+
+=============================== Coverage summary ===============================
+Statements   : 45.19% ( 235/520 )
+Branches     : 43.56% ( 247/567 )
+Functions    : 34.2% ( 92/269 )
+Lines        : 47.13% ( 230/488 )
+================================================================================

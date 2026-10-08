@@ -28,8 +28,9 @@ describe("TimetablesPage", () => {
     expect(await screen.findByText(/Choose a route to manage its recurring timetables/i)).toBeInTheDocument();
   });
 
-  it("shows an error message if the timetable generation API fails", async () => {
-    
+  it("shows the route list failure as the default prompt because the page does not report the error", async () => {
+    // Documented behaviour: when GET /api/v1/routes fails the page silently shows the default prompt.
+    // See docs/testing/web-centres-defects.md (WEB-A-2).
     server.use(
       http.get(apiUrl("/api/v1/routes"), () => new HttpResponse(null, { status: 500 })),
       http.get(apiUrl("/api/v1/centres"), () => HttpResponse.json([])),
@@ -45,5 +46,6 @@ describe("TimetablesPage", () => {
     );
 
     expect(await screen.findByText(/Choose a route to manage its recurring timetables/i)).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

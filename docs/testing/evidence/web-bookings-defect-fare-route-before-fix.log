@@ -1,0 +1,39 @@
+$ vitest run src/test/bookings/AccessAndFareRules
+
+ RUN  v5.0.3 /home/chamal/dev/uptslk/apps/web
+
+ ❯ src/test/bookings/AccessAndFareRules.test.tsx (5 tests | 1 failed) 1466ms
+   ❯ FareRules (2)
+     × rejects a fare rule without a selected route 776ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/test/bookings/AccessAndFareRules.test.tsx > FareRules > rejects a fare rule without a selected route
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array []
+
+
+Number of calls: 1
+
+ ❯ src/test/bookings/AccessAndFareRules.test.tsx:80:25
+     78|     await user.click(screen.getByRole("button", { name: "Save fare rul…
+     79|
+     80|     expect(postSpy).not.toHaveBeenCalled();
+       |                         ^
+     81|     expect(await screen.findByRole("alert")).toHaveTextContent("Select…
+     82|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  16:17:32
+   Duration  4.54s (tests 34%, environment 26%, import 21%, setup 10%, transform 9%)
+
+[ELIFECYCLE] Test failed. See above for more details.

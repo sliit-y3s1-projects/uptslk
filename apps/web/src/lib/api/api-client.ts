@@ -49,15 +49,26 @@ export async function apiClient<T>(
     try {
       const payload = JSON.parse(raw) as {
         error?: string | string[];
+        errors?: string[] | Record<string, string[]>;
         code?: string;
         title?: string;
         detail?: string;
       };
       const error = payload.error;
+      // The trips API reports every conflict as { errors: [...] }; ASP.NET validation sends { errors: { field: [...] } }.
+      const errors = Array.isArray(payload.errors)
+        ? payload.errors.join(" ")
+        : payload.errors && typeof payload.errors === "object"
+          ? Object.values(payload.errors).flat().join(" ")
+          : undefined;
       throw new ApiError(
         Array.isArray(error)
           ? error.join(" ")
-          : (error ?? payload.detail ?? payload.title ?? "Request failed"),
+          : (error ??
+              (errors || undefined) ??
+              payload.detail ??
+              payload.title ??
+              "Request failed"),
         response.status,
         payload.code,
       );
