@@ -220,7 +220,7 @@ public sealed class PassengerJourneyTests
     }
 
     [Fact]
-    public async Task CancelledTrip_ShowsACancelledTicketWithoutQr_AndStaffCanRefundTheBooking()
+    public async Task CancelledTrip_ShowsACancelledTicketWithoutQr_AndRefundsThePassengerExactlyOnce()
     {
         using var journey = await ArrangeAsync(); // steps 1 to 5
 
@@ -240,30 +240,33 @@ public sealed class PassengerJourneyTests
         var ticket = await SingleTicketAsync(journey.Commuter);
         Assert.Equal("Cancelled", ticket.GetProperty("ticketGroup").GetString()); // D
         Assert.Equal("Cancelled", ticket.GetProperty("tripStatus").GetString()); // C seen by D
+        Assert.Equal("Cancelled", ticket.GetProperty("status").GetString()); // D: the booking itself is cancelled, not only the trip
         Assert.False(ticket.GetProperty("canBoard").GetBoolean()); // D
         Assert.Equal(JsonValueKind.Null, ticket.GetProperty("qrCode").ValueKind); // D: no boarding QR
 
-        // ---- Component D: the existing refund rule is a staff cancellation of the booking (reversal, not deletion)
-        var refund = await journey.Dispatcher.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/bookings/{journey.BookingId}")
-        {
-            Content = JsonContent.Create(new { reason = "Trip cancelled by the centre" })
-        });
-        Assert.Equal(HttpStatusCode.NoContent, refund.StatusCode); // D
-        Assert.Equal(TopUpAmount, await WalletBalanceAsync(journey.Manager, journey.PassengerId)); // D: the whole fare is back in the wallet
+        // ---- Component D: the money came back by itself, as a reversal that keeps the original charge
+        Assert.Equal(TopUpAmount, await WalletBalanceAsync(journey.Manager, journey.PassengerId)); // D: the whole fare is back
         var detail = await GetAsync(journey.Manager, $"/api/v1/bookings/{journey.BookingId}");
         Assert.Equal("Cancelled", detail.GetProperty("status").GetString()); // D
         Assert.Equal(FareAmount, detail.GetProperty("refundAmount").GetDecimal()); // D
-        var types = detail.GetProperty("transactions").EnumerateArray().Select(t => t.GetProperty("type").GetString()).ToArray();
-        Assert.Contains("Fare", types); // D: the original charge is kept
-        Assert.Contains("Refund", types); // D: and the refund is recorded as its own transaction
+        Assert.Contains("Trip cancelled: Road closed by flooding", detail.GetProperty("cancellationReason").GetString()); // D
+        Assert.Equal(["Fare", "Refund"], detail.GetProperty("transactions").EnumerateArray().Select(t => t.GetProperty("type").GetString()!).OrderBy(x => x).ToArray()); // D
+
+        // ---- Component D: staff cancelling the booking again must not refund a second time
+        var again = await journey.Dispatcher.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/bookings/{journey.BookingId}")
+        {
+            Content = JsonContent.Create(new { reason = "Trip cancelled by the centre" })
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, again.StatusCode); // D
+        Assert.Equal(TopUpAmount, await WalletBalanceAsync(journey.Manager, journey.PassengerId)); // D: still exactly one refund
     }
 
     [Fact]
     public async Task CancelledTrip_RefundsThePassengersWalletAutomatically()
     {
-        // Intended rule: a passenger who was charged for a trip that the centre then cancels must get the money back.
-        // SRS 4.3 "Payment history and refund handling"; COMPONENT_BREAKDOWN "Soft-cancel a booking; reverse rather than
-        // delete financial records". The previous test shows the refund works when staff cancel the booking by hand.
+        // Rule (DEF-14): a passenger who was charged for a trip that the centre then cancels gets the money back without
+        // any further staff action. SRS 4.3 "Payment history and refund handling"; COMPONENT_BREAKDOWN "Soft-cancel a
+        // booking; reverse rather than delete financial records". Before the fix the wallet stayed at 350 instead of 500.
         using var journey = await ArrangeAsync(); // steps 1 to 5
         Assert.Equal(TopUpAmount - FareAmount, await WalletBalanceAsync(journey.Manager, journey.PassengerId)); // D: charged
 

@@ -46,6 +46,7 @@ builder.Services.AddScoped<TripConflictService>();
 builder.Services.AddSingleton<IImageStorageService, SupabaseImageStorageService>();
 builder.Services.AddSingleton<IPaymentGateway, StripePaymentGateway>();
 builder.Services.AddScoped<BookingPaymentService>();
+builder.Services.AddScoped<BookingCancellationService>();
 builder.Services.AddScoped<INetworkRecoveryTools, NetworkRecoveryTools>();
 builder.Services.AddScoped<IFleetRecoveryTools, FleetRecoveryTools>();
 builder.Services.AddScoped<IDispatchRecoveryTools, DispatchRecoveryTools>();

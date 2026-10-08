@@ -12,7 +12,7 @@ namespace api.Controllers;
 
 [ApiController]
 [Route("api/v1/trips")]
-public class TripsController(AppDbContext db, TripConflictService conflictService) : ControllerBase
+public class TripsController(AppDbContext db, TripConflictService conflictService, BookingCancellationService cancellation) : ControllerBase
 {
     private static readonly TimeZoneInfo SriLankaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Colombo");
 
@@ -168,6 +168,8 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         if (trip is null) return NotFound();
         if (!User.CanManageCentre(trip.CentreId)) return Forbid();
         if (!CanTransition(trip.Status, request.Status)) return BadRequest(new { error = $"Cannot change a {trip.Status} trip to {request.Status}." });
+        if (request.Status == TripStatus.Cancelled)
+            return await CancelWithRefundsAsync(tripId, CleanOptional(request.Note) ?? "Cancelled by dispatch", CleanOptional(request.Note));
 
         trip.Status = request.Status;
         trip.Notes = CleanOptional(request.Note) ?? trip.Notes;
@@ -187,11 +189,15 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         if (!User.CanManageCentre(trip.CentreId)) return Forbid();
         if (trip.Status is TripStatus.Completed or TripStatus.Cancelled) return BadRequest(new { error = "Only active trips can be cancelled." });
 
-        trip.Status = TripStatus.Cancelled;
-        trip.CancellationReason = request.Reason.Trim();
-        trip.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync();
-        return NoContent();
+        return await CancelWithRefundsAsync(tripId, request.Reason.Trim(), null);
+    }
+
+    // Cancelling a trip also cancels every active booking on it and returns the passengers' money (see BookingCancellationService).
+    private async Task<IActionResult> CancelWithRefundsAsync(Guid tripId, string reason, string? note)
+    {
+        var result = await cancellation.CancelTripAsync(tripId, reason, note, HttpContext.RequestAborted);
+        if (result.Cancelled) return NoContent();
+        return result.StatusCode == StatusCodes.Status404NotFound ? NotFound() : StatusCode(result.StatusCode, new { error = result.Error });
     }
 
     private async Task<AssignmentValidation> ValidateAssignment(Guid centreId, Guid routeId, Guid? directionId, Guid vehicleId, Guid driverId, Guid bayId, DateTime scheduledTime, Guid? excludedTripId = null)

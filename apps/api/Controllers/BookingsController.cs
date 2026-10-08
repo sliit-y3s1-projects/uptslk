@@ -13,7 +13,7 @@ namespace api.Controllers;
 
 [ApiController]
 [Route("api/v1/bookings")]
-public class BookingsController(AppDbContext db, BookingPaymentService bookingPayments) : ControllerBase
+public class BookingsController(AppDbContext db, BookingCancellationService cancellation) : ControllerBase
 {
     [Authorize(Roles = "Commuter")]
     [HttpGet("me")]
@@ -102,6 +102,9 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
         await db.LockRowAsync("Trips", trip.Id);
         await db.LockRowAsync("Wallets", passenger.Wallet.Id);
         await db.Entry(passenger.Wallet).ReloadAsync();
+        // The trip may have been cancelled while this request waited for the lock (DEF-14), so check it again.
+        await db.Entry(trip).ReloadAsync();
+        if (!BookingEligibility.IsOpenForBooking(trip, DateTime.UtcNow)) return BadRequest(new { error = "Bookings have closed for this departure. Please choose a later trip." });
         if (passenger.Wallet.Balance < totalFare) return BadRequest(new { error = "Insufficient wallet balance." });
         if (await OccupiedCapacity(trip.Id) + request.PassengerCount > trip.Vehicle.Capacity) return Conflict(new { error = "This departure does not have enough remaining spaces for every passenger." });
 
@@ -171,43 +174,9 @@ public class BookingsController(AppDbContext db, BookingPaymentService bookingPa
     [HttpDelete("{bookingId:guid}")]
     public async Task<IActionResult> Cancel(Guid bookingId, CancelBookingRequest request)
     {
-        var booking = await db.Bookings.Include(item => item.Payments).Include(item => item.Passenger).ThenInclude(passenger => passenger.Wallet).SingleOrDefaultAsync(item => item.Id == bookingId);
-        if (booking is null) return NotFound();
-        if (booking.Status is BookingStatus.Cancelled or BookingStatus.Completed) return BadRequest(new { error = "Only active bookings can be cancelled." });
-        if (booking.Payments.Any(payment => payment.Status == PaymentStatus.Succeeded))
-        {
-            var (error, statusCode) = await bookingPayments.RequestRefundAsync(bookingId, request.Reason, HttpContext.RequestAborted);
-            return error is null ? NoContent() : StatusCode(statusCode, new { error });
-        }
-        if (booking.Payments.Count > 0)
-        {
-            booking.Status = BookingStatus.Cancelled;
-            booking.CancellationReason = request.Reason.Trim();
-            booking.CancelledAt = DateTime.UtcNow;
-            booking.UpdatedAt = DateTime.UtcNow;
-            await db.SaveChangesAsync();
-            return NoContent();
-        }
-        if (booking.Passenger.Wallet is null) return BadRequest(new { error = "The passenger wallet does not exist." });
-
-        // Lock the booking and wallet, then re-read them, so a duplicate cancel request cannot refund the booking twice.
-        await using var transaction = await db.Database.BeginTransactionAsync();
-        await db.LockRowAsync("Bookings", booking.Id);
-        await db.LockRowAsync("Wallets", booking.Passenger.Wallet.Id);
-        await db.Entry(booking).ReloadAsync();
-        await db.Entry(booking.Passenger.Wallet).ReloadAsync();
-        if (booking.Status is BookingStatus.Cancelled or BookingStatus.Completed) return BadRequest(new { error = "Only active bookings can be cancelled." });
-        booking.Status = BookingStatus.Cancelled;
-        booking.CancellationReason = request.Reason.Trim();
-        booking.CancelledAt = DateTime.UtcNow;
-        booking.RefundAmount = booking.Fare;
-        booking.UpdatedAt = DateTime.UtcNow;
-        booking.Passenger.Wallet.Balance += booking.RefundAmount;
-        booking.Passenger.Wallet.UpdatedAt = DateTime.UtcNow;
-        db.Transactions.Add(new Transaction { WalletId = booking.Passenger.Wallet.Id, BookingId = booking.Id, Type = TransactionType.Refund, Amount = booking.RefundAmount });
-        await db.SaveChangesAsync();
-        await transaction.CommitAsync();
-        return NoContent();
+        var (error, statusCode) = await cancellation.CancelBookingAsync(bookingId, request.Reason, HttpContext.RequestAborted);
+        if (error is null) return NoContent();
+        return statusCode == StatusCodes.Status404NotFound ? NotFound() : StatusCode(statusCode, new { error });
     }
 
     [HttpGet("trips/{tripId:guid}/seats")]

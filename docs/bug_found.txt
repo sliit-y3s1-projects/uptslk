@@ -31,6 +31,8 @@ Evidence    : API / SQLite suite (DEF-1, DEF-2)
                 docs/testing/evidence/def12-before-fix.log (+ .trx)
                 docs/testing/evidence/def13-before-fix.log
                 docs/testing/evidence/full-suite-final.log (501 run: 501 passed) and full-suite-final.trx
+              End-to-end round (DEF-14)
+                docs/testing/evidence/def14-before-fix.log (3 journey tests, 1 failed) / def14-after-fix.log (3 passed)
                 docs/testing/coverage-report/  (HTML code coverage report, open index.html; Summary.txt)
 How found   : tests were written against the INTENDED behaviour (documented CRUD rules
               and role rules). Tests that failed on the unmodified code exposed the bugs
@@ -52,12 +54,14 @@ DEF-10 Parallel refund requests ask Stripe to refund repeatedly  High      P1   
 DEF-11 Timetable ending near midnight loops forever              High      P1        Fixed, retested - Pass
 DEF-12 A manager can change another centre's data                High      P1        Fixed, retested - Pass
 DEF-13 Parallel wallet top-ups lose money                        High      P1        Fixed, retested - Pass
+DEF-14 Cancelling a trip does not refund its bookings            High      P1        Fixed, retested - Pass
 
-Totals: 13 defects identified, 13 fixed, 13 retested and passing.
+Totals: 14 defects identified, 14 fixed, 14 retested and passing.
 API suite : 25 failing tests on the unfixed code (23 DEF-1, 2 DEF-2) -> 0 failing after the fix.
 DB suite  : 4 failing tests on the unfixed code (1 each for DEF-3 .. DEF-6) -> 0 failing after the fix.
 Round 3   : DEF-7 .. DEF-13 found while raising coverage from 53% to 74% (see the sections below); every one has
             a regression test that failed on the old code and passes now. Final run: 501 passed, 0 failed.
+Round 4   : DEF-14 found by the integrated passenger-journey test. Final run: 513 passed, 0 failed.
 DEF-3 .. DEF-6 cannot be seen on the in-memory SQLite used by the API suite; they only appear on
 real PostgreSQL with parallel requests (DEF-6 only with PostgreSQL's strict timestamptz rule).
 
@@ -467,6 +471,41 @@ Retest result: balance 1000 with 10 transactions; stable over 3 runs (def13-befo
 
 
 -----------------------------------------------------------------------------------
+DEF-14 Cancelling a trip does not cancel or refund its bookings
+-----------------------------------------------------------------------------------
+Component affected  : C (Scheduling and dispatch - trip cancellation), D (Passengers and Fares - bookings, wallet) affected
+Severity / Priority : High / P1  (financial: the passenger keeps a "Cancelled" ticket but loses the fare)
+Status              : FIXED - retest PASSED
+Found by            : Integration/PassengerJourneyTests.CancelledTrip_RefundsThePassengersWalletAutomatically
+
+Description
+  DELETE /api/v1/trips/{id} (and PATCH .../status to Cancelled) only changed the trip status. Bookings stayed
+  Confirmed, wallets were not refunded and there is no commuter cancel endpoint, so only staff cancelling each
+  booking by hand returned the money.
+Steps to reproduce (unfixed code)
+  1. Create centre, route, vehicle, driver, trip and fare (150). Commuter registers, wallet topped up to 500, books: wallet 350.
+  2. Dispatcher cancels the trip with a reason.
+  3. Expected: booking Cancelled, wallet 500 with a Refund transaction. Actual: booking stays Confirmed, wallet 350.
+Cause
+  TripsController.Cancel / UpdateStatus never touched Bookings or Wallets. A second gap was found by the new
+  parallel test: BookingsController.Create checked that the trip was open BEFORE taking the trip row lock, so a
+  booking made while the trip was being cancelled could still be created and stay unrefunded.
+Fix applied
+  New Services/BookingCancellationService: cancelling a trip, in one transaction under a row lock on the trip, cancels every
+  active booking and refunds it with the same rules as staff cancellation (wallet refund plus a Refund transaction;
+  card bookings go through the existing Stripe refund path after the commit, and a failed card refund leaves that
+  booking Confirmed for staff to retry). If a wallet booking cannot be refunded the whole cancellation rolls back.
+  BookingsController.Cancel now uses the same service. BookingsController.Create re-reads the trip after taking the lock.
+Retest result
+  Journey tests 3/3 pass (def14-before-fix.log had 1 failure: wallet 350 instead of 500). New regression tests:
+  Dispatch/TripCancellationRefundTests (6) and, on PostgreSQL, Database/PaymentConcurrencyTests
+  ParallelTripAndBookingCancellations_RefundThePassengerOnlyOnce and BookingWhileTheTripIsBeingCancelled_NeverLeavesAPaidBookingOnACancelledTrip
+  (the second failed once: 8 active bookings on a cancelled trip, wallets 3200 instead of 4000, until the re-check was added).
+  Full suite: 513 passed, 0 failed.
+  Not done: passengers are still not notified of the cancellation.
+
+
+-----------------------------------------------------------------------------------
 WEB APPLICATION DEFECTS (found by the React web tests, 2026-10-08)
 -----------------------------------------------------------------------------------
 Details, steps and evidence per component: docs/testing/web-centres-defects.md, web-fleet-defects.md,
@@ -486,7 +525,7 @@ WEB-C-7  C          Closing or releasing a bay failed silently                  
 WEB-D-1  D          Fare rule form sent a request without a route (the test hid the bug)     Medium    Fixed
 
 Totals: 11 web defects, 9 fixed with before/after evidence, 2 open (low, wording decisions for the owner).
-Counted with the API defects above, the project has 24 defects in total (13 API/database, 11 web).
+Counted with the API defects above, the project has 25 defects in total (14 API/database, 11 web).
 Retest: all 206 web tests pass after the fixes (web-full-suite.log); lint 0 errors; production build passes.
 Dispatch evidence: web-dispatch-defects-before-fix.log (8 of 92 failed) -> web-dispatch-defects-after-fix.log (92 passed).
 

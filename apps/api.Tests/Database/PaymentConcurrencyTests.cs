@@ -87,4 +87,47 @@ public sealed class PaymentConcurrencyTests(PostgresFixture postgres)
         Assert.Equal(1, gateway.RefundCalls);
         Assert.Equal(1, await factory.CountAsync<PaymentRefund>());
     }
+
+    [Fact]
+    public async Task ParallelTripAndBookingCancellations_RefundThePassengerOnlyOnce()
+    {
+        // DEF-14: cancelling the trip refunds its bookings. Cancelling the trip and the booking at the same moment (a
+        // dispatcher and a manager, or a double click) must still return the fare exactly once.
+        using var factory = new PostgresApiFactory(await postgres.CreateMigratedDatabaseAsync());
+        var world = await TestWorld.SeedAsync(factory);
+        var trip = await TestWorld.AddTripAsync(factory, world);
+        var (passenger, _) = await TestWorld.AddPassengerAsync(factory, world, 500m, 100m);
+        using var client = factory.CreateClientAs("Dispatcher", centreId: world.Centre.Id);
+        var booked = await client.PostAsJsonAsync("/api/v1/bookings", new { tripId = trip.Id, passengerId = passenger.Id, passengerCount = 1 });
+        Assert.Equal(HttpStatusCode.Created, booked.StatusCode);
+        var bookingId = await factory.WithDbAsync(db => db.Bookings.Select(b => b.Id).SingleAsync());
+
+        var calls = Enumerable.Range(0, 4).Select(_ => client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/trips/{trip.Id}") { Content = JsonContent.Create(new { reason = "Flooding" }) }))
+            .Concat(Enumerable.Range(0, 4).Select(_ => client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/bookings/{bookingId}") { Content = JsonContent.Create(new { reason = "Duplicate" }) })));
+        await Task.WhenAll(calls);
+
+        var balance = await factory.WithDbAsync(db => db.Wallets.Select(w => w.Balance).SingleAsync());
+        var refunds = await factory.WithDbAsync(db => db.Transactions.CountAsync(t => t.Type == TransactionType.Refund));
+        Assert.True(balance == 500m && refunds == 1, $"Expected the wallet back at 500 with one refund, but it is {balance} with {refunds} refund transactions.");
+    }
+
+    [Fact]
+    public async Task BookingWhileTheTripIsBeingCancelled_NeverLeavesAPaidBookingOnACancelledTrip()
+    {
+        using var factory = new PostgresApiFactory(await postgres.CreateMigratedDatabaseAsync());
+        var world = await TestWorld.SeedAsync(factory);
+        var trip = await TestWorld.AddTripAsync(factory, world);
+        var passengers = new List<Passenger>();
+        for (var i = 0; i < 8; i++) passengers.Add((await TestWorld.AddPassengerAsync(factory, world, 500m, 100m)).Passenger);
+        using var client = factory.CreateClientAs("Dispatcher", centreId: world.Centre.Id);
+
+        var bookings = passengers.Select(p => client.PostAsJsonAsync("/api/v1/bookings", new { tripId = trip.Id, passengerId = p.Id, passengerCount = 1 }));
+        var cancel = client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/trips/{trip.Id}") { Content = JsonContent.Create(new { reason = "Flooding" }) });
+        await Task.WhenAll(bookings.Cast<Task>().Append(cancel));
+
+        // Every passenger either could not book, or was refunded: nobody is charged for a cancelled trip.
+        var active = await factory.WithDbAsync(db => db.Bookings.CountAsync(b => b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed));
+        var total = await factory.WithDbAsync(db => db.Wallets.SumAsync(w => w.Balance));
+        Assert.True(active == 0 && total == 8 * 500m, $"{active} active bookings remain on a cancelled trip and the wallets hold {total} instead of {8 * 500m}.");
+    }
 }
