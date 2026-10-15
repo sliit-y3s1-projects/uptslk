@@ -1,0 +1,18 @@
+using System.ComponentModel.DataAnnotations;
+using api.Entities.Enums;
+
+namespace api.DTO.Payments;
+
+public sealed class StartCheckoutRequest
+{
+    public Guid TripId { get; init; }
+    public Guid PassengerId { get; init; }
+    [Range(1, 10)] public int PassengerCount { get; init; } = 1;
+    public PaymentProvider Provider { get; init; } = PaymentProvider.Stripe;
+    public bool UseMobileReturnUrl { get; init; }
+}
+
+public sealed class RequestPaymentRefundRequest
+{
+    [Required, StringLength(1000)] public string Reason { get; init; } = default!;
+}

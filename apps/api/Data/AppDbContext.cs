@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using api.Models;
-using RouteModel = api.Models.Route;
-using RouteDirectionModel = api.Models.RouteDirection;
+using api.Entities;
+using RouteModel = api.Entities.Route;
+using RouteDirectionModel = api.Entities.RouteDirection;
 
 namespace api.Data;
 

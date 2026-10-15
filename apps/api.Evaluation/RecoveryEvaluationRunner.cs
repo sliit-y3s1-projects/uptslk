@@ -1,6 +1,6 @@
 using System.Diagnostics;
-using api.Enums;
-using api.Models;
+using api.Entities.Enums;
+using api.Entities;
 using api.Services.AgentRecovery;
 using api.Services.AgentRecovery.Planning;
 

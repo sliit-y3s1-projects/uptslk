@@ -1,5 +1,5 @@
 using api.Data;
-using api.Enums;
+using api.Entities.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Services;

@@ -1,4 +1,4 @@
-using api.Enums;
+using api.Entities.Enums;
 using api.Services.AgentRecovery;
 using api.Services.AgentRecovery.Planning;
 using Microsoft.Extensions.Options;

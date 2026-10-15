@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using api.Models;
+using api.Entities;
 using api.Tests.Shared;
 using Xunit;
 
@@ -115,7 +115,7 @@ public sealed class TripConflictTests
     {
         using var factory = await TestApiExtensions.CreateInitializedFactoryAsync();
         var world = await TestWorld.SeedAsync(factory);
-        await TestWorld.AddTripAsync(factory, world, status: api.Enums.TripStatus.Cancelled);
+        await TestWorld.AddTripAsync(factory, world, status: api.Entities.Enums.TripStatus.Cancelled);
         using var client = factory.CreateClientAs("Dispatcher", centreId: world.Centre.Id);
 
         var response = await client.PostAsJsonAsync(Url, TripCrudTests.TripRequest(world));

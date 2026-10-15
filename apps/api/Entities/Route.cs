@@ -1,0 +1,30 @@
+using api.Entities.Enums;
+
+namespace api.Entities;
+
+public class Route
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+
+    public Guid CentreId { get; set; }
+    public Centre Centre { get; set; } = default!;
+
+    public string RouteNumber { get; set; } = default!;   // e.g. "01", "01-AC"
+    public string Name { get; set; } = default!;           // e.g. "Kurunegala - Colombo via Road 6"
+    public string Origin { get; set; } = default!;
+    public string Destination { get; set; } = default!;
+    public VehicleType ServiceType { get; set; }
+    public decimal DistanceKm { get; set; }
+    public int EstimatedDurationMin { get; set; }
+    public bool IsActive { get; set; } = true;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    // Navigation
+    public ICollection<RouteStop> Stops { get; set; } = new List<RouteStop>();
+    public ICollection<RouteSchedule> Schedules { get; set; } = new List<RouteSchedule>();
+    public ICollection<Trip> Trips { get; set; } = new List<Trip>();
+    public ICollection<FareRule> FareRules { get; set; } = new List<FareRule>();
+    public ICollection<RouteDirection> Directions { get; set; } = new List<RouteDirection>();
+}

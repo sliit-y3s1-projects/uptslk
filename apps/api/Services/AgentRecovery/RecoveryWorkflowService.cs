@@ -2,9 +2,8 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using api.Data;
-using api.Enums;
-using api.Models;
-using api.Services;
+using api.Entities.Enums;
+using api.Entities;
 using api.Services.AgentRecovery.Planning;
 using Microsoft.EntityFrameworkCore;
 

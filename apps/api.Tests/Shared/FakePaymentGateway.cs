@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
-using api.Enums;
-using api.Services.Payments;
+using api.Entities.Enums;
+using api.Interfaces.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
+using api.Common.Filters;
 using api.Common.Middleware;
 using api.Data;
-using api.Services.Notifications;
 
 namespace api.Common.Extensions;
 

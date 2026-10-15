@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using api.Tests.Shared;
 using Xunit;
-using RouteModel = api.Models.Route;
+using RouteModel = api.Entities.Route;
 
 namespace api.Tests.Centres;
 

@@ -1,9 +1,9 @@
 using api.Common.Constants;
 using api.Data;
-using api.DTOs;
-using api.Enums;
-using api.Models;
-using api.Services.Notifications;
+using api.DTO.Incidents;
+using api.Entities.Enums;
+using api.Entities;
+using api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

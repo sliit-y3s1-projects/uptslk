@@ -6,11 +6,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
-using api.DTOs;
-using api.Enums;
-using api.Models;
-using api.Services;
+using api.DTO.Auth;
+using api.Entities.Enums;
+using api.Entities;
 using api.Data;
+using api.Interfaces.Services;
+using api.Services;
 using Supabase.Storage.Exceptions;
 
 namespace api.Controllers;

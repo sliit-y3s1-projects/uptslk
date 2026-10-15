@@ -1,15 +1,15 @@
 using api.Common.Extensions;
 using api.Common.Constants;
+using api.Common.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using api.Data;
-using api.DTOs;
-using api.Enums;
-using api.Models;
+using api.DTO.Trips;
+using api.Entities.Enums;
+using api.Entities;
 using api.Services;
-using api.Services.Notifications;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using RouteModel = api.Models.Route;
+using RouteModel = api.Entities.Route;
 
 namespace api.Controllers;
 
@@ -21,8 +21,6 @@ public class TripsController(
     BookingCancellationService cancellation,
     MobileNotificationService notifications) : ControllerBase
 {
-    private static readonly TimeZoneInfo SriLankaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Colombo");
-
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] Guid? centreId, [FromQuery] Guid? terminalId, [FromQuery] Guid? routeId, [FromQuery] Guid? directionId, [FromQuery] Guid? vehicleId, [FromQuery] Guid? driverId, [FromQuery] Guid? bayId, [FromQuery] TripStatus? status, [FromQuery] DateOnly? date, [FromQuery] bool bookableOnly = false)
     {
@@ -51,8 +49,8 @@ public class TripsController(
         }
         if (date.HasValue)
         {
-            var start = ToSriLankaDayStartUtc(date.Value);
-            var end = ToSriLankaDayStartUtc(date.Value.AddDays(1));
+            var start = SriLankaTime.DayStartUtc(date.Value);
+            var end = SriLankaTime.DayStartUtc(date.Value.AddDays(1));
             query = query.Where(trip => trip.ScheduledTime >= start && trip.ScheduledTime < end);
         }
 
@@ -75,17 +73,14 @@ public class TripsController(
         if (centreId.HasValue) query = query.Where(trip => trip.CentreId == centreId.Value);
         if (date.HasValue)
         {
-            var start = ToSriLankaDayStartUtc(date.Value);
-            var end = ToSriLankaDayStartUtc(date.Value.AddDays(1));
+            var start = SriLankaTime.DayStartUtc(date.Value);
+            var end = SriLankaTime.DayStartUtc(date.Value.AddDays(1));
             query = query.Where(trip => trip.ScheduledTime >= start && trip.ScheduledTime < end);
         }
 
         var trips = await query.OrderByDescending(trip => trip.ScheduledTime).ToListAsync();
         return Ok(await ToListItems(trips));
     }
-
-    private static DateTime ToSriLankaDayStartUtc(DateOnly date) =>
-        TimeZoneInfo.ConvertTimeToUtc(date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), SriLankaTimeZone);
 
     [HttpGet("{tripId:guid}")]
     public async Task<IActionResult> Get(Guid tripId)

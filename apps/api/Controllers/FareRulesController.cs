@@ -1,9 +1,8 @@
 using api.Common.Extensions;
 using api.Common.Constants;
-using api.Services;
 using api.Data;
-using api.DTOs;
-using api.Models;
+using api.DTO.Fares;
+using api.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;

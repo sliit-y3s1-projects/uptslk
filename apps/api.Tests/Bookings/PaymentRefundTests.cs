@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
-using api.Enums;
-using api.Models;
+using api.Entities.Enums;
+using api.Entities;
 using api.Tests.Shared;
 using Microsoft.EntityFrameworkCore;
 using Xunit;

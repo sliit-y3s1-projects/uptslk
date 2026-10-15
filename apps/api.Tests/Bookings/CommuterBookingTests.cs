@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using api.Models;
+using api.Entities;
 using api.Tests.Shared;
 using Xunit;
 
@@ -73,11 +73,11 @@ public sealed class CommuterBookingTests
     {
         using var factory = await TestApiExtensions.CreateInitializedFactoryAsync();
         var world = await TestWorld.SeedAsync(factory);
-        var trip = await TestWorld.AddTripAsync(factory, world, status: api.Enums.TripStatus.Completed);
+        var trip = await TestWorld.AddTripAsync(factory, world, status: api.Entities.Enums.TripStatus.Completed);
         var (passenger, userId) = await TestWorld.AddPassengerAsync(factory, world, 500);
         await factory.WithDbAsync(async db =>
         {
-            db.Add(new Booking { TripId = trip.Id, PassengerId = passenger.Id, SeatNumber = "S1", QrCode = "BKG-SECRET", Status = api.Enums.BookingStatus.Confirmed });
+            db.Add(new Booking { TripId = trip.Id, PassengerId = passenger.Id, SeatNumber = "S1", QrCode = "BKG-SECRET", Status = api.Entities.Enums.BookingStatus.Confirmed });
             await db.SaveChangesAsync();
         });
         using var client = factory.CreateClientAs("Commuter", userId);

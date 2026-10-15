@@ -1,8 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using api.Enums;
-using api.Models;
+using api.Common.Helpers;
+using api.Entities.Enums;
+using api.Entities;
 using api.Tests.Shared;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
@@ -196,7 +197,7 @@ public sealed class RouteScheduleTests
     [InlineData("00:00", "01:00", 30, "00:00,00:30,01:00")]
     public void Departures_StopAtTheLastDeparture_EvenNearMidnight(string first, string last, int headway, string expected)
     {
-        var times = api.Services.ScheduleTimes.Departures(TimeOnly.Parse(first), TimeOnly.Parse(last), headway).Take(500).ToList();
+        var times = ScheduleTimes.Departures(TimeOnly.Parse(first), TimeOnly.Parse(last), headway).Take(500).ToList();
 
         Assert.Equal(expected, string.Join(",", times.Select(t => t.ToString("HH:mm"))));
     }
@@ -206,13 +207,13 @@ public sealed class RouteScheduleTests
     [InlineData(-30)]
     public void Departures_WithANonPositiveHeadway_ProducesNothing(int headway)
     {
-        Assert.Empty(api.Services.ScheduleTimes.Departures(new TimeOnly(5, 0), new TimeOnly(6, 0), headway).Take(10));
+        Assert.Empty(ScheduleTimes.Departures(new TimeOnly(5, 0), new TimeOnly(6, 0), headway).Take(10));
     }
 
     [Fact]
     public void Departures_NeverExceedOnePerHeadwayInADay()
     {
-        var times = api.Services.ScheduleTimes.Departures(new TimeOnly(0, 0), new TimeOnly(23, 59), 1).Take(5000).ToList();
+        var times = ScheduleTimes.Departures(new TimeOnly(0, 0), new TimeOnly(23, 59), 1).Take(5000).ToList();
 
         Assert.Equal(24 * 60, times.Count);
         Assert.Equal(times.Count, times.Distinct().Count());

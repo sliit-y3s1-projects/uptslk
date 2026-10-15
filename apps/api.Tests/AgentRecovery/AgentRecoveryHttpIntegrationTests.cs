@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using api.Data;
-using api.Enums;
-using api.Models;
+using api.Entities.Enums;
+using api.Entities;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

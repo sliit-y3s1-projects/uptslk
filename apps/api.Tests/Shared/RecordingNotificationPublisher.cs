@@ -1,7 +1,8 @@
 using System.Collections.Concurrent;
 using api.Data;
-using api.DTOs;
-using api.Services.Notifications;
+using api.DTO.Notifications;
+using api.Interfaces.Services;
+using api.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 

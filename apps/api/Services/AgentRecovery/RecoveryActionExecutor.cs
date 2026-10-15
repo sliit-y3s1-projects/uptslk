@@ -1,7 +1,6 @@
 using api.Data;
-using api.Enums;
-using api.Models;
-using api.Services.Notifications;
+using api.Entities.Enums;
+using api.Entities;
 
 namespace api.Services.AgentRecovery;
 

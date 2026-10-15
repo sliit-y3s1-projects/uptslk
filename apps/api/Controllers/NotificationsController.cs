@@ -1,7 +1,7 @@
 using api.Common.Constants;
 using System.Security.Claims;
 using api.Data;
-using api.DTOs;
+using api.DTO.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

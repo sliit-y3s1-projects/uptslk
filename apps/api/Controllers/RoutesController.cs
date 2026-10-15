@@ -1,16 +1,17 @@
 using api.Common.Extensions;
 using api.Common.Constants;
+using api.Common.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using api.Data;
-using api.DTOs;
-using api.Enums;
-using api.Models;
+using api.DTO.Routes;
+using api.DTO.Trips;
+using api.Entities.Enums;
+using api.Entities;
 using api.Services;
-using api.Services.Notifications;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using RouteModel = api.Models.Route;
-using RouteDirectionModel = api.Models.RouteDirection;
+using RouteModel = api.Entities.Route;
+using RouteDirectionModel = api.Entities.RouteDirection;
 
 namespace api.Controllers;
 
@@ -346,7 +347,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         foreach (var departure in ScheduleTimes.Departures(schedule.FirstDeparture, schedule.LastDeparture, schedule.HeadwayMinutes))
         {
             var localDeparture = request.ServiceDate.ToDateTime(departure, DateTimeKind.Unspecified);
-            var scheduledTime = TimeZoneInfo.ConvertTimeToUtc(localDeparture, SriLankaTimeZone);
+            var scheduledTime = SriLankaTime.ToUtc(localDeparture);
             var alreadyExists = await db.Trips.AnyAsync(item => item.RouteId == schedule.RouteId && item.RouteDirectionId == schedule.RouteDirectionId && item.ScheduledTime == scheduledTime);
             if (alreadyExists)
             {
@@ -443,8 +444,6 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
     }).ToList();
 
     private static bool IsValidRange(TimeOnly first, TimeOnly last) => last > first;
-
-    private static readonly TimeZoneInfo SriLankaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Colombo");
 
     private static bool OperatesOn(string operatingDays, DateOnly date)
     {

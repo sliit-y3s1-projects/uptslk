@@ -1,4 +1,4 @@
-using api.Models;
+using api.Entities;
 
 namespace api.Services.AgentRecovery;
 

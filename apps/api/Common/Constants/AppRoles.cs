@@ -1,4 +1,4 @@
-using api.Enums;
+using api.Entities.Enums;
 
 namespace api.Common.Constants;
 

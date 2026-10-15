@@ -1,6 +1,5 @@
 using api.Data;
-using api.Models;
-using api.Services;
+using api.Entities;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -10,7 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using api.Enums;
+using api.Entities.Enums;
+using api.Interfaces.Services;
 
 namespace api.Tests.Shared;
 

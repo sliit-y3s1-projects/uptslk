@@ -1,4 +1,4 @@
-using api.Models;
+using api.Entities;
 using api.Services.AgentRecovery.Planning;
 
 namespace api.Services.AgentRecovery;

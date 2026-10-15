@@ -1,9 +1,9 @@
 using api.Data;
-using api.Enums;
-using api.Models;
+using api.Entities.Enums;
+using api.Entities;
 using Npgsql;
 using Microsoft.EntityFrameworkCore;
-using Route = api.Models.Route;
+using Route = api.Entities.Route;
 
 namespace api.Tests.Database;
 

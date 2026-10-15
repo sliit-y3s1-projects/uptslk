@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using api.Enums;
+using api.Entities.Enums;
 using api.Tests.Shared;
 using Xunit;
 

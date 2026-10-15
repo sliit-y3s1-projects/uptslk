@@ -1,7 +1,7 @@
 using api.Data;
 using api.Data.Seed;
 using api.Hubs;
-using api.Models;
+using api.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 

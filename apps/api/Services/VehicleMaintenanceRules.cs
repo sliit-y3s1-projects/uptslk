@@ -1,14 +1,13 @@
+using api.Common.Helpers;
 using api.Data;
-using api.Enums;
-using api.Models;
+using api.Entities.Enums;
+using api.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Services;
 
 public static class VehicleMaintenanceRules
 {
-    private static readonly TimeZoneInfo SriLankaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Colombo");
-
     public static bool BlocksTrip(MaintenanceRecord record, DateTime departureUtc, int durationMinutes)
     {
         if (record.Status == MaintenanceStatus.InProgress) return true;
@@ -17,9 +16,9 @@ public static class VehicleMaintenanceRules
         var scheduledUtc = record.ScheduledFor.Kind == DateTimeKind.Unspecified
             ? DateTime.SpecifyKind(record.ScheduledFor, DateTimeKind.Utc)
             : record.ScheduledFor.ToUniversalTime();
-        var serviceDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(scheduledUtc, SriLankaTimeZone));
-        var start = TimeZoneInfo.ConvertTimeToUtc(serviceDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), SriLankaTimeZone);
-        var end = TimeZoneInfo.ConvertTimeToUtc(serviceDate.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), SriLankaTimeZone);
+        var serviceDate = DateOnly.FromDateTime(SriLankaTime.FromUtc(scheduledUtc));
+        var start = SriLankaTime.DayStartUtc(serviceDate);
+        var end = SriLankaTime.DayStartUtc(serviceDate.AddDays(1));
         return departureUtc < end && departureUtc.AddMinutes(Math.Max(durationMinutes, 1)) > start;
     }
 

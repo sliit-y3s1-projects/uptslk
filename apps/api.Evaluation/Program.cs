@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using api.Services.AgentRecovery;
 using api.Services.AgentRecovery.Planning;
+using api.Services.External;
 using Microsoft.Extensions.Options;
 
 namespace Upts.AgentEvaluation;

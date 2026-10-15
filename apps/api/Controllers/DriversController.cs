@@ -1,10 +1,13 @@
 using api.Common.Extensions;
 using api.Common.Constants;
+using api.Common.Helpers;
 using api.Data;
-using api.DTOs;
-using api.Enums;
-using api.Models;
-using api.Services.Notifications;
+using api.DTO.Drivers;
+using api.DTO.Incidents;
+using api.DTO.Trips;
+using api.Entities.Enums;
+using api.Entities;
+using api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -195,16 +198,15 @@ public class DriversController(AppDbContext db, UserManager<User> userManager, M
         var driver = await CurrentDriverQuery().SingleOrDefaultAsync();
         if (driver is null) return NotFound(new { error = "This account is not linked to a driver record. Contact your centre manager." });
 
-        var serviceDate = date ?? DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Asia/Colombo"));
+        var serviceDate = date ?? SriLankaTime.Today();
         if (fromDate.HasValue != toDate.HasValue)
             return BadRequest(new { error = "Provide both fromDate and toDate." });
         var firstDate = fromDate ?? serviceDate;
         var lastDate = toDate ?? serviceDate;
         if (lastDate.DayNumber < firstDate.DayNumber || lastDate.DayNumber - firstDate.DayNumber > 6)
             return BadRequest(new { error = "Duty searches can cover up to seven days." });
-        var timeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Colombo");
-        var start = TimeZoneInfo.ConvertTimeToUtc(firstDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), timeZone);
-        var end = TimeZoneInfo.ConvertTimeToUtc(lastDate.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), timeZone);
+        var start = SriLankaTime.DayStartUtc(firstDate);
+        var end = SriLankaTime.DayStartUtc(lastDate.AddDays(1));
 
         var trips = await db.Trips.AsNoTracking()
             .Include(trip => trip.Route)

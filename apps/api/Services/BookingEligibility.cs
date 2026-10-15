@@ -1,5 +1,5 @@
-using api.Enums;
-using api.Models;
+using api.Entities.Enums;
+using api.Entities;
 
 namespace api.Services;
 

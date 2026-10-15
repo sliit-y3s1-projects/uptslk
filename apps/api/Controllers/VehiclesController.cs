@@ -1,10 +1,10 @@
 using api.Common.Extensions;
 using api.Common.Constants;
 using api.Data;
-using api.DTOs;
-using api.Enums;
-using api.Models;
-using api.Services;
+using api.DTO.Vehicles;
+using api.Entities.Enums;
+using api.Entities;
+using api.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

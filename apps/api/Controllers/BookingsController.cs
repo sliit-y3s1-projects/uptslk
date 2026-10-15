@@ -1,14 +1,13 @@
 using api.Common.Constants;
 using api.Data;
-using api.DTOs;
-using api.Enums;
-using api.Models;
+using api.DTO.Bookings;
+using api.Entities.Enums;
+using api.Entities;
+using api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using api.Services.Payments;
-using api.Services;
 
 namespace api.Controllers;
 

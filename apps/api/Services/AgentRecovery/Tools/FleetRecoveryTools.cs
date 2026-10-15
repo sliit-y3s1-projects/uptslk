@@ -1,6 +1,5 @@
 using api.Data;
-using api.Enums;
-using api.Services;
+using api.Entities.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Services.AgentRecovery.Tools;

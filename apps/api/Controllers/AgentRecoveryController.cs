@@ -2,8 +2,8 @@ using api.Common.Constants;
 using System.Security.Claims;
 using System.Text.Json;
 using api.Data;
-using api.DTOs;
-using api.Enums;
+using api.DTO.AgentRecovery;
+using api.Entities.Enums;
 using api.Services.AgentRecovery;
 using api.Services.AgentRecovery.Planning;
 using Microsoft.AspNetCore.Authorization;
@@ -106,7 +106,7 @@ public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService re
                 cancellationToken))
             return NotFound();
 
-        (api.Models.AgentWorkflow? workflow, string? error) result;
+        (api.Entities.AgentWorkflow? workflow, string? error) result;
         try
         {
             result = await recoveryWorkflows.StartAsync(
@@ -156,7 +156,7 @@ public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService re
         return Ok(new { workflow.Id, workflow.Status, workflow.FailureReason });
     }
 
-    private static object ToListItem(api.Models.AgentWorkflow workflow) => new
+    private static object ToListItem(api.Entities.AgentWorkflow workflow) => new
     {
         workflow.Id,
         workflow.CentreId,

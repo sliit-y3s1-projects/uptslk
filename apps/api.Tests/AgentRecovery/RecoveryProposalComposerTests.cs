@@ -1,4 +1,4 @@
-using api.Models;
+using api.Entities;
 using api.Services.AgentRecovery;
 using api.Services.AgentRecovery.Planning;
 using Xunit;

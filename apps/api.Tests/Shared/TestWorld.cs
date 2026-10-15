@@ -1,8 +1,8 @@
 using api.Data;
-using api.Enums;
-using api.Models;
+using api.Entities.Enums;
+using api.Entities;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Route = api.Models.Route;
+using Route = api.Entities.Route;
 
 namespace api.Tests.Shared;
 
