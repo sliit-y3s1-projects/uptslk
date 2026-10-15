@@ -86,6 +86,24 @@ describe("TripFormPage: create", () => {
     expect(options.map((option) => option.textContent)).toEqual(["B1"]);
   });
 
+  it("keeps the driver the dispatcher picks instead of snapping back to the first one", async () => {
+    mockLookups([
+      http.get(apiUrl("/api/v1/drivers"), () =>
+        HttpResponse.json([
+          { id: "driver-1", centreId: CENTRE_ID, fullName: "Kamal Perera", licenseNumber: "DL-100", status: "Active" },
+          { id: "driver-2", centreId: CENTRE_ID, fullName: "Nimal Silva", licenseNumber: "DL-200", status: "Active" },
+        ]),
+      ),
+    ]);
+    const { user: person } = renderCreate();
+    await screen.findByText("Kamal Perera · DL-100");
+
+    await person.click(screen.getByRole("combobox", { name: /Driver/ }));
+    await person.click(await screen.findByRole("option", { name: "Nimal Silva · DL-200" }));
+
+    await waitFor(() => expect(screen.getByRole("combobox", { name: /Driver/ })).toHaveTextContent("Nimal Silva · DL-200"));
+  });
+
   it("does not save a trip without a service date and departure time, and tells the dispatcher", async () => {
     mockLookups();
     let posted = false;

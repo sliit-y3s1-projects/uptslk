@@ -1,12 +1,14 @@
 using api.Data;
 using api.Enums;
 using api.Models;
+using api.Services.Notifications;
 
 namespace api.Services.AgentRecovery;
 
 public sealed class RecoveryActionExecutor(
     AppDbContext db,
-    PassengerNotificationService passengerNotifications)
+    PassengerNotificationService passengerNotifications,
+    MobileNotificationService notifications)
 {
     public async Task ExecuteAsync(
         AgentWorkflow workflow,
@@ -21,6 +23,7 @@ public sealed class RecoveryActionExecutor(
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
+        var before = TripAssignment.Of(workflow.Trip);
         workflow.Trip.VehicleId = proposal.VehicleId;
         workflow.Trip.DriverId = proposal.DriverId;
         workflow.Trip.BayId = proposal.BayId;
@@ -28,6 +31,7 @@ public sealed class RecoveryActionExecutor(
         workflow.Trip.Status = TripStatus.Delayed;
         workflow.Trip.Notes = $"Recovered by approved agent workflow {workflow.Id:N}.";
         workflow.Trip.UpdatedAt = DateTime.UtcNow;
+        await notifications.TripChangedAsync(workflow.Trip, before, cancellationToken);
 
         workflow.Incident.Status = IncidentStatus.Resolved;
         workflow.Incident.ResolvedAt = DateTime.UtcNow;

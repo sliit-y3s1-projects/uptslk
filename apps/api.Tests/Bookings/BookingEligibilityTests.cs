@@ -131,7 +131,7 @@ public sealed class BookingEligibilityTests
         booking.Status = BookingStatus.Cancelled;
         db.Payments.Add(new Payment { Booking = booking, Provider = PaymentProvider.Stripe, ProviderOrderId = "ORDER-TEST", ProviderCheckoutId = "CHECKOUT-TEST", Amount = 100, Currency = "LKR", Status = PaymentStatus.Pending });
         await db.SaveChangesAsync();
-        await new BookingPaymentService(db, []).HandleStripeCheckoutCompletedAsync("EVENT-TEST", "CHECKOUT-TEST", "PI-TEST", "ORDER-TEST", 10000, "lkr", default);
+        await new BookingPaymentService(db, [], RecordingNotificationPublisher.ServiceFor(db)).HandleStripeCheckoutCompletedAsync("EVENT-TEST", "CHECKOUT-TEST", "PI-TEST", "ORDER-TEST", 10000, "lkr", default);
         Assert.Equal(BookingStatus.Cancelled, booking.Status);
     }
 

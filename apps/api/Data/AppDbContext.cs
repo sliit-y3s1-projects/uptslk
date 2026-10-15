@@ -36,6 +36,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<ApprovalRequest> ApprovalRequests => Set<ApprovalRequest>();
     public DbSet<PassengerNotification> PassengerNotifications => Set<PassengerNotification>();
     public DbSet<SupportRequest> SupportRequests => Set<SupportRequest>();
+    public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
 
     // PostgreSQL "timestamp with time zone" only accepts UTC values. Normalize every DateTime on its way in so a client
     // that sends a local time or a time without an offset gets a saved value instead of an HTTP 500.
@@ -114,6 +115,8 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<PassengerNotification>().Property(notification => notification.Subject).HasMaxLength(200);
         modelBuilder.Entity<PassengerNotification>().Property(notification => notification.Message).HasMaxLength(1000);
         modelBuilder.Entity<PassengerNotification>().Property(notification => notification.DeliveryError).HasMaxLength(1000);
+        modelBuilder.Entity<UserNotification>().Property(notification => notification.Title).HasMaxLength(200);
+        modelBuilder.Entity<UserNotification>().Property(notification => notification.Message).HasMaxLength(1000);
         modelBuilder.Entity<SupportRequest>().Property(request => request.Subject).HasMaxLength(200);
         modelBuilder.Entity<SupportRequest>().Property(request => request.Description).HasMaxLength(2000);
         modelBuilder.Entity<SupportRequest>().Property(request => request.Resolution).HasMaxLength(2000);
@@ -133,6 +136,13 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .WithMany(passenger => passenger.Notifications)
             .HasForeignKey(notification => notification.PassengerId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<UserNotification>()
+            .HasOne(notification => notification.User)
+            .WithMany()
+            .HasForeignKey(notification => notification.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<UserNotification>().HasIndex(notification => new { notification.UserId, notification.CreatedAt });
 
         modelBuilder.Entity<Bay>()
             .HasOne(b => b.Centre)

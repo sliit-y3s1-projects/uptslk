@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.RateLimiting;
 using api.Data;
 using api.Enums;
+using api.Hubs;
 using api.Models;
 using api.Services;
 using api.Services.Payments;
@@ -11,6 +12,7 @@ using api.Services.AgentRecovery;
 using api.Services.AgentRecovery.Agents;
 using api.Services.AgentRecovery.Planning;
 using api.Services.AgentRecovery.Tools;
+using api.Services.Notifications;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -25,8 +27,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks()
     .AddCheck<DatabaseHealthCheck>("database");
-builder.Services.AddControllers()
+builder.Services.AddControllers(options => options.Filters.Add<SendNotificationsFilter>())
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options => options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -47,6 +51,8 @@ builder.Services.AddSingleton<IImageStorageService, SupabaseImageStorageService>
 builder.Services.AddSingleton<IPaymentGateway, StripePaymentGateway>();
 builder.Services.AddScoped<BookingPaymentService>();
 builder.Services.AddScoped<BookingCancellationService>();
+builder.Services.AddSingleton<INotificationPublisher, SignalRNotificationPublisher>();
+builder.Services.AddScoped<MobileNotificationService>();
 builder.Services.AddScoped<INetworkRecoveryTools, NetworkRecoveryTools>();
 builder.Services.AddScoped<IFleetRecoveryTools, FleetRecoveryTools>();
 builder.Services.AddScoped<IDispatchRecoveryTools, DispatchRecoveryTools>();
@@ -90,6 +96,8 @@ builder.Services.AddAuthentication(options =>
         {
             OnMessageReceived = context =>
             {
+                if (string.IsNullOrEmpty(context.Token) && context.Request.Path.StartsWithSegments(NotificationHub.Path))
+                    context.Token = context.Request.Query["access_token"];
                 if (string.IsNullOrEmpty(context.Token)) context.Token = context.Request.Cookies["upts_access_token"];
                 return Task.CompletedTask;
             }
@@ -189,6 +197,7 @@ app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<NotificationHub>(NotificationHub.Path);
 app.MapHealthChecks("/health");
 
 app.Run();

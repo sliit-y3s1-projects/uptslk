@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
 import 'state/demo_store.dart';
 import 'state/auth_store.dart';
+import 'state/notification_store.dart';
 import 'services/auth_api_service.dart';
+import 'services/system_notification_service.dart';
 import 'features/auth/login_page.dart';
 import 'features/commuter/commuter_shell.dart';
 import 'features/driver/driver_shell.dart';
@@ -14,11 +16,32 @@ import 'features/profile/profile_page.dart';
 // by feature as each mobile API flow is integrated.
 final demoStore = DemoStore();
 final authStore = AuthStore(AuthApiService());
+final notificationStore = NotificationStore();
+final systemNotifications = SystemNotificationService(
+  onTap: notificationStore.requestOpen,
+);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await systemNotifications.initialize();
+  notificationStore.incoming.listen(systemNotifications.show);
   await authStore.restoreSession();
+  authStore.addListener(_syncNotifications);
+  _syncNotifications();
   runApp(const UPTSLKApp());
+}
+
+void _syncNotifications() {
+  final user = authStore.user;
+  final token = authStore.token;
+  if (user != null &&
+      token != null &&
+      (user.role == 'Commuter' || user.role == 'Driver')) {
+    systemNotifications.requestPermission();
+    notificationStore.start(token);
+  } else {
+    notificationStore.stop();
+  }
 }
 
 class UPTSLKApp extends StatelessWidget {
@@ -38,11 +61,17 @@ class UPTSLKApp extends StatelessWidget {
           }
 
           if (user.role == 'Commuter') {
-            return CommuterShell(authStore: authStore);
+            return CommuterShell(
+              authStore: authStore,
+              notificationStore: notificationStore,
+            );
           }
 
           if (user.role == 'Driver') {
-            return DriverShell(authStore: authStore);
+            return DriverShell(
+              authStore: authStore,
+              notificationStore: notificationStore,
+            );
           }
 
           return ProfilePage(authStore: authStore, user: user);

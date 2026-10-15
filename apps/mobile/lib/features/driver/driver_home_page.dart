@@ -10,9 +10,14 @@ import '../../state/auth_store.dart';
 import 'duty_details_page.dart';
 
 class DriverHomePage extends StatefulWidget {
-  const DriverHomePage({super.key, required this.authStore});
+  const DriverHomePage({
+    super.key,
+    required this.authStore,
+    this.refreshSignal = 0,
+  });
 
   final AuthStore authStore;
+  final int refreshSignal;
 
   @override
   State<DriverHomePage> createState() => _DriverHomePageState();
@@ -37,6 +42,14 @@ class _DriverHomePageState extends State<DriverHomePage> {
   void dispose() {
     _timer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant DriverHomePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshSignal != widget.refreshSignal) {
+      _dashboardFuture = _load();
+    }
   }
 
   Future<_DriverDashboard> _load() async {
