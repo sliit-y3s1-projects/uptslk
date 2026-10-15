@@ -83,7 +83,8 @@ public sealed class RecoveryActionExecutorIntegrationTests
 
         var executor = new RecoveryActionExecutor(
             database.Context,
-            new PassengerNotificationService(database.Context));
+            new PassengerNotificationService(database.Context),
+            RecordingNotificationPublisher.ServiceFor(database.Context));
         await executor.ExecuteAsync(workflow, approval, proposal, CancellationToken.None);
 
         database.Context.ChangeTracker.Clear();
@@ -124,7 +125,8 @@ public sealed class RecoveryActionExecutorIntegrationTests
             []);
         var executor = new RecoveryActionExecutor(
             database.Context,
-            new PassengerNotificationService(database.Context));
+            new PassengerNotificationService(database.Context),
+            RecordingNotificationPublisher.ServiceFor(database.Context));
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             executor.ExecuteAsync(workflow, approval, proposal, CancellationToken.None));

@@ -3,11 +3,15 @@ using api.Data;
 using api.DTOs;
 using api.Enums;
 using api.Models;
+using api.Services.Notifications;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Services.Payments;
 
-public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentGateway> gateways)
+public sealed class BookingPaymentService(
+    AppDbContext db,
+    IEnumerable<IPaymentGateway> gateways,
+    MobileNotificationService notifications)
 {
     public async Task<(PaymentCheckoutSession? Session, string? Error, int StatusCode)> StartCheckoutAsync(StartCheckoutRequest request, CancellationToken cancellationToken)
     {
@@ -93,7 +97,10 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
         payment.Status = PaymentStatus.Succeeded;
         payment.UpdatedAt = DateTime.UtcNow;
         if (payment.Booking.Status == BookingStatus.Pending)
+        {
             payment.Booking.Status = BookingStatus.Confirmed;
+            await notifications.BookingConfirmedAsync(payment.Booking, cancellationToken);
+        }
         payment.Booking.UpdatedAt = DateTime.UtcNow;
         db.PaymentWebhookEvents.Add(new PaymentWebhookEvent { Provider = PaymentProvider.Stripe, ProviderEventId = eventId, EventType = "checkout.session.completed" });
         await db.SaveChangesAsync(cancellationToken);
@@ -114,7 +121,10 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
         payment.Status = PaymentStatus.Succeeded;
         payment.UpdatedAt = DateTime.UtcNow;
         if (payment.Booking.Status == BookingStatus.Pending)
+        {
             payment.Booking.Status = BookingStatus.Confirmed;
+            await notifications.BookingConfirmedAsync(payment.Booking, cancellationToken);
+        }
         payment.Booking.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
     }
@@ -163,6 +173,7 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
         refund.UpdatedAt = DateTime.UtcNow;
         refund.Payment.Status = refund.Status == PaymentRefundStatus.Succeeded ? PaymentStatus.Refunded : PaymentStatus.Succeeded;
         refund.Payment.UpdatedAt = DateTime.UtcNow;
+        await notifications.RefundUpdatedAsync(refund, cancellationToken);
         db.PaymentWebhookEvents.Add(new PaymentWebhookEvent { Provider = PaymentProvider.Stripe, ProviderEventId = eventId, EventType = "refund.updated" });
         await db.SaveChangesAsync(cancellationToken);
     }
@@ -198,6 +209,7 @@ public sealed class BookingPaymentService(AppDbContext db, IEnumerable<IPaymentG
         booking.CancelledAt = DateTime.UtcNow;
         booking.RefundAmount = payment.Amount;
         booking.UpdatedAt = DateTime.UtcNow;
+        await notifications.BookingCancelledAsync(booking, RefundDestination.Card, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return (null, StatusCodes.Status204NoContent);

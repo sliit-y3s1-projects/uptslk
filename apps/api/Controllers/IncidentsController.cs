@@ -2,6 +2,7 @@ using api.Data;
 using api.DTOs;
 using api.Enums;
 using api.Models;
+using api.Services.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,7 @@ namespace api.Controllers;
 [ApiController]
 [Route("api/v1/incidents")]
 [Authorize(Roles = "Admin,CentreManager,Dispatcher,FleetOfficer")]
-public class IncidentsController(AppDbContext db) : ControllerBase
+public class IncidentsController(AppDbContext db, MobileNotificationService notifications) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] Guid? centreId, [FromQuery] Guid? tripId, [FromQuery] IncidentStatus? status, [FromQuery] IncidentType? type, [FromQuery] IncidentSeverity? severity)
@@ -107,6 +108,7 @@ public class IncidentsController(AppDbContext db) : ControllerBase
         var incident = await db.Incidents.FindAsync(incidentId);
         if (incident is null || !CanAccessCentre(incident.CentreId)) return NotFound();
 
+        var previousStatus = incident.Status;
         incident.Severity = request.Severity;
         incident.Title = request.Title.Trim();
         incident.Description = request.Description.Trim();
@@ -115,6 +117,7 @@ public class IncidentsController(AppDbContext db) : ControllerBase
         incident.SlaDueAt = request.SlaDueAt;
         incident.ResolvedAt = request.Status == IncidentStatus.Resolved ? DateTime.UtcNow : null;
         incident.UpdatedAt = DateTime.UtcNow;
+        if (incident.Status != previousStatus) notifications.IncidentUpdated(incident);
         await db.SaveChangesAsync();
         return NoContent();
     }

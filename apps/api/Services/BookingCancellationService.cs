@@ -1,6 +1,7 @@
 using api.Data;
 using api.Enums;
 using api.Models;
+using api.Services.Notifications;
 using api.Services.Payments;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +15,7 @@ namespace api.Services;
 public sealed class BookingCancellationService(
     AppDbContext db,
     BookingPaymentService bookingPayments,
+    MobileNotificationService notifications,
     ILogger<BookingCancellationService> logger)
 {
     public sealed record TripCancellationResult(bool Cancelled, string? Error, int StatusCode, int CancelledBookings, IReadOnlyList<Guid> UnrefundedCardBookings);
@@ -33,6 +35,7 @@ public sealed class BookingCancellationService(
             booking.CancellationReason = reason;
             booking.CancelledAt = DateTime.UtcNow;
             booking.UpdatedAt = DateTime.UtcNow;
+            await notifications.BookingCancelledAsync(booking, RefundDestination.None, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
             return (null, StatusCodes.Status204NoContent);
         }
@@ -55,6 +58,7 @@ public sealed class BookingCancellationService(
         booking.Passenger.Wallet.Balance += booking.RefundAmount;
         booking.Passenger.Wallet.UpdatedAt = DateTime.UtcNow;
         db.Transactions.Add(new Transaction { WalletId = booking.Passenger.Wallet.Id, BookingId = booking.Id, Type = TransactionType.Refund, Amount = booking.RefundAmount });
+        await notifications.BookingCancelledAsync(booking, RefundDestination.Wallet, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         if (transaction is not null) await transaction.CommitAsync(cancellationToken);
         return (null, StatusCodes.Status204NoContent);
@@ -87,6 +91,7 @@ public sealed class BookingCancellationService(
             trip.CancellationReason = reason;
             if (!string.IsNullOrWhiteSpace(note)) trip.Notes = note.Trim();
             trip.UpdatedAt = DateTime.UtcNow;
+            await notifications.TripCancelledAsync(trip, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
 
             var bookingIds = await db.Bookings

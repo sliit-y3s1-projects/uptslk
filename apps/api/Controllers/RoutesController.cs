@@ -4,6 +4,7 @@ using api.DTOs;
 using api.Enums;
 using api.Models;
 using api.Services;
+using api.Services.Notifications;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RouteModel = api.Models.Route;
@@ -13,7 +14,7 @@ namespace api.Controllers;
 
 [ApiController]
 [Route("api/v1/routes")]
-public class RoutesController(AppDbContext db, TripConflictService conflictService) : ControllerBase
+public class RoutesController(AppDbContext db, TripConflictService conflictService, MobileNotificationService notifications) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] Guid? centreId, [FromQuery] string? search, [FromQuery] bool? active)
@@ -337,6 +338,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         var existing = 0;
         var conflicts = 0;
         var createdDepartures = new List<string>();
+        var createdTrips = new List<Trip>();
         var skippedDepartures = new List<object>();
         var sequence = 0;
         foreach (var departure in ScheduleTimes.Departures(schedule.FirstDeparture, schedule.LastDeparture, schedule.HeadwayMinutes))
@@ -386,10 +388,17 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
             {
                 db.Trips.Add(trip);
                 await db.SaveChangesAsync();
+                createdTrips.Add(trip);
                 created++;
                 createdDepartures.Add(departure.ToString("HH:mm"));
             }
             sequence++;
+        }
+
+        if (createdTrips.Count > 0)
+        {
+            await notifications.TripsAssignedAsync(createdTrips);
+            await db.SaveChangesAsync();
         }
 
         return Ok(new

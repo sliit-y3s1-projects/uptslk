@@ -2,6 +2,7 @@ using api.Data;
 using api.DTOs;
 using api.Enums;
 using api.Models;
+using api.Services.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +13,7 @@ namespace api.Controllers;
 
 [ApiController]
 [Route("api/v1/drivers")]
-public class DriversController(AppDbContext db, UserManager<User> userManager) : ControllerBase
+public class DriversController(AppDbContext db, UserManager<User> userManager, MobileNotificationService notifications) : ControllerBase
 {
     [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
     [HttpGet]
@@ -255,6 +256,7 @@ public class DriversController(AppDbContext db, UserManager<User> userManager) :
         trip.ActualDepartureAt = request.Status == TripStatus.Dispatched ? DateTime.UtcNow : trip.ActualDepartureAt;
         trip.CompletedAt = request.Status == TripStatus.Completed ? DateTime.UtcNow : trip.CompletedAt;
         trip.UpdatedAt = DateTime.UtcNow;
+        await notifications.TripStatusChangedAsync(trip, CleanOptional(request.Note), changedByDriver: true);
         await db.SaveChangesAsync();
         return NoContent();
     }

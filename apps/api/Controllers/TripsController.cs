@@ -4,6 +4,7 @@ using api.DTOs;
 using api.Enums;
 using api.Models;
 using api.Services;
+using api.Services.Notifications;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RouteModel = api.Models.Route;
@@ -12,7 +13,11 @@ namespace api.Controllers;
 
 [ApiController]
 [Route("api/v1/trips")]
-public class TripsController(AppDbContext db, TripConflictService conflictService, BookingCancellationService cancellation) : ControllerBase
+public class TripsController(
+    AppDbContext db,
+    TripConflictService conflictService,
+    BookingCancellationService cancellation,
+    MobileNotificationService notifications) : ControllerBase
 {
     private static readonly TimeZoneInfo SriLankaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Colombo");
 
@@ -109,6 +114,7 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         };
 
         db.Trips.Add(trip);
+        await notifications.TripAssignedAsync(trip);
         await db.SaveChangesAsync();
         return CreatedAtAction(nameof(Get), new { tripId = trip.Id }, new { trip.Id, trip.CentreId, trip.RouteId, trip.ScheduledTime, trip.Status });
     }
@@ -125,6 +131,7 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         var validation = await ValidateAssignment(request.CentreId, request.RouteId, request.RouteDirectionId, request.VehicleId, request.DriverId, request.BayId, request.ScheduledTime, tripId);
         if (validation.Errors.Count > 0) return BadRequest(new { errors = validation.Errors });
 
+        var before = TripAssignment.Of(trip);
         trip.CentreId = request.CentreId;
         trip.RouteId = request.RouteId;
         trip.RouteDirectionId = request.RouteDirectionId;
@@ -134,6 +141,7 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         trip.ScheduledTime = request.ScheduledTime;
         trip.Notes = CleanOptional(request.Notes);
         trip.UpdatedAt = DateTime.UtcNow;
+        await notifications.TripChangedAsync(trip, before);
         await db.SaveChangesAsync();
         return NoContent();
     }
@@ -150,12 +158,14 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         var validation = await ValidateAssignment(trip.CentreId, trip.RouteId, trip.RouteDirectionId, request.VehicleId, request.DriverId, request.BayId, request.ScheduledTime, tripId);
         if (validation.Errors.Count > 0) return BadRequest(new { errors = validation.Errors });
 
+        var before = TripAssignment.Of(trip);
         trip.VehicleId = request.VehicleId;
         trip.DriverId = request.DriverId;
         trip.BayId = request.BayId;
         trip.ScheduledTime = request.ScheduledTime;
         trip.Notes = CleanOptional(request.Notes) ?? trip.Notes;
         trip.UpdatedAt = DateTime.UtcNow;
+        await notifications.TripChangedAsync(trip, before);
         await db.SaveChangesAsync();
         return NoContent();
     }
@@ -176,6 +186,7 @@ public class TripsController(AppDbContext db, TripConflictService conflictServic
         trip.ActualDepartureAt = request.Status == TripStatus.Dispatched ? DateTime.UtcNow : trip.ActualDepartureAt;
         trip.CompletedAt = request.Status == TripStatus.Completed ? DateTime.UtcNow : trip.CompletedAt;
         trip.UpdatedAt = DateTime.UtcNow;
+        await notifications.TripStatusChangedAsync(trip, CleanOptional(request.Note), changedByDriver: false);
         await db.SaveChangesAsync();
         return NoContent();
     }
