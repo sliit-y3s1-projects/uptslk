@@ -15,6 +15,7 @@ public static class ApplicationServiceExtensions
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
         services.AddScoped<IBayRepository, BayRepository>();
+        services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<ICentreRepository, CentreRepository>();
         services.AddScoped<IDriverRepository, DriverRepository>();
         services.AddScoped<IFareRuleRepository, FareRuleRepository>();
@@ -22,6 +23,7 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IMaintenanceRecordRepository, MaintenanceRecordRepository>();
         services.AddScoped<IPassengerNotificationRepository, PassengerNotificationRepository>();
         services.AddScoped<IPassengerRepository, PassengerRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IRouteRepository, RouteRepository>();
         services.AddScoped<ISupportRequestRepository, SupportRequestRepository>();
         services.AddScoped<ITripRepository, TripRepository>();
@@ -38,6 +40,7 @@ public static class ApplicationServiceExtensions
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         // Feature services used by the controllers.
+        services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<ICentreService, CentreService>();
         services.AddScoped<IDriverDutyService, DriverDutyService>();
         services.AddScoped<IDriverService, DriverService>();
@@ -46,6 +49,7 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
         services.AddScoped<IPassengerNotificationQueryService, PassengerNotificationQueryService>();
         services.AddScoped<IPassengerService, PassengerService>();
+        services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<ISupportRequestService, SupportRequestService>();
         services.AddScoped<IUserNotificationService, UserNotificationService>();
         services.AddScoped<IVehicleService, VehicleService>();

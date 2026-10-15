@@ -19,4 +19,13 @@ public abstract class Repository<T>(AppDbContext db) : IRepository<T> where T : 
     public void Add(T entity) => Set.Add(entity);
 
     public void Remove(T entity) => Set.Remove(entity);
+
+    public async Task LockAndReloadAsync(T entity, CancellationToken cancellationToken = default)
+    {
+        var entry = Db.Entry(entity);
+        var table = entry.Metadata.GetTableName()!;
+        var id = (Guid)entry.Property("Id").CurrentValue!;
+        await Db.LockRowAsync(table, id, cancellationToken);
+        await entry.ReloadAsync(cancellationToken);
+    }
 }
