@@ -14,13 +14,17 @@ public static class ApplicationServiceExtensions
 {
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
+        services.AddScoped<ICentreRepository, CentreRepository>();
         services.AddScoped<IFareRuleRepository, FareRuleRepository>();
+        services.AddScoped<IIncidentRepository, IncidentRepository>();
+        services.AddScoped<IMaintenanceRecordRepository, MaintenanceRecordRepository>();
         services.AddScoped<IPassengerNotificationRepository, PassengerNotificationRepository>();
         services.AddScoped<IPassengerRepository, PassengerRepository>();
         services.AddScoped<IRouteRepository, RouteRepository>();
         services.AddScoped<ISupportRequestRepository, SupportRequestRepository>();
         services.AddScoped<ITripRepository, TripRepository>();
         services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
+        services.AddScoped<IVehicleRepository, VehicleRepository>();
 
         return services;
     }
@@ -32,6 +36,8 @@ public static class ApplicationServiceExtensions
 
         // Feature services used by the controllers.
         services.AddScoped<IFareRuleService, FareRuleService>();
+        services.AddScoped<IIncidentService, IncidentService>();
+        services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
         services.AddScoped<IPassengerNotificationQueryService, PassengerNotificationQueryService>();
         services.AddScoped<ISupportRequestService, SupportRequestService>();
         services.AddScoped<IUserNotificationService, UserNotificationService>();

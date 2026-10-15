@@ -25,6 +25,8 @@ public sealed class GlobalExceptionHandler(
         problem.Extensions["error"] = message;
         if (exception is BadRequestException { Errors.Count: > 0 } badRequest)
             problem.Extensions["errors"] = badRequest.Errors;
+        if (exception is AppException { Details.Count: > 0 } withDetails)
+            foreach (var (key, value) in withDetails.Details) problem.Extensions[key] = value;
 
         context.Response.StatusCode = statusCode;
         return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext

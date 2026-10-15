@@ -1,142 +1,35 @@
 using api.Common.Constants;
-using api.Data;
 using api.DTO.Incidents;
-using api.Entities.Enums;
-using api.Entities;
-using api.Services;
+using api.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace api.Controllers;
 
 [ApiController]
 [Route("api/v1/incidents")]
 [Authorize(Roles = AppRoles.OperationsStaff)]
-public class IncidentsController(AppDbContext db, MobileNotificationService notifications) : ControllerBase
+public class IncidentsController(IIncidentService incidents) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] Guid? centreId, [FromQuery] Guid? tripId, [FromQuery] IncidentStatus? status, [FromQuery] IncidentType? type, [FromQuery] IncidentSeverity? severity)
-    {
-        if (!TryGetScopedCentre(out var scopedCentreId)) return Forbid();
-        if (scopedCentreId.HasValue && centreId.HasValue && centreId != scopedCentreId) return Forbid();
-        var query = db.Incidents.AsNoTracking().Include(incident => incident.Trip).AsQueryable();
-        var effectiveCentreId = scopedCentreId ?? centreId;
-        if (effectiveCentreId.HasValue) query = query.Where(incident => incident.CentreId == effectiveCentreId.Value);
-        if (tripId.HasValue) query = query.Where(incident => incident.TripId == tripId.Value);
-        if (status.HasValue) query = query.Where(incident => incident.Status == status.Value);
-        if (type.HasValue) query = query.Where(incident => incident.Type == type.Value);
-        if (severity.HasValue) query = query.Where(incident => incident.Severity == severity.Value);
-
-        var incidents = await query.OrderByDescending(incident => incident.CreatedAt).Select(incident => new
-        {
-            incident.Id,
-            incident.CentreId,
-            incident.TripId,
-            TripTime = incident.Trip != null ? incident.Trip.ScheduledTime : (DateTime?)null,
-            TripRouteNumber = incident.Trip != null ? incident.Trip.Route.RouteNumber : null,
-            TripRouteName = incident.Trip != null ? incident.Trip.Route.Name : null,
-            incident.ReportedByName,
-            incident.Type,
-            incident.Severity,
-            incident.Title,
-            incident.Description,
-            incident.AssignedTo,
-            incident.Status,
-            incident.SlaDueAt,
-            incident.ResolvedAt,
-            incident.CreatedAt
-        }).ToListAsync();
-
-        return Ok(incidents);
-    }
+    public async Task<ActionResult<IReadOnlyList<IncidentListItemResponse>>> List([FromQuery] IncidentFilter filter, CancellationToken cancellationToken) =>
+        Ok(await incidents.ListAsync(filter, cancellationToken));
 
     [HttpGet("{incidentId:guid}")]
-    public async Task<IActionResult> Get(Guid incidentId)
-    {
-        var incident = await db.Incidents.AsNoTracking().Include(item => item.Centre).Include(item => item.Trip).SingleOrDefaultAsync(item => item.Id == incidentId);
-        if (incident is null || !CanAccessCentre(incident.CentreId)) return NotFound();
-
-        return Ok(new
-        {
-            incident.Id,
-            Centre = new { incident.Centre.Id, incident.Centre.Code, incident.Centre.Name },
-            incident.TripId,
-            Trip = incident.Trip is null ? null : new { incident.Trip.Id, incident.Trip.ScheduledTime, incident.Trip.Status },
-            incident.ReportedByName,
-            incident.Type,
-            incident.Severity,
-            incident.Title,
-            incident.Description,
-            incident.AssignedTo,
-            incident.Status,
-            incident.SlaDueAt,
-            incident.ResolvedAt,
-            incident.CreatedAt,
-            incident.UpdatedAt
-        });
-    }
+    public async Task<ActionResult<IncidentResponse>> Get(Guid incidentId, CancellationToken cancellationToken) =>
+        Ok(await incidents.GetAsync(incidentId, cancellationToken));
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateIncidentRequest request)
+    public async Task<ActionResult<IncidentCreatedResponse>> Create(CreateIncidentRequest request, CancellationToken cancellationToken)
     {
-        if (!CanAccessCentre(request.CentreId)) return Forbid();
-        if (!await db.Centres.AnyAsync(centre => centre.Id == request.CentreId)) return BadRequest(new { error = "The selected centre does not exist." });
-        if (request.TripId.HasValue && !await db.Trips.AnyAsync(trip => trip.Id == request.TripId.Value && trip.CentreId == request.CentreId)) return BadRequest(new { error = "The selected trip does not belong to this centre." });
-
-        var incident = new Incident
-        {
-            CentreId = request.CentreId,
-            TripId = request.TripId,
-            ReportedByName = request.ReportedByName.Trim(),
-            Type = request.Type,
-            Severity = request.Severity,
-            Title = request.Title.Trim(),
-            Description = request.Description.Trim(),
-            AssignedTo = CleanOptional(request.AssignedTo),
-            SlaDueAt = request.SlaDueAt ?? DateTime.UtcNow.AddHours(4)
-        };
-
-        db.Incidents.Add(incident);
-        await db.SaveChangesAsync();
-        return CreatedAtAction(nameof(Get), new { incidentId = incident.Id }, new { incident.Id, incident.CentreId, incident.TripId, incident.Title, incident.Status });
+        var created = await incidents.CreateAsync(request, cancellationToken);
+        return CreatedAtAction(nameof(Get), new { incidentId = created.Id }, created);
     }
 
     [HttpPut("{incidentId:guid}")]
-    public async Task<IActionResult> Update(Guid incidentId, UpdateIncidentRequest request)
+    public async Task<IActionResult> Update(Guid incidentId, UpdateIncidentRequest request, CancellationToken cancellationToken)
     {
-        var incident = await db.Incidents.FindAsync(incidentId);
-        if (incident is null || !CanAccessCentre(incident.CentreId)) return NotFound();
-
-        var previousStatus = incident.Status;
-        incident.Severity = request.Severity;
-        incident.Title = request.Title.Trim();
-        incident.Description = request.Description.Trim();
-        incident.AssignedTo = CleanOptional(request.AssignedTo);
-        incident.Status = request.Status;
-        incident.SlaDueAt = request.SlaDueAt;
-        incident.ResolvedAt = request.Status == IncidentStatus.Resolved ? DateTime.UtcNow : null;
-        incident.UpdatedAt = DateTime.UtcNow;
-        if (incident.Status != previousStatus) notifications.IncidentUpdated(incident);
-        await db.SaveChangesAsync();
+        await incidents.UpdateAsync(incidentId, request, cancellationToken);
         return NoContent();
     }
-
-    private static string? CleanOptional(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-
-    private bool TryGetScopedCentre(out Guid? centreId)
-    {
-        if (User.IsInRole(AppRoles.Admin))
-        {
-            centreId = null;
-            return true;
-        }
-        var hasCentre = Guid.TryParse(User.FindFirstValue(AppClaims.CentreId), out var parsedCentreId);
-        centreId = hasCentre ? parsedCentreId : null;
-        return hasCentre;
-    }
-
-    private bool CanAccessCentre(Guid centreId) =>
-        TryGetScopedCentre(out var scopedCentreId) && (!scopedCentreId.HasValue || scopedCentreId == centreId);
 }

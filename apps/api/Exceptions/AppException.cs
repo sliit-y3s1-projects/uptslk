@@ -5,6 +5,9 @@ public abstract class AppException(string message, int statusCode) : Exception(m
 {
     public int StatusCode { get; } = statusCode;
 
+    // Extra fields added to the error response, for example the ids of conflicting trips.
+    public Dictionary<string, object?> Details { get; } = [];
+
     // For older services that report failures as a status code and a message.
     public static AppException FromStatusCode(int statusCode, string message) => statusCode switch
     {
