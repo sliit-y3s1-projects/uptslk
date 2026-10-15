@@ -4,14 +4,39 @@ using api.Services.AgentRecovery.Agents;
 using api.Services.AgentRecovery.Planning;
 using api.Services.AgentRecovery.Tools;
 using api.Services.External;
+using api.Interfaces.Repositories;
+using api.Repositories;
 using api.Services;
 
 namespace api.Common.Extensions;
 
 public static class ApplicationServiceExtensions
 {
+    public static IServiceCollection AddRepositories(this IServiceCollection services)
+    {
+        services.AddScoped<IFareRuleRepository, FareRuleRepository>();
+        services.AddScoped<IPassengerNotificationRepository, PassengerNotificationRepository>();
+        services.AddScoped<IPassengerRepository, PassengerRepository>();
+        services.AddScoped<IRouteRepository, RouteRepository>();
+        services.AddScoped<ISupportRequestRepository, SupportRequestRepository>();
+        services.AddScoped<ITripRepository, TripRepository>();
+        services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
+
+        return services;
+    }
+
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+        // Feature services used by the controllers.
+        services.AddScoped<IFareRuleService, FareRuleService>();
+        services.AddScoped<IPassengerNotificationQueryService, PassengerNotificationQueryService>();
+        services.AddScoped<ISupportRequestService, SupportRequestService>();
+        services.AddScoped<IUserNotificationService, UserNotificationService>();
+
+        // Shared services used by other services.
         services.AddScoped<JwtTokenService>();
         services.AddScoped<TripConflictService>();
         services.AddScoped<BookingPaymentService>();

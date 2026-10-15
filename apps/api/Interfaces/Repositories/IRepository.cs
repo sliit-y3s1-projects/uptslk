@@ -4,6 +4,7 @@ namespace api.Interfaces.Repositories;
 public interface IRepository<T> where T : class
 {
     Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
     void Add(T entity);
     void Remove(T entity);
 }

@@ -12,6 +12,10 @@ public abstract class Repository<T>(AppDbContext db) : IRepository<T> where T : 
     public async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         await Set.FindAsync([id], cancellationToken);
 
+    // Every entity uses a Guid primary key named "Id".
+    public Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default) =>
+        Set.AnyAsync(entity => EF.Property<Guid>(entity, "Id") == id, cancellationToken);
+
     public void Add(T entity) => Set.Add(entity);
 
     public void Remove(T entity) => Set.Remove(entity);

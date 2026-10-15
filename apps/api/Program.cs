@@ -9,6 +9,7 @@ builder.Services
     .AddDatabase(builder.Configuration)
     .AddJwtAuthentication(builder.Configuration)
     .AddRateLimitPolicies()
+    .AddRepositories()
     .AddApplicationServices()
     .AddAgentRecovery(builder.Configuration);
 
