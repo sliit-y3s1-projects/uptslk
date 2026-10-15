@@ -8,20 +8,28 @@ import '../services/notification_api_service.dart';
 import '../services/notification_hub_client.dart';
 
 class NotificationStore extends ChangeNotifier {
-  NotificationStore({NotificationApiService? api, NotificationHubClient? hub})
-    : _api = api ?? NotificationApiService(),
-      _hub = hub ?? NotificationHubClient();
+  NotificationStore({
+    NotificationApiService? api,
+    NotificationHubClient Function()? hubFactory,
+  }) : _api = api ?? NotificationApiService(),
+       _hubFactory = hubFactory ?? NotificationHubClient.new;
 
   static const _retryDelay = Duration(seconds: 30);
 
   final NotificationApiService _api;
-  final NotificationHubClient _hub;
+  final NotificationHubClient Function() _hubFactory;
   final _incoming = StreamController<AppNotification>.broadcast();
   final _openRequests = StreamController<void>.broadcast();
 
+  /// Increases on every start and stop, so callbacks from an older session are ignored.
+  int _session = 0;
   String? _token;
+  NotificationHubClient? _hub;
   Timer? _retryTimer;
   List<AppNotification> _items = const [];
+
+  /// Notifications received live while a list request is in flight.
+  final List<List<AppNotification>> _liveDuringRefresh = [];
 
   List<AppNotification> get items => _items;
   int get unreadCount => _items.where((item) => !item.isRead).length;
@@ -36,33 +44,22 @@ class NotificationStore extends ChangeNotifier {
 
   Future<void> start(String token) async {
     if (_token == token) return;
+    final previousHub = _endSession();
     _token = token;
-    await refresh();
-    await _connect(token);
+    final session = _session;
+    final hub = _hub = _hubFactory();
+    await previousHub?.disconnect();
+    await _refresh(session);
+    if (session == _session) await _connect(session, token, hub);
   }
 
   Future<void> stop() async {
+    final hub = _endSession();
     _token = null;
-    _retryTimer?.cancel();
-    if (_items.isNotEmpty) {
-      _items = const [];
-      notifyListeners();
-    }
-    await _hub.disconnect();
+    await hub?.disconnect();
   }
 
-  Future<void> refresh() async {
-    final token = _token;
-    if (token == null) return;
-    try {
-      final items = await _api.list(token);
-      if (_token != token) return;
-      _items = items;
-      notifyListeners();
-    } on AuthApiException {
-      // Keep the last loaded list; the next refresh or reconnect retries.
-    }
-  }
+  Future<void> refresh() => _refresh(_session);
 
   Future<void> markRead(AppNotification notification) async {
     final token = _token;
@@ -86,6 +83,40 @@ class NotificationStore extends ChangeNotifier {
     }
   }
 
+  NotificationHubClient? _endSession() {
+    _session++;
+    _retryTimer?.cancel();
+    _liveDuringRefresh.clear();
+    final hub = _hub;
+    _hub = null;
+    if (_items.isNotEmpty) {
+      _items = const [];
+      notifyListeners();
+    }
+    return hub;
+  }
+
+  Future<void> _refresh(int session) async {
+    final token = _token;
+    if (token == null) return;
+    final live = <AppNotification>[];
+    _liveDuringRefresh.add(live);
+    try {
+      final items = await _api.list(token);
+      if (session != _session) return;
+      final listed = {for (final item in items) item.id};
+      _items = [
+        ...live.reversed.where((item) => !listed.contains(item.id)),
+        ...items,
+      ];
+      notifyListeners();
+    } on AuthApiException {
+      // Keep the last loaded list; the next refresh or reconnect retries.
+    } finally {
+      _liveDuringRefresh.remove(live);
+    }
+  }
+
   void _replaceAll(bool Function(AppNotification item) test) {
     final now = DateTime.now();
     _items = [
@@ -94,33 +125,47 @@ class NotificationStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _connect(String token) async {
+  Future<void> _connect(
+    int session,
+    String token,
+    NotificationHubClient hub,
+  ) async {
     _retryTimer?.cancel();
     try {
-      await _hub.connect(
+      await hub.connect(
         token: token,
-        onNotification: _receive,
-        onReconnected: refresh,
-        onClosed: _scheduleReconnect,
+        onNotification: (notification) {
+          if (session == _session) _receive(notification);
+        },
+        onReconnected: () {
+          if (session == _session) _refresh(session);
+        },
+        onClosed: () => _scheduleReconnect(session, token, hub),
       );
-      if (_token != token) await _hub.disconnect();
+      if (session != _session) await hub.disconnect();
     } catch (_) {
-      _scheduleReconnect();
+      _scheduleReconnect(session, token, hub);
     }
   }
 
-  void _scheduleReconnect() {
-    final token = _token;
-    if (token == null) return;
+  void _scheduleReconnect(
+    int session,
+    String token,
+    NotificationHubClient hub,
+  ) {
+    if (session != _session) return;
     _retryTimer?.cancel();
     _retryTimer = Timer(_retryDelay, () async {
-      if (_token != token) return;
-      await refresh();
-      await _connect(token);
+      if (session != _session) return;
+      await _refresh(session);
+      if (session == _session) await _connect(session, token, hub);
     });
   }
 
   void _receive(AppNotification notification) {
+    for (final live in _liveDuringRefresh) {
+      live.add(notification);
+    }
     _items = [
       notification,
       ..._items.where((item) => item.id != notification.id),
@@ -131,10 +176,10 @@ class NotificationStore extends ChangeNotifier {
 
   @override
   void dispose() {
-    _retryTimer?.cancel();
+    final hub = _endSession();
     _incoming.close();
     _openRequests.close();
-    unawaited(_hub.disconnect());
+    unawaited(hub?.disconnect());
     super.dispose();
   }
 }

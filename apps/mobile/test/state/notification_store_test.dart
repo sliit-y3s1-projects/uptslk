@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -40,7 +41,7 @@ void main() {
       api: NotificationApiService(
         client: MockClient((_) async => http.Response(jsonEncode([]), 200)),
       ),
-      hub: hub,
+      hubFactory: () => hub,
     );
     await store.start('token');
     final incoming = store.incoming.first;
@@ -62,7 +63,7 @@ void main() {
               : http.Response('', 204),
         ),
       ),
-      hub: hub,
+      hubFactory: () => hub,
     );
     await store.start('token');
     hub.push!(_notification('n-1'));
@@ -74,7 +75,7 @@ void main() {
   });
 
   test('tapping a panel notification asks the app to open alerts', () async {
-    final store = NotificationStore(hub: _FakeHub());
+    final store = NotificationStore(hubFactory: _FakeHub.new);
     final opened = store.openRequests.first;
 
     store.requestOpen();
@@ -88,7 +89,7 @@ void main() {
       api: NotificationApiService(
         client: MockClient((_) async => http.Response(jsonEncode([]), 200)),
       ),
-      hub: hub,
+      hubFactory: () => hub,
     );
     await store.start('token');
     hub.push!(_notification('n-1'));
@@ -98,4 +99,55 @@ void main() {
     expect(store.items, isEmpty);
     expect(hub.push, isNull);
   });
+
+  test(
+    'keeps a live notification that arrives while the list is loading',
+    () async {
+      final hub = _FakeHub();
+      final slowList = Completer<http.Response>();
+      var requests = 0;
+      final store = NotificationStore(
+        api: NotificationApiService(
+          client: MockClient(
+            (_) async => ++requests == 1
+                ? http.Response(jsonEncode([]), 200)
+                : slowList.future,
+          ),
+        ),
+        hubFactory: () => hub,
+      );
+      await store.start('token');
+
+      final refreshing = store.refresh();
+      hub.push!(_notification('n-1'));
+      slowList.complete(http.Response(jsonEncode([]), 200));
+      await refreshing;
+
+      expect(store.items.map((item) => item.id), ['n-1']);
+      expect(store.unreadCount, 1);
+    },
+  );
+
+  test(
+    'ignores notifications from the previous account after switching',
+    () async {
+      final hubs = <_FakeHub>[];
+      final store = NotificationStore(
+        api: NotificationApiService(
+          client: MockClient((_) async => http.Response(jsonEncode([]), 200)),
+        ),
+        hubFactory: () => (hubs..add(_FakeHub())).last,
+      );
+      await store.start('first-account');
+      final oldPush = hubs.first.push!;
+
+      unawaited(store.stop());
+      await store.start('second-account');
+      oldPush(_notification('old-account'));
+
+      expect(store.items, isEmpty);
+      hubs.last.push!(_notification('new-account'));
+      expect(store.items.map((item) => item.id), ['new-account']);
+    },
+  );
 }
