@@ -31,6 +31,7 @@ public static class ApplicationServiceExtensions
         services.AddScoped<ISupportRequestRepository, SupportRequestRepository>();
         services.AddScoped<ITripRepository, TripRepository>();
         services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IVehicleRepository, VehicleRepository>();
         services.AddScoped<IWalletRepository, WalletRepository>();
 
@@ -42,7 +43,10 @@ public static class ApplicationServiceExtensions
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
+        services.AddScoped<IAuthCookieService, AuthCookieService>();
+
         // Feature services used by the controllers.
+        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<ICentreService, CentreService>();
         services.AddScoped<IDriverDutyService, DriverDutyService>();
@@ -57,6 +61,7 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IRouteService, RouteService>();
         services.AddScoped<ISupportRequestService, SupportRequestService>();
         services.AddScoped<ITripService, TripService>();
+        services.AddScoped<IUserAdminService, UserAdminService>();
         services.AddScoped<IUserNotificationService, UserNotificationService>();
         services.AddScoped<IVehicleService, VehicleService>();
 

@@ -10,4 +10,6 @@ public sealed class UnitOfWork(AppDbContext db) : IUnitOfWork
 
     public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
         db.Database.BeginTransactionAsync(cancellationToken);
+
+    public void DiscardChanges() => db.ChangeTracker.Clear();
 }

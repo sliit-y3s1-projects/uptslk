@@ -7,4 +7,7 @@ public interface IUnitOfWork
 {
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
+
+    // Forgets every change that has not been saved yet.
+    void DiscardChanges();
 }

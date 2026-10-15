@@ -1,375 +1,97 @@
 using api.Common.Constants;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Text;
 using api.DTO.Auth;
-using api.Entities.Enums;
-using api.Entities;
-using api.Data;
 using api.Interfaces.Services;
 using api.Services;
-using Supabase.Storage.Exceptions;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers;
 
 [ApiController]
 [Route("api/v1/auth")]
-public class AuthController : ControllerBase
+public class AuthController(IAuthService auth, IUserAdminService userAdmin) : ControllerBase
 {
-    private readonly UserManager<User> _userManager;
-    private readonly JwtTokenService _jwtService;
-    private readonly AppDbContext _db;
-    private readonly IImageStorageService _imageStorage;
-    private readonly ILogger<AuthController> _logger;
-    private readonly IWebHostEnvironment _environment;
-
-    public AuthController(
-        UserManager<User> userManager,
-        JwtTokenService jwtService,
-        AppDbContext db,
-        IImageStorageService imageStorage,
-        ILogger<AuthController> logger,
-        IWebHostEnvironment environment)
-    {
-        _userManager = userManager;
-        _jwtService = jwtService;
-        _db = db;
-        _imageStorage = imageStorage;
-        _logger = logger;
-        _environment = environment;
-    }
-
     [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterRequest req)
-    {
-        var user = new User
-        {
-            UserName = req.Email,
-            Email = req.Email,
-            Name = req.Name,
-            Role = UserRole.Commuter
-        };
-
-        var result = await _userManager.CreateAsync(user, req.Password);
-
-        if (!result.Succeeded)
-            return BadRequest(new { error = result.Errors.Select(e => e.Description) });
-
-        var passenger = new Passenger { UserId = user.Id, FullName = user.Name, PhoneNumber = $"pending-{user.Id:N}"[..28], Email = user.Email, Category = PassengerCategory.Adult };
-        _db.Passengers.Add(passenger);
-        _db.Wallets.Add(new Wallet { Passenger = passenger });
-        try
-        {
-            await _db.SaveChangesAsync();
-        }
-        catch (DbUpdateException)
-        {
-            _db.ChangeTracker.Clear();
-            await _userManager.DeleteAsync(user);
-            return BadRequest(new { error = "Unable to create the commuter profile. Ensure the latest database migration is applied." });
-        }
-
-        var token = _jwtService.GenerateToken(user);
-        SetAuthCookies(user);
-
-        return Ok(new AuthResponse(token, user.Id.ToString(), user.Name, user.Email!, user.Role.ToString(), user.CentreId, user.ProfilePhotoUrl));
-    }
-
+    public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request, CancellationToken cancellationToken) =>
+        Ok(await auth.RegisterAsync(request, cancellationToken));
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginRequest req)
-    {
-        var user = await _userManager.FindByEmailAsync(req.Email);
-        if (user is null)
-            return Unauthorized(new { error = "Invalid credentials" });
-        if (!user.IsActive)
-            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Your account is temporarily disabled. Contact an administrator." });
-
-        var valid = await _userManager.CheckPasswordAsync(user, req.Password);
-        if (!valid)
-            return Unauthorized(new { error = "Invalid credentials" });
-
-        var token = _jwtService.GenerateToken(user);
-        SetAuthCookies(user);
-
-        return Ok(new AuthResponse(token, user.Id.ToString(), user.Name, user.Email!, user.Role.ToString(), user.CentreId, user.ProfilePhotoUrl));
-    }
+    public async Task<ActionResult<AuthResponse>> Login(LoginRequest request) =>
+        Ok(await auth.LoginAsync(request));
 
     [HttpGet("me")]
-    [Microsoft.AspNetCore.Authorization.Authorize]
-    public async Task<IActionResult> Me()
-    {
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var user = await _userManager.FindByIdAsync(userId!);
-        if (user is null) return NotFound();
-
-        return Ok(new { user.Id, user.Name, user.Email, Role = user.Role.ToString(), user.CentreId, user.IsActive, user.HomeLocation, user.NicNumber, user.Gender, user.ProfilePhotoUrl, user.NicVerificationStatus });
-    }
+    [Authorize]
+    public async Task<ActionResult<UserProfileResponse>> Me() =>
+        Ok(await auth.GetCurrentUserAsync());
 
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        var cookieOptions = CreateAuthCookieOptions();
-        Response.Cookies.Delete(AuthCookies.AccessToken, cookieOptions);
-        Response.Cookies.Delete(AuthCookies.RefreshToken, cookieOptions);
+        auth.Logout();
         return NoContent();
     }
 
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh()
     {
-        var refresh = Request.Cookies[AuthCookies.RefreshToken];
-        if (string.IsNullOrWhiteSpace(refresh)) return Unauthorized();
-        try
-        {
-            var handler = new JwtSecurityTokenHandler();
-            var principal = handler.ValidateToken(refresh, new TokenValidationParameters
-            {
-                ValidateIssuer = true, ValidateAudience = true, ValidateLifetime = true, ValidateIssuerSigningKey = true,
-                ValidIssuer = HttpContext.RequestServices.GetRequiredService<IConfiguration>()["Jwt:Issuer"],
-                ValidAudience = HttpContext.RequestServices.GetRequiredService<IConfiguration>()["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(HttpContext.RequestServices.GetRequiredService<IConfiguration>()["Jwt:Key"]!))
-            }, out _);
-            var id = principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userManager.FindByIdAsync(id!);
-            if (user is null || !user.IsActive) return Unauthorized();
-            SetAuthCookies(user);
-            return NoContent();
-        }
-        // A malformed token (for example random text in the cookie) throws SecurityTokenMalformedException, which is an
-        // ArgumentException and not a SecurityTokenException, so both must map to 401 instead of an HTTP 500.
-        catch (Exception exception) when (exception is SecurityTokenException or ArgumentException) { return Unauthorized(); }
+        await auth.RefreshAsync();
+        return NoContent();
     }
 
     [HttpPost("change-password")]
     [Authorize]
-    public async Task<IActionResult> ChangePassword(ChangePasswordRequest req)
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
     {
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var user = await _userManager.FindByIdAsync(userId!);
-        if (user is null) return Unauthorized();
-
-        var result = await _userManager.ChangePasswordAsync(user, req.CurrentPassword, req.NewPassword);
-        if (!result.Succeeded)
-            return BadRequest(new { error = result.Errors.Select(e => e.Description) });
-
+        await auth.ChangePasswordAsync(request);
         return NoContent();
     }
 
     [HttpPatch("me")]
     [Authorize]
-    public async Task<IActionResult> UpdateProfile(UpdateProfileRequest req)
-    {
-        if (string.IsNullOrWhiteSpace(req.Name)) return BadRequest(new { error = "Name is required" });
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var user = await _userManager.FindByIdAsync(userId!);
-        if (user is null) return Unauthorized();
-        user.Name = req.Name.Trim();
-        user.HomeLocation = req.HomeLocation?.Trim();
-        user.NicNumber = req.NicNumber?.Trim();
-        user.Gender = req.Gender?.Trim();
-        user.UpdatedAt = DateTime.UtcNow;
-        var passenger = await _db.Passengers.SingleOrDefaultAsync(item => item.UserId == user.Id);
-        if (passenger is not null)
-        {
-            passenger.FullName = user.Name;
-            passenger.Email = user.Email;
-        }
-        var driver = await _db.Drivers.SingleOrDefaultAsync(item => item.UserId == user.Id);
-        if (driver is not null)
-        {
-            driver.FullName = user.Name;
-            driver.UpdatedAt = DateTime.UtcNow;
-        }
-        var result = await _userManager.UpdateAsync(user);
-        if (!result.Succeeded) return BadRequest(new { error = result.Errors.Select(e => e.Description) });
-        return Ok(new { user.Id, user.Name, user.Email, Role = user.Role.ToString(), user.CentreId, user.IsActive, user.HomeLocation, user.NicNumber, user.Gender, user.ProfilePhotoUrl });
-    }
+    public async Task<ActionResult<UserProfileResponse>> UpdateProfile(UpdateProfileRequest request, CancellationToken cancellationToken) =>
+        Ok(await auth.UpdateProfileAsync(request, cancellationToken));
 
     [HttpPost("me/profile-photo")]
     [Authorize]
     [Consumes("multipart/form-data")]
-    [RequestSizeLimit(6 * 1024 * 1024)]
-    public async Task<IActionResult> UploadProfilePhoto(
-        IFormFile file,
-        CancellationToken cancellationToken)
+    [RequestSizeLimit(AuthService.MaxPhotoBytes + 1024 * 1024)]
+    public async Task<ActionResult<ProfilePhotoResponse>> UploadProfilePhoto(IFormFile file, CancellationToken cancellationToken)
     {
-        if (file.Length == 0)
-            return BadRequest(new { error = "Select an image to upload." });
-        if (file.Length > 5 * 1024 * 1024)
-            return BadRequest(new { error = "Profile images cannot exceed 5 MB." });
-
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var user = await _userManager.FindByIdAsync(userId!);
-        if (user is null) return Unauthorized();
-
-        try
-        {
-            await using var stream = new MemoryStream();
-            await file.CopyToAsync(stream, cancellationToken);
-            var profilePhotoUrl = await _imageStorage.UploadProfileAsync(
-                user.Id,
-                stream.ToArray(),
-                file.ContentType,
-                cancellationToken);
-
-            user.ProfilePhotoUrl = profilePhotoUrl;
-            user.UpdatedAt = DateTime.UtcNow;
-            var result = await _userManager.UpdateAsync(user);
-            if (!result.Succeeded)
-                return BadRequest(new { error = result.Errors.Select(error => error.Description) });
-
-            return Ok(new { user.ProfilePhotoUrl });
-        }
-        catch (InvalidDataException exception)
-        {
-            return BadRequest(new { error = exception.Message });
-        }
-        catch (InvalidOperationException exception)
-        {
-            _logger.LogError(exception, "Supabase profile-image storage is not configured");
-            return Problem(
-                title: "Profile image storage is unavailable",
-                detail: "Configure Supabase storage before uploading profile images.",
-                statusCode: StatusCodes.Status503ServiceUnavailable);
-        }
-        catch (SupabaseStorageException exception)
-        {
-            _logger.LogError(exception, "Supabase rejected the profile image for user {UserId}", user.Id);
-            return Problem(
-                title: "Profile image upload failed",
-                detail: "The image could not be stored. Please try again.",
-                statusCode: StatusCodes.Status502BadGateway);
-        }
+        await using var stream = new MemoryStream();
+        await file.CopyToAsync(stream, cancellationToken);
+        return Ok(await auth.UploadProfilePhotoAsync(stream.ToArray(), file.ContentType, cancellationToken));
     }
 
     [HttpPost("me/verify-nic")]
     [Authorize]
-    public async Task<IActionResult> VerifyNic(VerifyNicRequest req)
-    {
-        var value = req.NicNumber.Trim().ToUpperInvariant();
-        var validFormat = System.Text.RegularExpressions.Regex.IsMatch(value, "^(\\d{9}[VX]|\\d{12})$");
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var user = await _userManager.FindByIdAsync(userId!);
-        if (user is null) return Unauthorized();
-        user.NicNumber = value;
-        user.NicVerificationStatus = validFormat ? "Verified" : "Invalid";
-        user.UpdatedAt = DateTime.UtcNow;
-        await _userManager.UpdateAsync(user);
-        return Ok(new { user.NicNumber, user.NicVerificationStatus, user.Gender });
-    }
+    public async Task<ActionResult<NicVerificationResponse>> VerifyNic(VerifyNicRequest request) =>
+        Ok(await auth.VerifyNicAsync(request));
 
     [HttpPost("create-user")]
     [Authorize(Roles = AppRoles.Admin)]
-    public async Task<IActionResult> CreateUser(CreateUserRequest req)
-    {
-        if (!Enum.TryParse<UserRole>(req.Role, true, out var role))
-            return BadRequest(new { error = "Invalid role" });
-        if (role == UserRole.Driver)
-            return BadRequest(new { error = "Create driver accounts from Centre Ops so the login is linked to a driver record." });
-
-        var user = new User
-        {
-            UserName = req.Email,
-            Email = req.Email,
-            Name = req.Name,
-            Role = role,
-            CentreId = req.CentreId
-        };
-
-        var result = await _userManager.CreateAsync(user, req.Password);
-
-        if (!result.Succeeded)
-            return BadRequest(new { error = result.Errors.Select(e => e.Description) });
-
-        return Ok(new { user.Id, user.Name, user.Email, Role = user.Role.ToString(), user.CentreId });
-    }
+    public async Task<ActionResult<UserSummaryResponse>> CreateUser(CreateUserRequest request) =>
+        Ok(await userAdmin.CreateUserAsync(request));
 
     [HttpGet("users")]
     [Authorize(Roles = AppRoles.Admin)]
-    public async Task<IActionResult> Users([FromQuery] bool staffOnly = false)
-    {
-        var query = _userManager.Users.AsNoTracking();
-        if (staffOnly)
-            query = query.Where(user => user.Role != UserRole.Commuter && user.Role != UserRole.Admin);
-
-        var users = await query
-            .OrderBy(user => user.Name)
-            .Select(user => new { user.Id, user.Name, user.Email, Role = user.Role.ToString(), user.CentreId, user.IsActive })
-            .ToListAsync();
-        return Ok(users);
-    }
+    public async Task<ActionResult<IReadOnlyList<UserSummaryResponse>>> Users([FromQuery] bool staffOnly, CancellationToken cancellationToken) =>
+        Ok(await userAdmin.ListUsersAsync(staffOnly, cancellationToken));
 
     [HttpPatch("users/{id:guid}/centre")]
     [Authorize(Roles = AppRoles.Admin)]
-    public async Task<IActionResult> AssignCentre(Guid id, AssignUserCentreRequest request)
-    {
-        var user = await _userManager.FindByIdAsync(id.ToString());
-        if (user is null) return NotFound();
-        if (user.Role is UserRole.Admin or UserRole.Commuter)
-            return BadRequest(new { error = "Only staff accounts can be assigned to a centre." });
-
-        if (request.CentreId.HasValue && !await _db.Centres.AnyAsync(centre => centre.Id == request.CentreId.Value))
-            return BadRequest(new { error = "The selected centre does not exist." });
-
-        user.CentreId = request.CentreId;
-        user.UpdatedAt = DateTime.UtcNow;
-        var result = await _userManager.UpdateAsync(user);
-        if (!result.Succeeded)
-            return BadRequest(new { error = result.Errors.Select(error => error.Description) });
-
-        return Ok(new { user.Id, user.Name, user.Email, Role = user.Role.ToString(), user.CentreId });
-    }
+    public async Task<ActionResult<UserSummaryResponse>> AssignCentre(Guid id, AssignUserCentreRequest request, CancellationToken cancellationToken) =>
+        Ok(await userAdmin.AssignCentreAsync(id, request, cancellationToken));
 
     [HttpPatch("users/{id:guid}")]
     [Authorize(Roles = AppRoles.Admin)]
-    public async Task<IActionResult> UpdateUserDetails(Guid id, UpdateUserDetailsRequest request)
-    {
-        var name = request.Name?.Trim();
-        var email = request.Email?.Trim();
-        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email))
-            return BadRequest(new { error = "Name and email are required." });
-
-        var user = await _userManager.FindByIdAsync(id.ToString());
-        if (user is null) return NotFound();
-        var accountWithEmail = await _userManager.FindByEmailAsync(email);
-        if (accountWithEmail is not null && accountWithEmail.Id != user.Id)
-            return Conflict(new { error = "Another account already uses this email address." });
-
-        user.Name = name;
-        user.Email = email;
-        user.UserName = email;
-        user.NormalizedEmail = _userManager.NormalizeEmail(email);
-        user.NormalizedUserName = _userManager.NormalizeName(email);
-        user.UpdatedAt = DateTime.UtcNow;
-
-        var passenger = await _db.Passengers.SingleOrDefaultAsync(item => item.UserId == user.Id);
-        if (passenger is not null)
-        {
-            passenger.FullName = name;
-            passenger.Email = email;
-        }
-
-        var result = await _userManager.UpdateAsync(user);
-        if (!result.Succeeded)
-            return BadRequest(new { error = result.Errors.Select(error => error.Description) });
-
-        return Ok(new { user.Id, user.Name, user.Email, Role = user.Role.ToString(), user.CentreId, user.IsActive });
-    }
+    public async Task<ActionResult<UserSummaryResponse>> UpdateUserDetails(Guid id, UpdateUserDetailsRequest request, CancellationToken cancellationToken) =>
+        Ok(await userAdmin.UpdateDetailsAsync(id, request, cancellationToken));
 
     [HttpPatch("users/{id:guid}/status")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> SetStatus(Guid id, [FromBody] bool isActive)
     {
-        var user = await _userManager.FindByIdAsync(id.ToString());
-        if (user is null) return NotFound();
-        user.IsActive = isActive;
-        user.UpdatedAt = DateTime.UtcNow;
-        await _userManager.UpdateAsync(user);
+        await userAdmin.SetActiveAsync(id, isActive);
         return NoContent();
     }
 
@@ -377,42 +99,7 @@ public class AuthController : ControllerBase
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> ResetPassword(Guid id, [FromBody] string newPassword)
     {
-        if (string.IsNullOrWhiteSpace(newPassword)) return BadRequest(new { error = "A new password is required" });
-        var user = await _userManager.FindByIdAsync(id.ToString());
-        if (user is null) return NotFound();
-        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-        var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
-        if (!result.Succeeded) return BadRequest(new { error = result.Errors.Select(e => e.Description) });
-        user.UpdatedAt = DateTime.UtcNow;
-        await _userManager.UpdateAsync(user);
+        await userAdmin.ResetPasswordAsync(id, newPassword);
         return NoContent();
-    }
-
-    private void SetAuthCookies(User user)
-    {
-        var access = _jwtService.GenerateToken(user);
-        var refresh = _jwtService.GenerateToken(user, TimeSpan.FromDays(30));
-        Response.Cookies.Append(
-            AuthCookies.AccessToken,
-            access,
-            CreateAuthCookieOptions(DateTimeOffset.UtcNow.AddHours(8)));
-        Response.Cookies.Append(
-            AuthCookies.RefreshToken,
-            refresh,
-            CreateAuthCookieOptions(DateTimeOffset.UtcNow.AddDays(30)));
-    }
-
-    private CookieOptions CreateAuthCookieOptions(DateTimeOffset? expires = null)
-    {
-        var useCrossSiteCookie = !_environment.IsDevelopment() || Request.IsHttps;
-
-        return new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = useCrossSiteCookie,
-            SameSite = useCrossSiteCookie ? SameSiteMode.None : SameSiteMode.Lax,
-            Path = "/",
-            Expires = expires
-        };
     }
 }

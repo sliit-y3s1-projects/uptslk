@@ -35,6 +35,9 @@ public sealed class PassengerRepository(AppDbContext db) : Repository<Passenger>
     public Task<Passenger?> GetWithWalletAsync(Guid id, CancellationToken cancellationToken = default) =>
         Set.Include(passenger => passenger.Wallet).SingleOrDefaultAsync(passenger => passenger.Id == id, cancellationToken);
 
+    public Task<Passenger?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        Set.SingleOrDefaultAsync(passenger => passenger.UserId == userId, cancellationToken);
+
     public Task<Guid?> GetIdByUserIdAsync(Guid userId, CancellationToken cancellationToken = default) =>
         Set.AsNoTracking()
             .Where(passenger => passenger.UserId == userId)
