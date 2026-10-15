@@ -24,4 +24,7 @@ public sealed class IncidentRepository(AppDbContext db) : Repository<Incident>(d
             .Include(incident => incident.Centre)
             .Include(incident => incident.Trip)
             .SingleOrDefaultAsync(incident => incident.Id == id, cancellationToken);
+
+    public Task<bool> ExistsInCentreAsync(Guid id, Guid centreId, CancellationToken cancellationToken = default) =>
+        Set.AnyAsync(incident => incident.Id == id && incident.CentreId == centreId, cancellationToken);
 }

@@ -14,6 +14,7 @@ public static class ApplicationServiceExtensions
 {
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
+        services.AddScoped<IAgentWorkflowRepository, AgentWorkflowRepository>();
         services.AddScoped<IBayRepository, BayRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<ICentreRepository, CentreRepository>();
@@ -46,6 +47,7 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IAuthCookieService, AuthCookieService>();
 
         // Feature services used by the controllers.
+        services.AddScoped<IAgentRecoveryService, AgentRecoveryService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<ICentreService, CentreService>();
