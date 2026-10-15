@@ -16,6 +16,7 @@ public static class ApplicationServiceExtensions
     {
         services.AddScoped<IBayRepository, BayRepository>();
         services.AddScoped<ICentreRepository, CentreRepository>();
+        services.AddScoped<IDriverRepository, DriverRepository>();
         services.AddScoped<IFareRuleRepository, FareRuleRepository>();
         services.AddScoped<IIncidentRepository, IncidentRepository>();
         services.AddScoped<IMaintenanceRecordRepository, MaintenanceRecordRepository>();
@@ -37,6 +38,8 @@ public static class ApplicationServiceExtensions
 
         // Feature services used by the controllers.
         services.AddScoped<ICentreService, CentreService>();
+        services.AddScoped<IDriverDutyService, DriverDutyService>();
+        services.AddScoped<IDriverService, DriverService>();
         services.AddScoped<IFareRuleService, FareRuleService>();
         services.AddScoped<IIncidentService, IncidentService>();
         services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
