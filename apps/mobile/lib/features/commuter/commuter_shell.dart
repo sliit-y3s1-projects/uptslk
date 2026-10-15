@@ -45,7 +45,7 @@ class _CommuterShellState extends State<CommuterShell> {
     return LiveNotificationListener(
       store: widget.notificationStore,
       onNotification: (_) => setState(() => _ticketRefreshSignal++),
-      onView: () => setState(() => _currentIndex = 2),
+      onOpen: () => setState(() => _currentIndex = 2),
       child: Scaffold(
         body: IndexedStack(
           index: _currentIndex,

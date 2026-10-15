@@ -5,19 +5,19 @@ import 'package:flutter/material.dart';
 import '../../models/app_notification.dart';
 import '../../state/notification_store.dart';
 
-/// Shows a snack bar for each live notification and reports it to [onNotification].
+/// Reports live notifications and taps on notifications in the phone's panel.
 class LiveNotificationListener extends StatefulWidget {
   const LiveNotificationListener({
     super.key,
     required this.store,
     required this.onNotification,
-    required this.onView,
+    required this.onOpen,
     required this.child,
   });
 
   final NotificationStore store;
   final ValueChanged<AppNotification> onNotification;
-  final VoidCallback onView;
+  final VoidCallback onOpen;
   final Widget child;
 
   @override
@@ -26,32 +26,27 @@ class LiveNotificationListener extends StatefulWidget {
 }
 
 class _LiveNotificationListenerState extends State<LiveNotificationListener> {
-  late StreamSubscription<AppNotification> _subscription;
+  late final List<StreamSubscription<Object?>> _subscriptions;
 
   @override
   void initState() {
     super.initState();
-    _subscription = widget.store.incoming.listen(_show);
+    _subscriptions = [
+      widget.store.incoming.listen((notification) {
+        if (mounted) widget.onNotification(notification);
+      }),
+      widget.store.openRequests.listen((_) {
+        if (mounted) widget.onOpen();
+      }),
+    ];
   }
 
   @override
   void dispose() {
-    _subscription.cancel();
+    for (final subscription in _subscriptions) {
+      subscription.cancel();
+    }
     super.dispose();
-  }
-
-  void _show(AppNotification notification) {
-    if (!mounted) return;
-    widget.onNotification(notification);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Text('${notification.title}\n${notification.message}'),
-          action: SnackBarAction(label: 'View', onPressed: widget.onView),
-        ),
-      );
   }
 
   @override

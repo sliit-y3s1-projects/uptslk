@@ -47,7 +47,7 @@ class _DriverShellState extends State<DriverShell> {
     return LiveNotificationListener(
       store: widget.notificationStore,
       onNotification: (_) => setState(() => _dutyRefreshSignal++),
-      onView: () => setState(() => _currentIndex = 1),
+      onOpen: () => setState(() => _currentIndex = 1),
       child: Scaffold(
         body: IndexedStack(index: _currentIndex, children: pages),
         bottomNavigationBar: AppBottomNavigation(

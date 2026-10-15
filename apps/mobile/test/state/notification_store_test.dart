@@ -73,6 +73,15 @@ void main() {
     expect(store.unreadCount, 0);
   });
 
+  test('tapping a panel notification asks the app to open alerts', () async {
+    final store = NotificationStore(hub: _FakeHub());
+    final opened = store.openRequests.first;
+
+    store.requestOpen();
+
+    await expectLater(opened, completes);
+  });
+
   test('stop disconnects and clears notifications', () async {
     final hub = _FakeHub();
     final store = NotificationStore(

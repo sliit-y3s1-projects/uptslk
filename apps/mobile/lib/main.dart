@@ -5,6 +5,7 @@ import 'state/demo_store.dart';
 import 'state/auth_store.dart';
 import 'state/notification_store.dart';
 import 'services/auth_api_service.dart';
+import 'services/system_notification_service.dart';
 import 'features/auth/login_page.dart';
 import 'features/commuter/commuter_shell.dart';
 import 'features/driver/driver_shell.dart';
@@ -16,9 +17,14 @@ import 'features/profile/profile_page.dart';
 final demoStore = DemoStore();
 final authStore = AuthStore(AuthApiService());
 final notificationStore = NotificationStore();
+final systemNotifications = SystemNotificationService(
+  onTap: notificationStore.requestOpen,
+);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await systemNotifications.initialize();
+  notificationStore.incoming.listen(systemNotifications.show);
   await authStore.restoreSession();
   authStore.addListener(_syncNotifications);
   _syncNotifications();
@@ -31,6 +37,7 @@ void _syncNotifications() {
   if (user != null &&
       token != null &&
       (user.role == 'Commuter' || user.role == 'Driver')) {
+    systemNotifications.requestPermission();
     notificationStore.start(token);
   } else {
     notificationStore.stop();

@@ -17,6 +17,7 @@ class NotificationStore extends ChangeNotifier {
   final NotificationApiService _api;
   final NotificationHubClient _hub;
   final _incoming = StreamController<AppNotification>.broadcast();
+  final _openRequests = StreamController<void>.broadcast();
 
   String? _token;
   Timer? _retryTimer;
@@ -27,6 +28,11 @@ class NotificationStore extends ChangeNotifier {
 
   /// Notifications pushed live by the server while the app is connected.
   Stream<AppNotification> get incoming => _incoming.stream;
+
+  /// Fires when the user taps a notification in the phone's notification panel.
+  Stream<void> get openRequests => _openRequests.stream;
+
+  void requestOpen() => _openRequests.add(null);
 
   Future<void> start(String token) async {
     if (_token == token) return;
@@ -127,6 +133,7 @@ class NotificationStore extends ChangeNotifier {
   void dispose() {
     _retryTimer?.cancel();
     _incoming.close();
+    _openRequests.close();
     unawaited(_hub.disconnect());
     super.dispose();
   }
