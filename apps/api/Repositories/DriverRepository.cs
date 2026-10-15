@@ -31,6 +31,9 @@ public sealed class DriverRepository(AppDbContext db) : Repository<Driver>(db), 
             .OrderBy(driver => driver.FullName)
             .ToListAsync(cancellationToken);
 
+    public Task<Guid?> GetUserIdAsync(Guid driverId, CancellationToken cancellationToken = default) =>
+        Set.AsNoTracking().Where(driver => driver.Id == driverId).Select(driver => driver.UserId).SingleOrDefaultAsync(cancellationToken);
+
     public Task<Driver?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default) =>
         Set.SingleOrDefaultAsync(driver => driver.UserId == userId, cancellationToken);
 

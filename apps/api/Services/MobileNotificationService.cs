@@ -1,36 +1,27 @@
 using api.Common.Helpers;
-using api.Data;
 using api.DTO.Notifications;
-using api.Entities.Enums;
 using api.Entities;
+using api.Entities.Enums;
+using api.Interfaces.Repositories;
 using api.Interfaces.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace api.Services;
 
-public sealed record TripAssignment(Guid DriverId, Guid VehicleId, Guid BayId, DateTime ScheduledTime)
-{
-    public static TripAssignment Of(Trip trip) => new(trip.DriverId, trip.VehicleId, trip.BayId, trip.ScheduledTime);
-}
-
-public enum RefundDestination
-{
-    None,
-    Wallet,
-    Card
-}
-
-/// <summary>
-/// Creates in-app notifications for commuters and drivers. Each notification is added to the shared DbContext so it is
-/// saved together with the change that caused it, and is pushed over SignalR only after the request has succeeded
-/// (see <see cref="SendNotificationsFilter"/>).
-/// </summary>
 public sealed class MobileNotificationService(
-    AppDbContext db,
+    IUserNotificationRepository userNotifications,
+    IDriverRepository drivers,
+    IPassengerRepository passengers,
+    IBookingRepository bookings,
+    ITripRepository trips,
+    IRouteRepository routes,
+    IBayRepository bays,
+    IVehicleRepository vehicles,
     INotificationPublisher publisher,
-    ILogger<MobileNotificationService> logger)
+    ILogger<MobileNotificationService> logger) : IMobileNotificationService
 {
     private const int MaxMessageLength = 1000;
+
+    // Notifications created during this request. They are pushed once the request has succeeded.
     private readonly List<UserNotification> pending = [];
 
     public async Task TripAssignedAsync(Trip trip, CancellationToken cancellationToken = default)
@@ -42,6 +33,7 @@ public sealed class MobileNotificationService(
 
     public async Task TripsAssignedAsync(IReadOnlyCollection<Trip> trips, CancellationToken cancellationToken = default)
     {
+        // One message per driver, so a driver given many generated trips is not flooded.
         foreach (var driverTrips in trips.GroupBy(trip => trip.DriverId))
         {
             var ordered = driverTrips.OrderBy(trip => trip.ScheduledTime).ToList();
@@ -69,11 +61,13 @@ public sealed class MobileNotificationService(
         if (after.ScheduledTime != before.ScheduledTime) changes.Add($"it now departs {info.Time}");
         if (after.BayId != before.BayId) changes.Add($"the departure bay is now {info.BayCode}");
 
+        // Passengers only care about the time and the bay.
         if (changes.Count > 0)
             await NotifyPassengersAsync(trip.Id, NotificationType.TripUpdated, $"Route {info.RouteNumber} trip changed",
                 $"Your route {info.RouteNumber} trip at {previousTime} has changed: {string.Join("; ", changes)}. Your ticket is still valid.",
                 cancellationToken);
 
+        // A new driver gets an assignment message and the old driver is told they are off the trip.
         if (after.DriverId != before.DriverId)
         {
             await NotifyDriverAsync(before.DriverId, NotificationType.TripUnassigned, "Trip reassigned",
@@ -84,9 +78,9 @@ public sealed class MobileNotificationService(
 
         if (after.VehicleId != before.VehicleId)
         {
-            var plate = await db.Vehicles.AsNoTracking().Where(vehicle => vehicle.Id == after.VehicleId)
-                .Select(vehicle => vehicle.PlateNumber).SingleAsync(cancellationToken);
-            changes.Add($"your bus is now {plate}");
+            var vehicle = await vehicles.GetReadOnlyAsync(after.VehicleId, cancellationToken)
+                ?? throw new InvalidOperationException($"Vehicle {after.VehicleId} does not exist.");
+            changes.Add($"your bus is now {vehicle.PlateNumber}");
         }
         await NotifyDriverAsync(trip.DriverId, NotificationType.TripUpdated, "Trip changed",
             $"Your route {info.RouteNumber} trip at {previousTime} has changed: {string.Join("; ", changes)}.", trip.Id, cancellationToken);
@@ -96,6 +90,8 @@ public sealed class MobileNotificationService(
     {
         var info = await DescribeAsync(trip, cancellationToken);
         var status = trip.Status.ToString().ToLowerInvariant();
+
+        // Passengers only hear about delays and boarding.
         var passengerMessage = trip.Status switch
         {
             TripStatus.Delayed => $"Your route {info.RouteNumber} trip at {info.Time} is delayed.{Reason(note)}",
@@ -106,6 +102,7 @@ public sealed class MobileNotificationService(
             await NotifyPassengersAsync(trip.Id, NotificationType.TripStatusChanged, $"Route {info.RouteNumber}: {trip.Status}",
                 passengerMessage, cancellationToken);
 
+        // The driver already knows about changes they made themselves.
         if (!changedByDriver)
             await NotifyDriverAsync(trip.DriverId, NotificationType.TripStatusChanged, $"Trip {status}",
                 $"Dispatch marked your route {info.RouteNumber} trip at {info.Time} as {status}.{Reason(note)}",
@@ -121,7 +118,7 @@ public sealed class MobileNotificationService(
 
     public async Task BookingCancelledAsync(Booking booking, RefundDestination refund, CancellationToken cancellationToken = default)
     {
-        var userId = await PassengerUserIdAsync(booking.PassengerId, cancellationToken);
+        var userId = await passengers.GetUserIdAsync(booking.PassengerId, cancellationToken);
         if (userId is null) return;
 
         var info = await DescribeTripAsync(booking.TripId, cancellationToken);
@@ -138,7 +135,7 @@ public sealed class MobileNotificationService(
 
     public async Task BookingConfirmedAsync(Booking booking, CancellationToken cancellationToken = default)
     {
-        var userId = await PassengerUserIdAsync(booking.PassengerId, cancellationToken);
+        var userId = await passengers.GetUserIdAsync(booking.PassengerId, cancellationToken);
         if (userId is null) return;
 
         var info = await DescribeTripAsync(booking.TripId, cancellationToken);
@@ -149,24 +146,23 @@ public sealed class MobileNotificationService(
 
     public async Task RefundUpdatedAsync(PaymentRefund refund, CancellationToken cancellationToken = default)
     {
+        // Only a finished refund is worth telling the passenger about.
         if (refund.Status is not (PaymentRefundStatus.Succeeded or PaymentRefundStatus.Failed)) return;
 
-        var booking = await db.Bookings.AsNoTracking()
-            .Where(item => item.Id == refund.Payment.BookingId)
-            .Select(item => new { item.Id, item.TripId, item.Passenger.UserId })
-            .SingleOrDefaultAsync(cancellationToken);
-        if (booking?.UserId is null) return;
+        var booking = await bookings.GetWithPassengerAsync(refund.Payment.BookingId, cancellationToken);
+        if (booking?.Passenger.UserId is not { } userId) return;
 
         if (refund.Status == PaymentRefundStatus.Succeeded)
-            Add(booking.UserId.Value, NotificationType.RefundCompleted, "Refund completed",
+            Add(userId, NotificationType.RefundCompleted, "Refund completed",
                 $"Your refund of {Money(refund.Amount)} has been sent to your card.", booking.TripId, booking.Id);
         else
-            Add(booking.UserId.Value, NotificationType.RefundFailed, "Refund failed",
+            Add(userId, NotificationType.RefundFailed, "Refund failed",
                 $"Your refund of {Money(refund.Amount)} could not be completed. Please contact support.", booking.TripId, booking.Id);
     }
 
     public void IncidentUpdated(Incident incident)
     {
+        // Only incidents reported from the driver app have someone to notify.
         if (incident.ReportedById is not { } userId) return;
         Add(userId, NotificationType.IncidentUpdated, "Incident report updated",
             $"Your report \"{incident.Title}\" is now {IncidentStatusLabel(incident.Status)}.", incident.TripId, null);
@@ -178,6 +174,7 @@ public sealed class MobileNotificationService(
         pending.Clear();
         foreach (var notification in notifications)
         {
+            // The notification is already saved, so a failed push only means the app shows it on its next refresh.
             try
             {
                 await publisher.PublishAsync(notification.UserId, NotificationResponse.From(notification), cancellationToken);
@@ -191,27 +188,18 @@ public sealed class MobileNotificationService(
 
     private async Task NotifyDriverAsync(Guid driverId, NotificationType type, string title, string message, Guid? tripId, CancellationToken cancellationToken)
     {
-        var userId = await db.Drivers.AsNoTracking().Where(driver => driver.Id == driverId)
-            .Select(driver => driver.UserId).SingleOrDefaultAsync(cancellationToken);
+        var userId = await drivers.GetUserIdAsync(driverId, cancellationToken);
         if (userId is not null) Add(userId.Value, type, title, message, tripId, null);
     }
 
     private async Task NotifyPassengersAsync(Guid tripId, NotificationType type, string title, string message, CancellationToken cancellationToken)
     {
-        var bookings = await db.Bookings.AsNoTracking()
-            .Where(booking => booking.TripId == tripId
-                && (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed)
-                && booking.Passenger.UserId != null)
-            .Select(booking => new { booking.Id, UserId = booking.Passenger.UserId!.Value })
-            .ToListAsync(cancellationToken);
+        var activeBookings = await bookings.GetActiveForTripWithPassengerAsync(tripId, cancellationToken);
 
-        foreach (var booking in bookings.DistinctBy(booking => booking.UserId))
-            Add(booking.UserId, type, title, message, tripId, booking.Id);
+        // A passenger with several bookings on the trip gets one message.
+        foreach (var booking in activeBookings.Where(booking => booking.Passenger.UserId.HasValue).DistinctBy(booking => booking.Passenger.UserId))
+            Add(booking.Passenger.UserId!.Value, type, title, message, tripId, booking.Id);
     }
-
-    private Task<Guid?> PassengerUserIdAsync(Guid passengerId, CancellationToken cancellationToken) =>
-        db.Passengers.AsNoTracking().Where(passenger => passenger.Id == passengerId)
-            .Select(passenger => passenger.UserId).SingleOrDefaultAsync(cancellationToken);
 
     private void Add(Guid userId, NotificationType type, string title, string message, Guid? tripId, Guid? bookingId)
     {
@@ -224,29 +212,29 @@ public sealed class MobileNotificationService(
             TripId = tripId,
             BookingId = bookingId
         };
-        db.UserNotifications.Add(notification);
+        // Saved by the caller's SaveChanges, together with the change it describes.
+        userNotifications.Add(notification);
         pending.Add(notification);
     }
 
     private async Task<TripInfo> DescribeAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var routeNumber = await db.Routes.AsNoTracking().Where(route => route.Id == trip.RouteId)
-            .Select(route => route.RouteNumber).SingleAsync(cancellationToken);
-        var bayCode = await db.Bays.AsNoTracking().Where(bay => bay.Id == trip.BayId)
-            .Select(bay => bay.Code).SingleAsync(cancellationToken);
-        return new TripInfo(routeNumber, bayCode, FormatTime(trip.ScheduledTime));
+        // The trip may have unsaved changes, so read the route and bay by id instead of reloading the trip.
+        var route = await routes.GetReadOnlyAsync(trip.RouteId, cancellationToken)
+            ?? throw new InvalidOperationException($"Route {trip.RouteId} does not exist.");
+        var bay = await bays.GetReadOnlyAsync(trip.BayId, cancellationToken)
+            ?? throw new InvalidOperationException($"Bay {trip.BayId} does not exist.");
+        return new TripInfo(route.RouteNumber, bay.Code, FormatTime(trip.ScheduledTime));
     }
 
     private async Task<TripInfo> DescribeTripAsync(Guid tripId, CancellationToken cancellationToken)
     {
-        var trip = await db.Trips.AsNoTracking().Where(item => item.Id == tripId)
-            .Select(item => new { item.Route.RouteNumber, BayCode = item.Bay.Code, item.ScheduledTime })
-            .SingleAsync(cancellationToken);
-        return new TripInfo(trip.RouteNumber, trip.BayCode, FormatTime(trip.ScheduledTime));
+        var trip = await trips.GetWithRouteAndBayAsync(tripId, cancellationToken)
+            ?? throw new InvalidOperationException($"Trip {tripId} does not exist.");
+        return new TripInfo(trip.Route.RouteNumber, trip.Bay.Code, FormatTime(trip.ScheduledTime));
     }
 
-    private static string FormatTime(DateTime utc) =>
-        SriLankaTime.FromUtc(utc).ToString("HH:mm, d MMM");
+    private static string FormatTime(DateTime utc) => SriLankaTime.FromUtc(utc).ToString("HH:mm, d MMM");
 
     private static string Money(decimal amount) => $"LKR {amount:N2}";
 

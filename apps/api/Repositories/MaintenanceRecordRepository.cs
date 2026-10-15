@@ -2,7 +2,7 @@ using api.Data;
 using api.DTO.Maintenance;
 using api.Entities;
 using api.Interfaces.Repositories;
-using api.Services;
+using api.Entities.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Repositories;
@@ -24,6 +24,9 @@ public sealed class MaintenanceRecordRepository(AppDbContext db) : Repository<Ma
         return query.Include(record => record.Vehicle).SingleOrDefaultAsync(record => record.Id == id, cancellationToken);
     }
 
-    public Task<IReadOnlyList<Guid>> FindConflictingTripIdsAsync(MaintenanceRecord record, CancellationToken cancellationToken = default) =>
-        VehicleMaintenanceRules.FindConflictingTripIdsAsync(Db, record, cancellationToken);
+    public Task<List<MaintenanceRecord>> GetOpenForVehicleAsync(Guid vehicleId, CancellationToken cancellationToken = default) =>
+        Set.AsNoTracking()
+            .Where(record => record.VehicleId == vehicleId
+                && (record.Status == MaintenanceStatus.Scheduled || record.Status == MaintenanceStatus.InProgress))
+            .ToListAsync(cancellationToken);
 }

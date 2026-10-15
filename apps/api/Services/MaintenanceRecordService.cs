@@ -10,6 +10,7 @@ namespace api.Services;
 public sealed class MaintenanceRecordService(
     IMaintenanceRecordRepository maintenanceRecords,
     IVehicleRepository vehicles,
+    ITripRepository trips,
     IUnitOfWork unitOfWork,
     ICurrentUserService currentUser) : IMaintenanceRecordService
 {
@@ -85,7 +86,15 @@ public sealed class MaintenanceRecordService(
 
     private async Task EnsureNoTripConflictsAsync(MaintenanceRecord record, string message, CancellationToken cancellationToken)
     {
-        var conflictingTripIds = await maintenanceRecords.FindConflictingTripIdsAsync(record, cancellationToken);
+        // Completed or cancelled work never blocks a trip.
+        if (record.Status is MaintenanceStatus.Completed or MaintenanceStatus.Cancelled) return;
+
+        var activeTrips = await trips.GetActiveForVehicleAsync(record.VehicleId, cancellationToken);
+        var conflictingTripIds = activeTrips
+            .Where(trip => VehicleMaintenanceRules.BlocksTrip(record, trip.ScheduledTime,
+                trip.RouteDirection?.EstimatedDurationMin ?? trip.Route.EstimatedDurationMin))
+            .Select(trip => trip.Id)
+            .ToList();
         if (conflictingTripIds.Count > 0)
             throw new ConflictException(message) { Details = { ["conflictingTripIds"] = conflictingTripIds } };
     }

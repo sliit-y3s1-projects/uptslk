@@ -1,10 +1,8 @@
-using api.Data;
-using api.Entities.Enums;
-using Microsoft.EntityFrameworkCore;
+using api.Interfaces.Repositories;
 
 namespace api.Services.AgentRecovery.Tools;
 
-public sealed class FleetRecoveryTools(AppDbContext db) : IFleetRecoveryTools
+public sealed class FleetRecoveryTools(IVehicleRepository vehicles) : IFleetRecoveryTools
 {
     public async Task<FindReplacementVehicleOutput> FindReplacementVehicleAsync(
         FindReplacementVehicleInput input,
@@ -14,18 +12,15 @@ public sealed class FleetRecoveryTools(AppDbContext db) : IFleetRecoveryTools
         RecoveryToolInputValidator.RequireId(input.ExcludedVehicleId, nameof(input.ExcludedVehicleId));
         RecoveryToolInputValidator.RequireNonNegative(input.RequiredCapacity, nameof(input.RequiredCapacity));
 
-        var vehicles = await db.Vehicles.AsNoTracking()
-            .Include(vehicle => vehicle.MaintenanceRecords)
-            .Where(vehicle => vehicle.CentreId == input.CentreId
-                && vehicle.Id != input.ExcludedVehicleId
-                && vehicle.Status == VehicleStatus.Active)
-            .ToListAsync(cancellationToken);
-        var candidates = vehicles
+        var activeVehicles = await vehicles.ListActiveInCentreWithMaintenanceAsync(input.CentreId, cancellationToken);
+
+        // Prefer vehicles big enough for everyone, then the smallest of those, so large buses stay free.
+        var candidates = activeVehicles
+            .Where(vehicle => vehicle.Id != input.ExcludedVehicleId)
             .Where(vehicle => !vehicle.MaintenanceRecords.Any(record =>
                 VehicleMaintenanceRules.BlocksTrip(record, input.ScheduledTime, input.DurationMinutes)))
             .OrderByDescending(vehicle => vehicle.Capacity >= input.RequiredCapacity)
             .ThenBy(vehicle => vehicle.Capacity)
-            .Select(vehicle => new { vehicle.Id, vehicle.PlateNumber, vehicle.Capacity })
             .ToList();
         var candidate = candidates.FirstOrDefault();
 

@@ -31,8 +31,7 @@ public sealed class AuthCookieService(
 
     public string? ReadRefreshToken() => Http.Request.Cookies[AuthCookies.RefreshToken];
 
-    // The deployed web app runs on another domain, so it needs SameSite=None cookies over HTTPS.
-    // Local development over plain HTTP falls back to Lax cookies.
+    // The live web app is on another domain and needs SameSite=None over HTTPS. Local HTTP uses Lax.
     private CookieOptions CreateOptions(DateTimeOffset? expires = null)
     {
         var useCrossSiteCookie = !environment.IsDevelopment() || Http.Request.IsHttps;

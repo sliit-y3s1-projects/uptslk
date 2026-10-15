@@ -14,7 +14,7 @@ public sealed class IncidentService(
     ITripRepository trips,
     IUnitOfWork unitOfWork,
     ICurrentUserService currentUser,
-    MobileNotificationService notifications) : IIncidentService
+    IMobileNotificationService notifications) : IIncidentService
 {
     private const string NotFoundMessage = "Incident not found.";
 

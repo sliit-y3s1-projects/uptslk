@@ -1,10 +1,8 @@
-using api.Data;
-using api.Entities.Enums;
-using Microsoft.EntityFrameworkCore;
+using api.Interfaces.Repositories;
 
 namespace api.Services.AgentRecovery.Tools;
 
-public sealed class NetworkRecoveryTools(AppDbContext db) : INetworkRecoveryTools
+public sealed class NetworkRecoveryTools(IBayRepository bays) : INetworkRecoveryTools
 {
     public async Task<FindDepartureBayOutput> FindDepartureBayAsync(
         FindDepartureBayInput input,
@@ -13,13 +11,10 @@ public sealed class NetworkRecoveryTools(AppDbContext db) : INetworkRecoveryTool
         RecoveryToolInputValidator.RequireId(input.DepartureCentreId, nameof(input.DepartureCentreId));
         RecoveryToolInputValidator.RequireId(input.ExcludedBayId, nameof(input.ExcludedBayId));
 
-        var candidates = await db.Bays.AsNoTracking()
-            .Where(bay => bay.CentreId == input.DepartureCentreId
-                && bay.Status == BayStatus.Available
-                && bay.Id != input.ExcludedBayId)
-            .OrderBy(bay => bay.Code)
-            .Select(bay => new { bay.Id, bay.Code })
-            .ToListAsync(cancellationToken);
+        // Available bays at the departure centre by code, without the bay that has the problem.
+        var candidates = (await bays.ListAvailableInCentreAsync(input.DepartureCentreId, cancellationToken))
+            .Where(bay => bay.Id != input.ExcludedBayId)
+            .ToList();
         var candidate = candidates.FirstOrDefault();
 
         return new FindDepartureBayOutput(

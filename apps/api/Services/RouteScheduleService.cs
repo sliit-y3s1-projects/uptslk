@@ -20,8 +20,8 @@ public sealed class RouteScheduleService(
     ITripRepository trips,
     IUnitOfWork unitOfWork,
     ICurrentUserService currentUser,
-    TripConflictService conflicts,
-    MobileNotificationService notifications) : IRouteScheduleService
+    ITripConflictService conflicts,
+    IMobileNotificationService notifications) : IRouteScheduleService
 {
     private const string RouteNotFound = "Route not found.";
     private const string ScheduleNotFound = "Schedule not found.";

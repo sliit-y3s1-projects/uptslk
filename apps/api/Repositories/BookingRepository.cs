@@ -41,6 +41,43 @@ public sealed class BookingRepository(AppDbContext db) : Repository<Booking>(db)
             .Include(booking => booking.Transactions)
             .SingleOrDefaultAsync(booking => booking.Id == id, cancellationToken);
 
+    public Task<Booking?> GetWithPassengerAsync(Guid id, CancellationToken cancellationToken = default) =>
+        Set.AsNoTracking().Include(booking => booking.Passenger).SingleOrDefaultAsync(booking => booking.Id == id, cancellationToken);
+
+    public Task<List<Booking>> GetActiveForTripWithPassengerAsync(Guid tripId, CancellationToken cancellationToken = default) =>
+        Set.AsNoTracking()
+            .Include(booking => booking.Passenger)
+            .Where(booking => booking.TripId == tripId
+                && (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed))
+            .ToListAsync(cancellationToken);
+
+    public Task<Booking?> GetForCancellationAsync(Guid id, CancellationToken cancellationToken = default) =>
+        Set.Include(booking => booking.Payments)
+            .Include(booking => booking.Passenger).ThenInclude(passenger => passenger.Wallet)
+            .SingleOrDefaultAsync(booking => booking.Id == id, cancellationToken);
+
+    public Task<Booking?> GetWithPaymentsAndRefundsAsync(Guid id, CancellationToken cancellationToken = default) =>
+        Set.Include(booking => booking.Payments).ThenInclude(payment => payment.Refunds)
+            .SingleOrDefaultAsync(booking => booking.Id == id, cancellationToken);
+
+    public Task<List<Guid>> GetActiveIdsForTripAsync(Guid tripId, CancellationToken cancellationToken = default) =>
+        Set.Where(booking => booking.TripId == tripId
+                && (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed))
+            .Select(booking => booking.Id)
+            .ToListAsync(cancellationToken);
+
+    public Task<List<Booking>> GetActiveWithoutRecoveryNoticeAsync(Guid tripId, Guid workflowId, CancellationToken cancellationToken = default) =>
+        Set.AsNoTracking()
+            .Include(booking => booking.Passenger)
+            .Where(booking => booking.TripId == tripId
+                && (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed)
+                && !Db.PassengerNotifications.Any(notification =>
+                    notification.WorkflowId == workflowId
+                    && notification.BookingId == booking.Id
+                    && notification.Channel == PassengerNotificationChannel.InApp))
+            .OrderBy(booking => booking.CreatedAt)
+            .ToListAsync(cancellationToken);
+
     public Task<Booking?> GetWithTripAsync(Guid id, CancellationToken cancellationToken = default) =>
         Set.Include(booking => booking.Trip).SingleOrDefaultAsync(booking => booking.Id == id, cancellationToken);
 

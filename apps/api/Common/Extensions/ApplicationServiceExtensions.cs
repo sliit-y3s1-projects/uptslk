@@ -24,7 +24,9 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IMaintenanceRecordRepository, MaintenanceRecordRepository>();
         services.AddScoped<IPassengerNotificationRepository, PassengerNotificationRepository>();
         services.AddScoped<IPassengerRepository, PassengerRepository>();
+        services.AddScoped<IPaymentRefundRepository, PaymentRefundRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IPaymentWebhookEventRepository, PaymentWebhookEventRepository>();
         services.AddScoped<IRouteDirectionRepository, RouteDirectionRepository>();
         services.AddScoped<IRouteRepository, RouteRepository>();
         services.AddScoped<IRouteScheduleRepository, RouteScheduleRepository>();
@@ -69,10 +71,10 @@ public static class ApplicationServiceExtensions
 
         // Shared services used by other services.
         services.AddScoped<JwtTokenService>();
-        services.AddScoped<TripConflictService>();
-        services.AddScoped<BookingPaymentService>();
-        services.AddScoped<BookingCancellationService>();
-        services.AddScoped<MobileNotificationService>();
+        services.AddScoped<ITripConflictService, TripConflictService>();
+        services.AddScoped<IBookingPaymentService, BookingPaymentService>();
+        services.AddScoped<IBookingCancellationService, BookingCancellationService>();
+        services.AddScoped<IMobileNotificationService, MobileNotificationService>();
 
         services.AddSingleton<IImageStorageService, SupabaseImageStorageService>();
         services.AddSingleton<IPaymentGateway, StripePaymentGateway>();

@@ -9,7 +9,6 @@ public interface IRouteRepository : IRepository<Route>
 
     // Loads the centre, stops, schedules and every direction with its centres, stops and schedules.
     Task<Route?> GetWithDetailsAsync(Guid id, bool track = false, CancellationToken cancellationToken = default);
-    Task<Route?> GetReadOnlyAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Guid> GetCentreIdAsync(Guid routeId, CancellationToken cancellationToken = default);
     Task<bool> RouteNumberExistsAsync(Guid centreId, string routeNumber, CancellationToken cancellationToken = default);
 

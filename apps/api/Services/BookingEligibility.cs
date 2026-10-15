@@ -5,8 +5,7 @@ namespace api.Services;
 
 public static class BookingEligibility
 {
-    // Keep genuinely ongoing journeys visible, but do not let stale statuses
-    // leave tickets in Upcoming indefinitely. This does not complete the trip.
+    // Keeps a running trip's ticket visible, but stops an old status from leaving a ticket in Upcoming forever.
     public static DateTime ActiveUntil(Trip trip)
     {
         var duration = trip.RouteDirection?.EstimatedDurationMin ?? 0;

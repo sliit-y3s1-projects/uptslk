@@ -63,7 +63,7 @@ public sealed class VehicleMaintenanceTests
         using (var scope = factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var conflicts = await new TripConflictService(db).FindConflicts(
+            var conflicts = await TestServices.TripConflicts(db).FindConflicts(
                 vehicleId, driverId, bayId,
                 new DateTime(2026, 10, 1, 6, 0, 0, DateTimeKind.Utc), 60);
             Assert.Contains(conflicts, item => item.Contains("maintenance", StringComparison.OrdinalIgnoreCase));

@@ -2,11 +2,7 @@ namespace api.Common.Helpers;
 
 public static class ScheduleTimes
 {
-    /// <summary>
-    /// The departure times of a timetable: first, first + headway, ... up to and including the last departure.
-    /// Time is counted in plain minutes. <see cref="TimeOnly.AddMinutes(double)"/> wraps at midnight, so a timetable
-    /// ending at 23:30 with a 30 minute headway would jump to 00:00, still look "before" 23:30 and never finish.
-    /// </summary>
+    // Departure times from first to last, every headway minutes. Counted in minutes because TimeOnly wraps at midnight.
     public static IEnumerable<TimeOnly> Departures(TimeOnly first, TimeOnly last, int headwayMinutes)
     {
         if (headwayMinutes <= 0) yield break;

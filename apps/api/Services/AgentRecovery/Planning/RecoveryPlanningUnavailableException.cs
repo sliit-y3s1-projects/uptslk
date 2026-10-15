@@ -1,7 +1,4 @@
 namespace api.Services.AgentRecovery.Planning;
 
-/// <summary>
-/// Raised when the AI planner could not produce a valid plan and the caller did not
-/// allow the safe built-in fallback plan to be used instead.
-/// </summary>
+// The AI planner gave no valid plan and the caller did not allow the safe built-in plan.
 public sealed class RecoveryPlanningUnavailableException(string reason) : Exception(reason);

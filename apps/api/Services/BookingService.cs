@@ -16,7 +16,7 @@ public sealed class BookingService(
     IWalletRepository wallets,
     IUnitOfWork unitOfWork,
     ICurrentUserService currentUser,
-    BookingCancellationService cancellation) : IBookingService
+    IBookingCancellationService cancellation) : IBookingService
 {
     private const string NotFoundMessage = "Booking not found.";
     private const string TripNotFound = "Trip not found.";
@@ -57,8 +57,7 @@ public sealed class BookingService(
         var totalFare = fare.Amount * request.PassengerCount;
         var wallet = passenger.Wallet ?? throw new BadRequestException(InsufficientBalance);
 
-        // Lock the trip and the wallet so parallel requests are checked one at a time. Without this two requests
-        // could both pass the capacity and balance checks and oversell the trip or spend the same money twice.
+        // Lock the trip and wallet so parallel bookings cannot oversell the trip or spend the same money twice.
         await using var transaction = await unitOfWork.BeginTransactionAsync(cancellationToken);
         await trips.LockAndReloadAsync(trip, cancellationToken);
         await wallets.LockAndReloadAsync(wallet, cancellationToken);
@@ -127,8 +126,7 @@ public sealed class BookingService(
 
     public async Task CancelAsync(Guid bookingId, CancelBookingRequest request, CancellationToken cancellationToken)
     {
-        var (error, statusCode) = await cancellation.CancelBookingAsync(bookingId, request.Reason, cancellationToken);
-        if (error is not null) throw AppException.FromStatusCode(statusCode, error);
+        await cancellation.CancelBookingAsync(bookingId, request.Reason, cancellationToken);
     }
 
     public async Task<SeatAvailabilityResponse> GetSeatAvailabilityAsync(Guid tripId, CancellationToken cancellationToken)

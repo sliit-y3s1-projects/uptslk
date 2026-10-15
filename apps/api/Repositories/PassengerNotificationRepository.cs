@@ -8,6 +8,8 @@ namespace api.Repositories;
 
 public sealed class PassengerNotificationRepository(AppDbContext db) : Repository<PassengerNotification>(db), IPassengerNotificationRepository
 {
+    public void AddRange(IEnumerable<PassengerNotification> notifications) => Set.AddRange(notifications);
+
     public Task<List<PassengerNotification>> GetLatestDeliveredForUserAsync(Guid userId, int count, CancellationToken cancellationToken = default) =>
         DeliveredForUser(Set.AsNoTracking(), userId)
             .OrderByDescending(notification => notification.CreatedAt)

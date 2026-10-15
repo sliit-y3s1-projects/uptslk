@@ -1,5 +1,6 @@
 using api.Data;
 using api.Entities;
+using api.Entities.Enums;
 using api.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,8 +11,11 @@ public sealed class BayRepository(AppDbContext db) : Repository<Bay>(db), IBayRe
     public Task<List<Bay>> ListForCentreAsync(Guid centreId, CancellationToken cancellationToken = default) =>
         Set.AsNoTracking().Where(bay => bay.CentreId == centreId).OrderBy(bay => bay.Code).ToListAsync(cancellationToken);
 
-    public Task<Bay?> GetReadOnlyAsync(Guid id, CancellationToken cancellationToken = default) =>
-        Set.AsNoTracking().SingleOrDefaultAsync(bay => bay.Id == id, cancellationToken);
+    public Task<List<Bay>> ListAvailableInCentreAsync(Guid centreId, CancellationToken cancellationToken = default) =>
+        Set.AsNoTracking()
+            .Where(bay => bay.CentreId == centreId && bay.Status == BayStatus.Available)
+            .OrderBy(bay => bay.Code)
+            .ToListAsync(cancellationToken);
 
     public Task<Bay?> GetInCentreAsync(Guid bayId, Guid centreId, CancellationToken cancellationToken = default) =>
         Set.AsNoTracking().SingleOrDefaultAsync(bay => bay.Id == bayId && bay.CentreId == centreId, cancellationToken);

@@ -1,11 +1,11 @@
 using api.Entities.Enums;
 using api.Entities;
-using api.Services;
 using api.Services.AgentRecovery.Tools;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 using api.Tests.Shared;
+using api.Repositories;
 namespace api.Tests.AgentRecovery;
 
 public sealed class RecoveryToolIntegrationTests
@@ -21,7 +21,7 @@ public sealed class RecoveryToolIntegrationTests
         database.Context.AddRange(centre, excluded, unavailable, expected);
         await database.Context.SaveChangesAsync();
 
-        var result = await new NetworkRecoveryTools(database.Context).FindDepartureBayAsync(
+        var result = await new NetworkRecoveryTools(new BayRepository(database.Context)).FindDepartureBayAsync(
             new FindDepartureBayInput(centre.Id, excluded.Id),
             CancellationToken.None);
 
@@ -50,7 +50,7 @@ public sealed class RecoveryToolIntegrationTests
         database.Context.AddRange(centre, excluded, maintained, expected);
         await database.Context.SaveChangesAsync();
 
-        var result = await new FleetRecoveryTools(database.Context).FindReplacementVehicleAsync(
+        var result = await new FleetRecoveryTools(new VehicleRepository(database.Context)).FindReplacementVehicleAsync(
             new FindReplacementVehicleInput(centre.Id, excluded.Id, 48, DateTime.UtcNow.AddHours(2), 60),
             CancellationToken.None);
 
@@ -79,7 +79,7 @@ public sealed class RecoveryToolIntegrationTests
         database.Context.AddRange(centre, excluded, reserved, available);
         await database.Context.SaveChangesAsync();
 
-        var result = await new FleetRecoveryTools(database.Context).FindReplacementVehicleAsync(
+        var result = await new FleetRecoveryTools(new VehicleRepository(database.Context)).FindReplacementVehicleAsync(
             new FindReplacementVehicleInput(centre.Id, excluded.Id, 48,
                 new DateTime(2026, 10, 1, 4, 0, 0, DateTimeKind.Utc), 60),
             CancellationToken.None);
@@ -123,7 +123,7 @@ public sealed class RecoveryToolIntegrationTests
             conflictingTrip);
         await database.Context.SaveChangesAsync();
 
-        var tools = new DispatchRecoveryTools(database.Context, new TripConflictService(database.Context));
+        var tools = new DispatchRecoveryTools(new DriverRepository(database.Context), TestServices.TripConflicts(database.Context));
         var result = await tools.FindConflictFreeDriverAsync(
             new FindConflictFreeDriverInput(
                 centre.Id,
@@ -158,7 +158,7 @@ public sealed class RecoveryToolIntegrationTests
             CreateBooking(scenario.Trip, "A3", 4, BookingStatus.Cancelled));
         await database.Context.SaveChangesAsync();
 
-        var result = await new PassengerRecoveryTools(database.Context).AssessPassengerImpactAsync(
+        var result = await new PassengerRecoveryTools(new BookingRepository(database.Context)).AssessPassengerImpactAsync(
             new AssessPassengerImpactInput(scenario.Trip.Id),
             CancellationToken.None);
 

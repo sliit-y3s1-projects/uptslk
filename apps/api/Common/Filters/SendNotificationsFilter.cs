@@ -1,11 +1,11 @@
-using api.Services;
+using api.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace api.Common.Filters;
 
 /// <summary>Pushes the notifications created during a request once the action has completed successfully.</summary>
-public sealed class SendNotificationsFilter(MobileNotificationService notifications) : IAsyncActionFilter
+public sealed class SendNotificationsFilter(IMobileNotificationService notifications) : IAsyncActionFilter
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {

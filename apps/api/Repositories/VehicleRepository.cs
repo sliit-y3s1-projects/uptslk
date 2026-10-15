@@ -32,6 +32,15 @@ public sealed class VehicleRepository(AppDbContext db) : Repository<Vehicle>(db)
             .Include(vehicle => vehicle.MaintenanceRecords)
             .SingleOrDefaultAsync(vehicle => vehicle.Id == id, cancellationToken);
 
+    public Task<List<Vehicle>> ListActiveInCentreWithMaintenanceAsync(Guid centreId, CancellationToken cancellationToken = default) =>
+        Set.AsNoTracking()
+            .Include(vehicle => vehicle.MaintenanceRecords)
+            .Where(vehicle => vehicle.CentreId == centreId && vehicle.Status == VehicleStatus.Active)
+            .ToListAsync(cancellationToken);
+
+    public Task<Vehicle?> GetWithMaintenanceAsync(Guid id, CancellationToken cancellationToken = default) =>
+        Set.AsNoTracking().Include(vehicle => vehicle.MaintenanceRecords).SingleOrDefaultAsync(vehicle => vehicle.Id == id, cancellationToken);
+
     public Task<List<Vehicle>> ListActiveInCentreAsync(Guid centreId, CancellationToken cancellationToken = default) =>
         Set.AsNoTracking()
             .Where(vehicle => vehicle.CentreId == centreId && vehicle.Status == VehicleStatus.Active)

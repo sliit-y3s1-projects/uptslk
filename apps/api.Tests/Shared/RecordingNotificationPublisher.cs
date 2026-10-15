@@ -5,6 +5,7 @@ using api.Interfaces.Services;
 using api.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using api.Repositories;
 
 namespace api.Tests.Shared;
 
@@ -22,5 +23,15 @@ internal sealed class RecordingNotificationPublisher : INotificationPublisher
     public void Register(IServiceCollection services) => services.AddSingleton<INotificationPublisher>(this);
 
     public static MobileNotificationService ServiceFor(AppDbContext db) =>
-        new(db, new RecordingNotificationPublisher(), NullLogger<MobileNotificationService>.Instance);
+        new(
+            new UserNotificationRepository(db),
+            new DriverRepository(db),
+            new PassengerRepository(db),
+            new BookingRepository(db),
+            new TripRepository(db),
+            new RouteRepository(db),
+            new BayRepository(db),
+            new VehicleRepository(db),
+            new RecordingNotificationPublisher(),
+            NullLogger<MobileNotificationService>.Instance);
 }

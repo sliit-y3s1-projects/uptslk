@@ -1,128 +1,136 @@
-using api.Data;
-using api.Entities.Enums;
 using api.Entities;
-using Microsoft.EntityFrameworkCore;
+using api.Entities.Enums;
+using api.Exceptions;
+using api.Interfaces.Repositories;
+using api.Interfaces.Services;
 
 namespace api.Services;
 
-/// <summary>
-/// Cancels bookings and gives the passenger's money back: a wallet refund with a refund transaction for wallet bookings,
-/// and the existing Stripe refund for bookings paid by card. Used by staff cancelling one booking and by a trip
-/// cancellation that cancels every active booking on the trip.
-/// </summary>
 public sealed class BookingCancellationService(
-    AppDbContext db,
-    BookingPaymentService bookingPayments,
-    MobileNotificationService notifications,
-    ILogger<BookingCancellationService> logger)
+    IBookingRepository bookings,
+    ITripRepository trips,
+    IWalletRepository wallets,
+    IPaymentRepository payments,
+    IUnitOfWork unitOfWork,
+    IBookingPaymentService bookingPayments,
+    IMobileNotificationService notifications,
+    ILogger<BookingCancellationService> logger) : IBookingCancellationService
 {
-    public sealed record TripCancellationResult(bool Cancelled, string? Error, int StatusCode, int CancelledBookings, IReadOnlyList<Guid> UnrefundedCardBookings);
+    private const string NotActive = "Only active bookings can be cancelled.";
+    private const int MaxReasonLength = 1000;
 
-    public async Task<(string? Error, int StatusCode)> CancelBookingAsync(Guid bookingId, string reason, CancellationToken cancellationToken = default)
+    public async Task CancelBookingAsync(Guid bookingId, string reason, CancellationToken cancellationToken = default)
     {
         reason = reason.Trim();
-        var booking = await db.Bookings.Include(item => item.Payments).Include(item => item.Passenger).ThenInclude(passenger => passenger.Wallet)
-            .SingleOrDefaultAsync(item => item.Id == bookingId, cancellationToken);
-        if (booking is null) return ("Booking not found.", StatusCodes.Status404NotFound);
-        if (booking.Status is BookingStatus.Cancelled or BookingStatus.Completed) return ("Only active bookings can be cancelled.", StatusCodes.Status400BadRequest);
+        var booking = await bookings.GetForCancellationAsync(bookingId, cancellationToken) ?? throw new NotFoundException("Booking not found.");
+        if (booking.Status is BookingStatus.Cancelled or BookingStatus.Completed) throw new BadRequestException(NotActive);
+
+        // Paid by card: the payment service cancels the booking and asks the provider for the refund.
         if (booking.Payments.Any(payment => payment.Status == PaymentStatus.Succeeded))
-            return await bookingPayments.RequestRefundAsync(bookingId, reason, cancellationToken);
+        {
+            await bookingPayments.RequestRefundAsync(bookingId, reason, cancellationToken);
+            return;
+        }
+
+        // A checkout was started but never paid, so there is no money to return.
         if (booking.Payments.Count > 0)
         {
-            booking.Status = BookingStatus.Cancelled;
-            booking.CancellationReason = reason;
-            booking.CancelledAt = DateTime.UtcNow;
-            booking.UpdatedAt = DateTime.UtcNow;
+            MarkCancelled(booking, reason);
             await notifications.BookingCancelledAsync(booking, RefundDestination.None, cancellationToken);
-            await db.SaveChangesAsync(cancellationToken);
-            return (null, StatusCodes.Status204NoContent);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+            return;
         }
-        if (booking.Passenger.Wallet is null) return ("The passenger wallet does not exist.", StatusCodes.Status400BadRequest);
 
-        // Lock the booking and wallet, then re-read them, so a duplicate cancel request cannot refund the booking twice.
-        // When a trip cancellation already holds a transaction, this joins it instead of opening a second one.
-        var ownsTransaction = db.Database.CurrentTransaction is null;
-        await using var transaction = ownsTransaction ? await db.Database.BeginTransactionAsync(cancellationToken) : null;
-        await db.LockRowAsync("Bookings", booking.Id, cancellationToken);
-        await db.LockRowAsync("Wallets", booking.Passenger.Wallet.Id, cancellationToken);
-        await db.Entry(booking).ReloadAsync(cancellationToken);
-        await db.Entry(booking.Passenger.Wallet).ReloadAsync(cancellationToken);
-        if (booking.Status is BookingStatus.Cancelled or BookingStatus.Completed) return ("Only active bookings can be cancelled.", StatusCodes.Status400BadRequest);
-        booking.Status = BookingStatus.Cancelled;
-        booking.CancellationReason = reason;
-        booking.CancelledAt = DateTime.UtcNow;
+        var wallet = booking.Passenger.Wallet ?? throw new BadRequestException("The passenger wallet does not exist.");
+
+        // Lock and re-read the booking and wallet so a repeated cancel cannot refund twice. Reuse a trip cancellation's transaction.
+        await using var transaction = unitOfWork.HasActiveTransaction ? null : await unitOfWork.BeginTransactionAsync(cancellationToken);
+        await bookings.LockAndReloadAsync(booking, cancellationToken);
+        await wallets.LockAndReloadAsync(wallet, cancellationToken);
+        if (booking.Status is BookingStatus.Cancelled or BookingStatus.Completed) throw new BadRequestException(NotActive);
+
+        MarkCancelled(booking, reason);
         booking.RefundAmount = booking.Fare;
-        booking.UpdatedAt = DateTime.UtcNow;
-        booking.Passenger.Wallet.Balance += booking.RefundAmount;
-        booking.Passenger.Wallet.UpdatedAt = DateTime.UtcNow;
-        db.Transactions.Add(new Transaction { WalletId = booking.Passenger.Wallet.Id, BookingId = booking.Id, Type = TransactionType.Refund, Amount = booking.RefundAmount });
+        wallet.Balance += booking.RefundAmount;
+        wallet.UpdatedAt = DateTime.UtcNow;
+        wallets.AddTransaction(new Transaction { WalletId = wallet.Id, BookingId = booking.Id, Type = TransactionType.Refund, Amount = booking.RefundAmount });
         await notifications.BookingCancelledAsync(booking, RefundDestination.Wallet, cancellationToken);
-        await db.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         if (transaction is not null) await transaction.CommitAsync(cancellationToken);
-        return (null, StatusCodes.Status204NoContent);
     }
 
-    /// <summary>
-    /// Cancels a trip and every active booking on it. The trip status change and all wallet refunds happen in one
-    /// transaction under a row lock on the trip. Bookings paid by card are refunded through the existing Stripe path
-    /// right after that transaction commits (that path needs its own transaction); any that fail stay Confirmed with a
-    /// successful payment so staff can retry the refund, and they are returned in <see cref="TripCancellationResult.UnrefundedCardBookings"/>.
-    /// </summary>
     public async Task<TripCancellationResult> CancelTripAsync(Guid tripId, string reason, string? note = null, CancellationToken cancellationToken = default)
     {
         reason = reason.Trim();
         var bookingReason = $"Trip cancelled: {reason}";
-        if (bookingReason.Length > 1000) bookingReason = bookingReason[..1000];
+        if (bookingReason.Length > MaxReasonLength) bookingReason = bookingReason[..MaxReasonLength];
         var cardBookings = new List<Guid>();
         var cancelledBookings = 0;
 
-        await using (var transaction = await db.Database.BeginTransactionAsync(cancellationToken))
+        // Step 1: cancel the trip and refund wallet bookings in one locked transaction, so no money is left owed on failure.
+        await using (var transaction = await unitOfWork.BeginTransactionAsync(cancellationToken))
         {
-            await db.LockRowAsync("Trips", tripId, cancellationToken);
-            db.ChangeTracker.Clear(); // the caller may have loaded the trip; read it again now that the lock is held
-            var trip = await db.Trips.SingleOrDefaultAsync(item => item.Id == tripId, cancellationToken);
-            if (trip is null) return new(false, "Trip not found.", StatusCodes.Status404NotFound, 0, []);
-            if (trip.Status is TripStatus.Completed or TripStatus.Cancelled)
-                return new(false, "Only active trips can be cancelled.", StatusCodes.Status400BadRequest, 0, []);
+            await trips.LockAsync(tripId, cancellationToken);
+            // The caller may have loaded the trip already. Read it again now that the lock is held.
+            unitOfWork.DiscardChanges();
+            var trip = await trips.GetByIdAsync(tripId, cancellationToken) ?? throw new NotFoundException("Trip not found.");
+            if (trip.Status is TripStatus.Completed or TripStatus.Cancelled) throw new BadRequestException("Only active trips can be cancelled.");
 
             trip.Status = TripStatus.Cancelled;
             trip.CancellationReason = reason;
             if (!string.IsNullOrWhiteSpace(note)) trip.Notes = note.Trim();
             trip.UpdatedAt = DateTime.UtcNow;
             await notifications.TripCancelledAsync(trip, cancellationToken);
-            await db.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
-            var bookingIds = await db.Bookings
-                .Where(booking => booking.TripId == tripId && (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed))
-                .Select(booking => booking.Id)
-                .ToListAsync(cancellationToken);
-            foreach (var bookingId in bookingIds)
+            foreach (var bookingId in await bookings.GetActiveIdsForTripAsync(tripId, cancellationToken))
             {
-                if (await db.Payments.AnyAsync(payment => payment.BookingId == bookingId && payment.Status == PaymentStatus.Succeeded, cancellationToken))
+                // Card refunds need their own transaction, so they run in step 2.
+                if (await payments.HasSucceededForBookingAsync(bookingId, cancellationToken))
                 {
                     cardBookings.Add(bookingId);
                     continue;
                 }
-                var (error, statusCode) = await CancelBookingAsync(bookingId, bookingReason, cancellationToken);
-                // Leaving without committing rolls everything back, so the trip is not cancelled with money still owed.
-                if (error is not null)
-                    return new(false, $"The trip was not cancelled because booking {bookingId} could not be refunded: {error}", statusCode == StatusCodes.Status404NotFound ? StatusCodes.Status409Conflict : statusCode, 0, []);
+
+                try
+                {
+                    await CancelBookingAsync(bookingId, bookingReason, cancellationToken);
+                }
+                catch (AppException exception)
+                {
+                    // A booking that vanished mid-way is a clash with another request, not a missing trip.
+                    var statusCode = exception.StatusCode == StatusCodes.Status404NotFound ? StatusCodes.Status409Conflict : exception.StatusCode;
+                    throw AppException.FromStatusCode(statusCode,
+                        $"The trip was not cancelled because booking {bookingId} could not be refunded: {exception.Message}");
+                }
                 cancelledBookings++;
             }
             await transaction.CommitAsync(cancellationToken);
         }
 
+        // Step 2: refund card bookings. A failed refund leaves that booking confirmed so staff can retry it.
         var unrefunded = new List<Guid>();
         foreach (var bookingId in cardBookings)
         {
-            var (error, _) = await CancelBookingAsync(bookingId, bookingReason, cancellationToken);
-            if (error is null) cancelledBookings++;
-            else
+            try
+            {
+                await CancelBookingAsync(bookingId, bookingReason, cancellationToken);
+                cancelledBookings++;
+            }
+            catch (AppException exception)
             {
                 unrefunded.Add(bookingId);
-                logger.LogWarning("Trip {TripId} was cancelled but the card refund for booking {BookingId} failed: {Error}", tripId, bookingId, error);
+                logger.LogWarning("Trip {TripId} was cancelled but the card refund for booking {BookingId} failed: {Error}", tripId, bookingId, exception.Message);
             }
         }
-        return new(true, null, StatusCodes.Status204NoContent, cancelledBookings, unrefunded);
+        return new TripCancellationResult(cancelledBookings, unrefunded);
+    }
+
+    private static void MarkCancelled(Booking booking, string reason)
+    {
+        booking.Status = BookingStatus.Cancelled;
+        booking.CancellationReason = reason;
+        booking.CancelledAt = DateTime.UtcNow;
+        booking.UpdatedAt = DateTime.UtcNow;
     }
 }

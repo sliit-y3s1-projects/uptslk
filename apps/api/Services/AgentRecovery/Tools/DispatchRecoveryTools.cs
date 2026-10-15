@@ -1,12 +1,11 @@
-using api.Data;
-using api.Entities.Enums;
-using Microsoft.EntityFrameworkCore;
+using api.Interfaces.Repositories;
+using api.Interfaces.Services;
 
 namespace api.Services.AgentRecovery.Tools;
 
 public sealed class DispatchRecoveryTools(
-    AppDbContext db,
-    TripConflictService conflictService) : IDispatchRecoveryTools
+    IDriverRepository drivers,
+    ITripConflictService conflictService) : IDispatchRecoveryTools
 {
     public async Task<FindConflictFreeDriverOutput> FindConflictFreeDriverAsync(
         FindConflictFreeDriverInput input,
@@ -19,14 +18,12 @@ public sealed class DispatchRecoveryTools(
         RecoveryToolInputValidator.RequireId(input.ExcludedTripId, nameof(input.ExcludedTripId));
         RecoveryToolInputValidator.RequirePositive(input.DurationMinutes, nameof(input.DurationMinutes));
 
-        var candidates = await db.Drivers.AsNoTracking()
-            .Where(driver => driver.CentreId == input.CentreId
-                && driver.Id != input.ExcludedDriverId
-                && driver.Status == DriverStatus.Active)
-            .OrderBy(driver => driver.FullName)
-            .Select(driver => new { driver.Id, driver.FullName })
-            .ToListAsync(cancellationToken);
+        // Every other active driver at the centre, by name, so the choice is predictable.
+        var candidates = (await drivers.ListActiveInCentreAsync(input.CentreId, cancellationToken))
+            .Where(driver => driver.Id != input.ExcludedDriverId)
+            .ToList();
 
+        // The first driver with no clash wins.
         foreach (var candidate in candidates)
         {
             var conflicts = await conflictService.FindConflicts(

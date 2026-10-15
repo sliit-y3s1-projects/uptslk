@@ -16,7 +16,7 @@ public sealed class DriverDutyService(
     IIncidentRepository incidents,
     IUnitOfWork unitOfWork,
     ICurrentUserService currentUser,
-    MobileNotificationService notifications) : IDriverDutyService
+    IMobileNotificationService notifications) : IDriverDutyService
 {
     private const string NoDriverRecord = "This account is not linked to a driver record. Contact your centre manager.";
     private const string TripNotFound = "The assigned trip was not found.";

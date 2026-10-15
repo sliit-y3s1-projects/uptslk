@@ -25,6 +25,13 @@ public sealed class IncidentRepository(AppDbContext db) : Repository<Incident>(d
             .Include(incident => incident.Trip)
             .SingleOrDefaultAsync(incident => incident.Id == id, cancellationToken);
 
+    public Task<Incident?> GetForRecoveryAsync(Guid id, CancellationToken cancellationToken = default) =>
+        Set.Include(incident => incident.Trip).ThenInclude(trip => trip!.Route)
+            .Include(incident => incident.Trip).ThenInclude(trip => trip!.Vehicle)
+            .Include(incident => incident.Trip).ThenInclude(trip => trip!.RouteDirection).ThenInclude(direction => direction!.StartCentre)
+            .Include(incident => incident.Trip).ThenInclude(trip => trip!.RouteDirection).ThenInclude(direction => direction!.EndCentre)
+            .SingleOrDefaultAsync(incident => incident.Id == id, cancellationToken);
+
     public Task<bool> ExistsInCentreAsync(Guid id, Guid centreId, CancellationToken cancellationToken = default) =>
         Set.AnyAsync(incident => incident.Id == id && incident.CentreId == centreId, cancellationToken);
 }

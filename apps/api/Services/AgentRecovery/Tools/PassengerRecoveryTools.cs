@@ -1,10 +1,8 @@
-using api.Data;
-using api.Entities.Enums;
-using Microsoft.EntityFrameworkCore;
+using api.Interfaces.Repositories;
 
 namespace api.Services.AgentRecovery.Tools;
 
-public sealed class PassengerRecoveryTools(AppDbContext db) : IPassengerRecoveryTools
+public sealed class PassengerRecoveryTools(IBookingRepository bookings) : IPassengerRecoveryTools
 {
     public async Task<AssessPassengerImpactOutput> AssessPassengerImpactAsync(
         AssessPassengerImpactInput input,
@@ -12,10 +10,8 @@ public sealed class PassengerRecoveryTools(AppDbContext db) : IPassengerRecovery
     {
         RecoveryToolInputValidator.RequireId(input.TripId, nameof(input.TripId));
 
-        var affectedPassengers = await db.Bookings.AsNoTracking()
-            .Where(booking => booking.TripId == input.TripId
-                && (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed))
-            .SumAsync(booking => (int?)booking.PassengerCount, cancellationToken) ?? 0;
+        // Passengers on pending and confirmed bookings are the ones a change affects.
+        var affectedPassengers = await bookings.GetOccupiedCapacityAsync(input.TripId, cancellationToken);
 
         return new AssessPassengerImpactOutput(
             affectedPassengers,

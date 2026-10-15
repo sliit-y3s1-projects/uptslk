@@ -1,7 +1,6 @@
-using api.Data;
-using api.Entities.Enums;
 using api.Entities;
-using Microsoft.EntityFrameworkCore;
+using api.Entities.Enums;
+using api.Interfaces.Repositories;
 
 namespace api.Services.AgentRecovery;
 
@@ -10,7 +9,11 @@ public sealed record PassengerNotificationPreparationResult(
     int Delivered,
     int Failed);
 
-public sealed class PassengerNotificationService(AppDbContext db)
+// Writes the disruption notices passengers see after a recovery plan is approved.
+public sealed class PassengerNotificationService(
+    IBayRepository bays,
+    IBookingRepository bookings,
+    IPassengerNotificationRepository passengerNotifications)
 {
     public async Task<PassengerNotificationPreparationResult> PrepareApprovedRecoveryNotificationsAsync(
         AgentWorkflow workflow,
@@ -20,39 +23,23 @@ public sealed class PassengerNotificationService(AppDbContext db)
         if (!workflow.ApprovalRequests.Any(request => request.Decision == ApprovalDecision.Approved))
             throw new InvalidOperationException("Passenger notifications require an approved recovery workflow.");
 
-        var bayCode = await db.Bays.AsNoTracking()
-            .Where(bay => bay.Id == proposal.BayId)
-            .Select(bay => bay.Code)
-            .SingleOrDefaultAsync(cancellationToken);
-        if (string.IsNullOrWhiteSpace(bayCode))
+        var bay = await bays.GetReadOnlyAsync(proposal.BayId, cancellationToken);
+        if (string.IsNullOrWhiteSpace(bay?.Code))
             throw new InvalidOperationException("Passenger notifications require a valid departure bay.");
 
-        var bookings = await db.Bookings.AsNoTracking()
-            .Include(booking => booking.Passenger)
-            .Where(booking => booking.TripId == workflow.TripId
-                && (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed)
-                && !db.PassengerNotifications.Any(notification =>
-                    notification.WorkflowId == workflow.Id
-                    && notification.BookingId == booking.Id
-                    && notification.Channel == PassengerNotificationChannel.InApp))
-            .OrderBy(booking => booking.CreatedAt)
-            .ToListAsync(cancellationToken);
+        // Skip bookings that were already told, so running this twice does not send duplicates.
+        var affectedBookings = await bookings.GetActiveWithoutRecoveryNoticeAsync(workflow.TripId, workflow.Id, cancellationToken);
 
         var createdAt = DateTime.UtcNow;
-        var notifications = bookings
-            .Select(booking => RecoveryNotificationFactory.Create(
-                workflow,
-                booking,
-                proposal.ScheduledTime,
-                bayCode,
-                createdAt))
+        var notifications = affectedBookings
+            .Select(booking => RecoveryNotificationFactory.Create(workflow, booking, proposal.ScheduledTime, bay.Code, createdAt))
             .ToArray();
-        db.PassengerNotifications.AddRange(notifications);
+        // Saved by the caller together with the rest of the approved recovery.
+        passengerNotifications.AddRange(notifications);
 
         return new PassengerNotificationPreparationResult(
             notifications.Length,
             notifications.Count(notification => notification.Status == PassengerNotificationStatus.Delivered),
             notifications.Count(notification => notification.Status == PassengerNotificationStatus.Failed));
     }
-
 }

@@ -42,9 +42,6 @@ public sealed class RouteRepository(AppDbContext db) : Repository<Route>(db), IR
             .Include(route => route.Directions).ThenInclude(direction => direction.Schedules).ThenInclude(schedule => schedule.Bay)
             .SingleOrDefaultAsync(route => route.Id == id, cancellationToken);
 
-    public Task<Route?> GetReadOnlyAsync(Guid id, CancellationToken cancellationToken = default) =>
-        Set.AsNoTracking().SingleOrDefaultAsync(route => route.Id == id, cancellationToken);
-
     public Task<Guid> GetCentreIdAsync(Guid routeId, CancellationToken cancellationToken = default) =>
         Set.Where(route => route.Id == routeId).Select(route => route.CentreId).SingleAsync(cancellationToken);
 

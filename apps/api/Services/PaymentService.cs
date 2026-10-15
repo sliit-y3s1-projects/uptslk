@@ -10,7 +10,7 @@ using Stripe.Checkout;
 namespace api.Services;
 
 public sealed class PaymentService(
-    BookingPaymentService bookingPayments,
+    IBookingPaymentService bookingPayments,
     IPaymentRepository payments,
     IPassengerRepository passengers,
     ICurrentUserService currentUser,
@@ -20,8 +20,7 @@ public sealed class PaymentService(
 
     public async Task<CheckoutSessionResponse> StartCheckoutAsync(StartCheckoutRequest request, CancellationToken cancellationToken)
     {
-        var (session, error, statusCode) = await bookingPayments.StartCheckoutAsync(request, cancellationToken);
-        if (session is null) throw AppException.FromStatusCode(statusCode, error!);
+        var session = await bookingPayments.StartCheckoutAsync(request, cancellationToken);
         return new CheckoutSessionResponse(session.Url, session.OrderId);
     }
 
@@ -99,8 +98,7 @@ public sealed class PaymentService(
 
     public async Task RequestRefundAsync(Guid bookingId, RequestPaymentRefundRequest request, CancellationToken cancellationToken)
     {
-        var (error, statusCode) = await bookingPayments.RequestRefundAsync(bookingId, request.Reason, cancellationToken);
-        if (error is not null) throw AppException.FromStatusCode(statusCode, error);
+        await bookingPayments.RequestRefundAsync(bookingId, request.Reason, cancellationToken);
     }
 
     private static void EnsureOrderId(string orderId)

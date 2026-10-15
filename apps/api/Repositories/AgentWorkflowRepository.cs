@@ -1,6 +1,7 @@
 using api.Data;
 using api.DTO.AgentRecovery;
 using api.Entities;
+using api.Entities.Enums;
 using api.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,6 +36,21 @@ public sealed class AgentWorkflowRepository(AppDbContext db) : Repository<AgentW
         if (centreId.HasValue) query = query.Where(workflow => workflow.CentreId == centreId.Value);
         return query.SingleOrDefaultAsync(workflow => workflow.Id == id, cancellationToken);
     }
+
+    public Task<bool> HasActiveForIncidentAsync(Guid incidentId, CancellationToken cancellationToken = default) =>
+        Set.AnyAsync(workflow => workflow.IncidentId == incidentId
+            && (workflow.Status == WorkflowStatus.Running || workflow.Status == WorkflowStatus.PausedForApproval), cancellationToken);
+
+    public Task<AgentWorkflow?> GetForDecisionAsync(Guid id, CancellationToken cancellationToken = default) =>
+        Set.Include(workflow => workflow.ApprovalRequests)
+            .Include(workflow => workflow.Trip).ThenInclude(trip => trip.Route)
+            .Include(workflow => workflow.Trip).ThenInclude(trip => trip.RouteDirection)
+            .Include(workflow => workflow.Incident)
+            .SingleOrDefaultAsync(workflow => workflow.Id == id, cancellationToken);
+
+    public void AddStep(AgentStep step) => Db.AgentSteps.Add(step);
+
+    public void AddApprovalRequest(ApprovalRequest approvalRequest) => Db.ApprovalRequests.Add(approvalRequest);
 
     public Task<bool> ExistsInCentreAsync(Guid id, Guid centreId, CancellationToken cancellationToken = default) =>
         Set.AnyAsync(workflow => workflow.Id == id && workflow.CentreId == centreId, cancellationToken);

@@ -8,6 +8,6 @@ public interface IMaintenanceRecordRepository : IRepository<MaintenanceRecord>
     Task<List<MaintenanceRecord>> SearchAsync(MaintenanceRecordFilter filter, CancellationToken cancellationToken = default);
     Task<MaintenanceRecord?> GetWithVehicleAsync(Guid id, bool track = false, CancellationToken cancellationToken = default);
 
-    // Active trips of the record's vehicle that fall on the maintenance day.
-    Task<IReadOnlyList<Guid>> FindConflictingTripIdsAsync(MaintenanceRecord record, CancellationToken cancellationToken = default);
+    // Scheduled or in-progress maintenance for the vehicle.
+    Task<List<MaintenanceRecord>> GetOpenForVehicleAsync(Guid vehicleId, CancellationToken cancellationToken = default);
 }

@@ -19,9 +19,9 @@ public sealed class TripService(
     IBayRepository bays,
     IUnitOfWork unitOfWork,
     ICurrentUserService currentUser,
-    TripConflictService conflicts,
-    BookingCancellationService cancellation,
-    MobileNotificationService notifications) : ITripService
+    ITripConflictService conflicts,
+    IBookingCancellationService cancellation,
+    IMobileNotificationService notifications) : ITripService
 {
     private const string NotFoundMessage = "Trip not found.";
 
@@ -140,11 +140,8 @@ public sealed class TripService(
     }
 
     // Cancelling a trip also cancels every active booking on it and returns the passengers' money.
-    private async Task CancelWithRefundsAsync(Guid tripId, string reason, string? note, CancellationToken cancellationToken)
-    {
-        var result = await cancellation.CancelTripAsync(tripId, reason, note, cancellationToken);
-        if (!result.Cancelled) throw AppException.FromStatusCode(result.StatusCode, result.Error ?? NotFoundMessage);
-    }
+    private Task CancelWithRefundsAsync(Guid tripId, string reason, string? note, CancellationToken cancellationToken) =>
+        cancellation.CancelTripAsync(tripId, reason, note, cancellationToken);
 
     private async Task<Trip> GetManagedTripAsync(Guid tripId, CancellationToken cancellationToken)
     {
@@ -163,12 +160,12 @@ public sealed class TripService(
     private async Task EnsureValidAssignmentAsync(Assignment assignment, CancellationToken cancellationToken)
     {
         var errors = new List<string>();
-        var centre = await centres.GetByIdAsync(assignment.CentreId, cancellationToken);
-        var route = await routes.GetByIdAsync(assignment.RouteId, cancellationToken);
-        var direction = assignment.DirectionId.HasValue ? await directions.GetByIdAsync(assignment.DirectionId.Value, cancellationToken) : null;
-        var vehicle = await vehicles.GetByIdAsync(assignment.VehicleId, cancellationToken);
-        var driver = await drivers.GetByIdAsync(assignment.DriverId, cancellationToken);
-        var bay = await bays.GetByIdAsync(assignment.BayId, cancellationToken);
+        var centre = await centres.GetReadOnlyAsync(assignment.CentreId, cancellationToken);
+        var route = await routes.GetReadOnlyAsync(assignment.RouteId, cancellationToken);
+        var direction = assignment.DirectionId.HasValue ? await directions.GetReadOnlyAsync(assignment.DirectionId.Value, cancellationToken) : null;
+        var vehicle = await vehicles.GetReadOnlyAsync(assignment.VehicleId, cancellationToken);
+        var driver = await drivers.GetReadOnlyAsync(assignment.DriverId, cancellationToken);
+        var bay = await bays.GetReadOnlyAsync(assignment.BayId, cancellationToken);
 
         if (centre is null) errors.Add("The selected centre does not exist.");
         else if (centre.Status != CentreStatus.Operating) errors.Add("Trips can only be scheduled at an operating centre.");

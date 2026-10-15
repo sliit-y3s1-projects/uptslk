@@ -1,26 +1,35 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using api.Data;
-using api.Entities.Enums;
 using api.Entities;
+using api.Entities.Enums;
+using api.Interfaces.Repositories;
+using api.Interfaces.Services;
 using api.Services.AgentRecovery.Planning;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace api.Services.AgentRecovery;
 
+// Runs an incident recovery: plan with the AI planner, run the agents, check the proposal, then wait for a manager.
 public sealed class RecoveryWorkflowService(
-    AppDbContext db,
+    IAgentWorkflowRepository workflows,
+    IIncidentRepository incidents,
+    IBookingRepository bookings,
+    IVehicleRepository vehicles,
+    IDriverRepository drivers,
+    IBayRepository bays,
+    IUnitOfWork unitOfWork,
     RecoveryPlanningService planningService,
     RecoveryAgentRegistry agentRegistry,
     RecoveryProposalComposer proposalComposer,
     RecoveryActionExecutor actionExecutor,
-    TripConflictService conflictService,
-    Microsoft.Extensions.Options.IOptions<AgentAiOptions> agentAiOptions,
+    ITripConflictService conflictService,
+    IOptions<AgentAiOptions> agentAiOptions,
     ILogger<RecoveryWorkflowService> logger)
 {
     private const int AgentTimeoutSeconds = 5;
     private const int MaxAgentRetries = 1;
+    // Departures older than this are history, not something to recover.
     private const int MaximumDepartureAgeMinutes = 120;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -35,12 +44,7 @@ public sealed class RecoveryWorkflowService(
         CancellationToken cancellationToken,
         bool allowFallback = true)
     {
-        var incident = await db.Incidents
-            .Include(item => item.Trip).ThenInclude(trip => trip!.Route)
-            .Include(item => item.Trip).ThenInclude(trip => trip!.Vehicle)
-            .Include(item => item.Trip).ThenInclude(trip => trip!.RouteDirection).ThenInclude(direction => direction!.StartCentre)
-            .Include(item => item.Trip).ThenInclude(trip => trip!.RouteDirection).ThenInclude(direction => direction!.EndCentre)
-            .SingleOrDefaultAsync(item => item.Id == incidentId, cancellationToken);
+        var incident = await incidents.GetForRecoveryAsync(incidentId, cancellationToken);
         if (incident is null) return (null, "The incident does not exist.");
         if (scopedCentreId.HasValue && incident.CentreId != scopedCentreId.Value)
             return (null, "The incident does not exist.");
@@ -48,12 +52,10 @@ public sealed class RecoveryWorkflowService(
         if (incident.Trip.Status is TripStatus.Completed or TripStatus.Cancelled) return (null, "Completed or cancelled trips cannot enter recovery.");
         if (incident.Trip.ScheduledTime.AddMinutes(MaximumDepartureAgeMinutes) < DateTime.UtcNow)
             return (null, "This departure is too far in the past to recover. Choose a current or upcoming trip.");
-        if (await db.AgentWorkflows.AnyAsync(workflow => workflow.IncidentId == incidentId && (workflow.Status == WorkflowStatus.Running || workflow.Status == WorkflowStatus.PausedForApproval), cancellationToken))
+        if (await workflows.HasActiveForIncidentAsync(incidentId, cancellationToken))
             return (null, "This incident already has an active recovery workflow.");
 
-        var affectedPassengers = await db.Bookings
-            .Where(booking => booking.TripId == incident.TripId && (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed))
-            .SumAsync(booking => (int?)booking.PassengerCount, cancellationToken) ?? 0;
+        var affectedPassengers = await bookings.GetOccupiedCapacityAsync(incident.Trip.Id, cancellationToken);
         var workflow = new AgentWorkflow
         {
             CentreId = incident.CentreId,
@@ -62,9 +64,10 @@ public sealed class RecoveryWorkflowService(
             Objective = string.IsNullOrWhiteSpace(objective) ? $"Recover {incident.Trip.Route.RouteNumber} after {incident.Type.ToString().ToLowerInvariant()} incident: {incident.Title}" : objective.Trim(),
             PlanJson = "[]"
         };
-        db.AgentWorkflows.Add(workflow);
-        await db.SaveChangesAsync(cancellationToken);
+        workflows.Add(workflow);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // Plan with the AI planner. When it is unavailable, the safe built-in plan is used if the caller allowed it.
         var planningInput = CreatePlanningInput(workflow, incident, affectedPassengers, agentRegistry.Capabilities);
         RecoveryPlanningResult planningResult;
         try
@@ -73,10 +76,9 @@ public sealed class RecoveryWorkflowService(
         }
         catch (RecoveryPlanningUnavailableException)
         {
-            // Nothing has been planned or executed yet, so drop the empty workflow and let
-            // the caller decide whether to retry or continue with the safe plan.
-            db.AgentWorkflows.Remove(workflow);
-            await db.SaveChangesAsync(CancellationToken.None);
+            // Nothing has run yet, so drop the empty workflow and let the caller retry or choose the safe plan.
+            workflows.Remove(workflow);
+            await unitOfWork.SaveChangesAsync(CancellationToken.None);
             throw;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -85,7 +87,7 @@ public sealed class RecoveryWorkflowService(
             workflow.FailureReason = "Recovery planning was cancelled before a safe plan was created.";
             workflow.UpdatedAt = DateTime.UtcNow;
             workflow.CompletedAt = DateTime.UtcNow;
-            await db.SaveChangesAsync(CancellationToken.None);
+            await unitOfWork.SaveChangesAsync(CancellationToken.None);
             throw;
         }
         ApplyPlanningResult(workflow, planningResult);
@@ -104,6 +106,7 @@ public sealed class RecoveryWorkflowService(
             execution.Errors);
         var failures = composition.Errors.ToList();
 
+        // If the AI plan failed, ask the planner once more with the failures as feedback.
         if (failures.Count > 0
             && planningResult.Mode == "Gemini"
             && workflow.ReplanCount < _agentAiOptions.MaxWorkflowReplans)
@@ -122,14 +125,14 @@ public sealed class RecoveryWorkflowService(
                 workflow.FailureReason = "Recovery replanning was cancelled before a safe revised plan was created.";
                 workflow.UpdatedAt = DateTime.UtcNow;
                 workflow.CompletedAt = DateTime.UtcNow;
-                await db.SaveChangesAsync(CancellationToken.None);
+                await unitOfWork.SaveChangesAsync(CancellationToken.None);
                 throw;
             }
 
             workflow.ReplanCount++;
             AppendReplanAudit(workflow, revisedPlanningResult, failures);
             ApplyReplanningResult(workflow, revisedPlanningResult);
-            await db.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
             if (revisedPlanningResult.Mode == "Gemini")
             {
@@ -169,10 +172,11 @@ public sealed class RecoveryWorkflowService(
             workflow.FailureReason = string.Join(" ", failures.Distinct(StringComparer.Ordinal));
             workflow.UpdatedAt = DateTime.UtcNow;
             workflow.CompletedAt = DateTime.UtcNow;
-            await db.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             return (workflow, null);
         }
 
+        // Deterministic safety checks run before a manager ever sees the proposal.
         var proposal = composition.Proposal
             ?? throw new InvalidOperationException("Proposal composition succeeded without producing a proposal.");
         MarkPlanStep(plan, "Safety Validation", "Running");
@@ -188,7 +192,7 @@ public sealed class RecoveryWorkflowService(
             workflow.ProposalJson = JsonSerializer.Serialize(proposal, JsonOptions);
             workflow.UpdatedAt = DateTime.UtcNow;
             workflow.CompletedAt = DateTime.UtcNow;
-            await db.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             return (workflow, null);
         }
 
@@ -198,10 +202,10 @@ public sealed class RecoveryWorkflowService(
         workflow.ProposalJson = JsonSerializer.Serialize(proposal, JsonOptions);
         workflow.Status = WorkflowStatus.PausedForApproval;
         workflow.UpdatedAt = DateTime.UtcNow;
-        db.ApprovalRequests.Add(new ApprovalRequest { WorkflowId = workflow.Id, Reason = "Approve the validated recovery proposal before any dispatch assignment or passenger notification is applied." });
+        workflows.AddApprovalRequest(new ApprovalRequest { WorkflowId = workflow.Id, Reason = "Approve the validated recovery proposal before any dispatch assignment or passenger notification is applied." });
         incident.Status = IncidentStatus.InProgress;
         incident.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return (workflow, null);
     }
 
@@ -213,11 +217,7 @@ public sealed class RecoveryWorkflowService(
         Guid? scopedCentreId,
         CancellationToken cancellationToken)
     {
-        var workflow = await db.AgentWorkflows.Include(item => item.ApprovalRequests)
-            .Include(item => item.Trip).ThenInclude(trip => trip.Route)
-            .Include(item => item.Trip).ThenInclude(trip => trip.RouteDirection)
-            .Include(item => item.Incident)
-            .SingleOrDefaultAsync(item => item.Id == workflowId, cancellationToken);
+        var workflow = await workflows.GetForDecisionAsync(workflowId, cancellationToken);
         if (workflow is null) return (null, "The recovery workflow does not exist.");
         if (scopedCentreId.HasValue && workflow.CentreId != scopedCentreId.Value)
             return (null, "The recovery workflow does not exist.");
@@ -235,10 +235,11 @@ public sealed class RecoveryWorkflowService(
             workflow.FailureReason = "Recovery proposal rejected by the approving manager.";
             workflow.CompletedAt = DateTime.UtcNow;
             workflow.UpdatedAt = DateTime.UtcNow;
-            await db.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             return (workflow, null);
         }
 
+        // Check the proposal again at approval time, because the fleet may have changed while it waited.
         var proposal = JsonSerializer.Deserialize<RecoveryProposal>(workflow.ProposalJson ?? "", JsonOptions);
         if (proposal is null) return (null, "The approved workflow has no valid recovery proposal.");
         var approvalValidation = await ValidateProposalAsync(workflow.Trip, proposal, "Approval", cancellationToken);
@@ -251,7 +252,7 @@ public sealed class RecoveryWorkflowService(
             workflow.FailureReason = string.Join(" ", validationErrors);
             workflow.CompletedAt = DateTime.UtcNow;
             workflow.UpdatedAt = DateTime.UtcNow;
-            await db.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             return (workflow, null);
         }
 
@@ -264,11 +265,10 @@ public sealed class RecoveryWorkflowService(
     {
         var results = new List<ValidationResult>();
         var checkedAt = DateTime.UtcNow;
-        var vehicle = await db.Vehicles.AsNoTracking()
-            .Include(item => item.MaintenanceRecords)
-            .SingleOrDefaultAsync(item => item.Id == proposal.VehicleId, cancellationToken);
-        var driver = await db.Drivers.AsNoTracking().SingleOrDefaultAsync(item => item.Id == proposal.DriverId, cancellationToken);
-        var bay = await db.Bays.AsNoTracking().SingleOrDefaultAsync(item => item.Id == proposal.BayId, cancellationToken);
+        // Read the resources fresh, because they may have changed since the agents looked at them.
+        var vehicle = await vehicles.GetWithMaintenanceAsync(proposal.VehicleId, cancellationToken);
+        var driver = await drivers.GetReadOnlyAsync(proposal.DriverId, cancellationToken);
+        var bay = await bays.GetReadOnlyAsync(proposal.BayId, cancellationToken);
         results.Add(Check(phase, "Vehicle active at centre", vehicle is not null && vehicle.Status == VehicleStatus.Active && vehicle.CentreId == trip.CentreId, "The proposed vehicle is no longer active at this centre.", checkedAt));
         var maintenanceClear = vehicle is not null && !vehicle.MaintenanceRecords.Any(record =>
             VehicleMaintenanceRules.BlocksTrip(record, proposal.ScheduledTime,
@@ -300,7 +300,7 @@ public sealed class RecoveryWorkflowService(
         var plan = CreateExecutionPlan(generatedPlan, agentRegistry);
         workflow.PlanJson = JsonSerializer.Serialize(plan, JsonOptions);
         workflow.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var recommendations = new Dictionary<RecoveryAgentId, AgentRecommendation>();
         var stepOutcomes = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
@@ -318,7 +318,7 @@ public sealed class RecoveryWorkflowService(
                 executionErrors.Add(error);
                 stepOutcomes[plannedStep.StepId] = false;
                 MarkPlanStep(plan, agent.Name, "Skipped");
-                db.AgentSteps.Add(new AgentStep
+                workflows.AddStep(new AgentStep
                 {
                     WorkflowId = workflow.Id,
                     AgentName = agent.Name,
@@ -344,7 +344,7 @@ public sealed class RecoveryWorkflowService(
                 recommendations[agent.Id] = result.Execution.Recommendation;
                 stepOutcomes[plannedStep.StepId] = true;
                 MarkPlanStep(plan, agent.Name, "Completed");
-                db.AgentSteps.Add(new AgentStep
+                workflows.AddStep(new AgentStep
                 {
                     WorkflowId = workflow.Id,
                     AgentName = agent.Name,
@@ -361,7 +361,7 @@ public sealed class RecoveryWorkflowService(
                 executionErrors.Add(error);
                 stepOutcomes[plannedStep.StepId] = false;
                 MarkPlanStep(plan, agent.Name, "Failed");
-                db.AgentSteps.Add(new AgentStep
+                workflows.AddStep(new AgentStep
                 {
                     WorkflowId = workflow.Id,
                     AgentName = agent.Name,
@@ -405,7 +405,7 @@ public sealed class RecoveryWorkflowService(
             workflow.FailureReason = "Recovery agent execution was cancelled before the assessment completed.";
             workflow.UpdatedAt = DateTime.UtcNow;
             workflow.CompletedAt = DateTime.UtcNow;
-            await db.SaveChangesAsync(CancellationToken.None);
+            await unitOfWork.SaveChangesAsync(CancellationToken.None);
             throw;
         }
     }
@@ -417,7 +417,7 @@ public sealed class RecoveryWorkflowService(
     {
         workflow.PlanJson = JsonSerializer.Serialize(plan, JsonOptions);
         workflow.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     private static RecoveryPlanningInput CreatePlanningInput(

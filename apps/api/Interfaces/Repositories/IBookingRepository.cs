@@ -9,6 +9,20 @@ public interface IBookingRepository : IRepository<Booking>
     Task<List<Booking>> GetTicketsForUserAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<List<Booking>> SearchAsync(BookingFilter filter, CancellationToken cancellationToken = default);
     Task<Booking?> GetWithDetailsAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Booking?> GetWithPassengerAsync(Guid id, CancellationToken cancellationToken = default);
+
+    // Pending and confirmed bookings on the trip, with their passenger.
+    Task<List<Booking>> GetActiveForTripWithPassengerAsync(Guid tripId, CancellationToken cancellationToken = default);
+    // Loads the booking for cancelling, with its payments and the passenger's wallet.
+    Task<Booking?> GetForCancellationAsync(Guid id, CancellationToken cancellationToken = default);
+
+    // Loads the booking for a card refund, with its payments and their refunds.
+    Task<Booking?> GetWithPaymentsAndRefundsAsync(Guid id, CancellationToken cancellationToken = default);
+
+    // Ids of the pending and confirmed bookings on the trip.
+    Task<List<Guid>> GetActiveIdsForTripAsync(Guid tripId, CancellationToken cancellationToken = default);
+    // Active bookings on the trip that have not yet had an in-app notice from this recovery workflow, oldest first.
+    Task<List<Booking>> GetActiveWithoutRecoveryNoticeAsync(Guid tripId, Guid workflowId, CancellationToken cancellationToken = default);
     Task<Booking?> GetWithTripAsync(Guid id, CancellationToken cancellationToken = default);
 
     // Seats taken by pending and confirmed bookings on the trip.

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 using api.Tests.Shared;
+using api.Data;
 namespace api.Tests.AgentRecovery;
 
 public sealed class RecoveryActionExecutorIntegrationTests
@@ -82,8 +83,8 @@ public sealed class RecoveryActionExecutorIntegrationTests
         await database.Context.SaveChangesAsync();
 
         var executor = new RecoveryActionExecutor(
-            database.Context,
-            new PassengerNotificationService(database.Context),
+            new UnitOfWork(database.Context),
+            TestServices.PassengerNotices(database.Context),
             RecordingNotificationPublisher.ServiceFor(database.Context));
         await executor.ExecuteAsync(workflow, approval, proposal, CancellationToken.None);
 
@@ -124,8 +125,8 @@ public sealed class RecoveryActionExecutorIntegrationTests
             0,
             []);
         var executor = new RecoveryActionExecutor(
-            database.Context,
-            new PassengerNotificationService(database.Context),
+            new UnitOfWork(database.Context),
+            TestServices.PassengerNotices(database.Context),
             RecordingNotificationPublisher.ServiceFor(database.Context));
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>

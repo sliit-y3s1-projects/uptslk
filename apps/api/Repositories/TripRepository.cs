@@ -47,11 +47,28 @@ public sealed class TripRepository(AppDbContext db) : Repository<Trip>(db), ITri
     public Task<Trip?> GetWithRouteAsync(Guid id, CancellationToken cancellationToken = default) =>
         Set.AsNoTracking().Include(trip => trip.Route).SingleOrDefaultAsync(trip => trip.Id == id, cancellationToken);
 
+    public Task<Trip?> GetWithRouteAndBayAsync(Guid id, CancellationToken cancellationToken = default) =>
+        Set.AsNoTracking().Include(trip => trip.Route).Include(trip => trip.Bay).SingleOrDefaultAsync(trip => trip.Id == id, cancellationToken);
+
     public Task<Trip?> GetWithVehicleAndRouteAsync(Guid id, bool track = false, CancellationToken cancellationToken = default)
     {
         var query = track ? Set : Set.AsNoTracking();
         return query.Include(trip => trip.Vehicle).Include(trip => trip.Route).SingleOrDefaultAsync(trip => trip.Id == id, cancellationToken);
     }
+
+    public Task<List<Trip>> GetActiveForVehicleAsync(Guid vehicleId, CancellationToken cancellationToken = default) =>
+        Active(Set.AsNoTracking())
+            .Include(trip => trip.Route)
+            .Include(trip => trip.RouteDirection)
+            .Where(trip => trip.VehicleId == vehicleId)
+            .ToListAsync(cancellationToken);
+
+    public Task<List<Trip>> GetActiveUsingAnyAsync(Guid vehicleId, Guid driverId, Guid bayId, Guid? excludedTripId, CancellationToken cancellationToken = default) =>
+        Active(Set.AsNoTracking())
+            .Include(trip => trip.Route)
+            .Where(trip => (!excludedTripId.HasValue || trip.Id != excludedTripId.Value)
+                && (trip.VehicleId == vehicleId || trip.DriverId == driverId || trip.BayId == bayId))
+            .ToListAsync(cancellationToken);
 
     public Task<bool> ExistsAtAsync(Guid routeId, Guid? directionId, DateTime scheduledTime, CancellationToken cancellationToken = default) =>
         Set.AnyAsync(trip => trip.RouteId == routeId && trip.RouteDirectionId == directionId && trip.ScheduledTime == scheduledTime, cancellationToken);
@@ -92,4 +109,8 @@ public sealed class TripRepository(AppDbContext db) : Repository<Trip>(db), ITri
         var end = SriLankaTime.DayStartUtc(date.AddDays(1));
         return query.Where(trip => trip.ScheduledTime >= start && trip.ScheduledTime < end);
     }
+
+    // Trips that still hold a vehicle, driver and bay.
+    private static IQueryable<Trip> Active(IQueryable<Trip> query) =>
+        query.Where(trip => trip.Status != TripStatus.Completed && trip.Status != TripStatus.Cancelled);
 }
