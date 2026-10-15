@@ -1,5 +1,6 @@
 using api.Data;
 using api.Entities;
+using api.Interfaces.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +8,7 @@ namespace api.Common.Extensions;
 
 public static class DatabaseServiceExtensions
 {
-    // EF Core with PostgreSQL, plus ASP.NET Identity stored in the same database.
+    // EF Core with PostgreSQL, ASP.NET Identity in the same database, and the unit of work.
     public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<AppDbContext>(options =>
@@ -22,6 +23,8 @@ public static class DatabaseServiceExtensions
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
+
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;
     }
