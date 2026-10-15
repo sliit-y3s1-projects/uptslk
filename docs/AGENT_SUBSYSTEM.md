@@ -972,12 +972,12 @@ Measures will include:
 - Token usage and estimated model cost.
 - Human approval completion rate.
 
-The versioned evaluation dataset and runner are located in `apps/api.Evaluation`. The runner supports a repeatable deterministic baseline and an optional live Gemini mode. Both modes evaluate the same expected specialist set and deterministic approval-ready or safe-failure outcome. Results are written as JSON for analysis and Markdown for direct inclusion in the final report.
+The versioned evaluation dataset and runner are located in `apps/backend/api.Evaluation`. The runner supports a repeatable deterministic baseline and an optional live Gemini mode. Both modes evaluate the same expected specialist set and deterministic approval-ready or safe-failure outcome. Results are written as JSON for analysis and Markdown for direct inclusion in the final report.
 
 Run the baseline from the repository root:
 
 ```bash
-dotnet run --project apps/api.Evaluation -- \
+dotnet run --project apps/backend/api.Evaluation -- \
   --mode baseline \
   --output docs/evaluation/results/recovery-evaluation-baseline
 ```
@@ -985,7 +985,7 @@ dotnet run --project apps/api.Evaluation -- \
 Run the live provider evaluation only after configuring `GEMINI_API_KEY` locally:
 
 ```bash
-dotnet run --project apps/api.Evaluation -- \
+dotnet run --project apps/backend/api.Evaluation -- \
   --mode gemini \
   --output docs/evaluation/results/recovery-evaluation-gemini
 ```

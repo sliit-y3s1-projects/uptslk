@@ -4,7 +4,7 @@
 
 This evaluation package measures the UPTSLK recovery planner and deterministic safety boundary against a stable set of incident scenarios. It provides repeatable evidence for the Agentic AI evaluation report.
 
-The dataset is stored at `apps/api.Evaluation/Scenarios/recovery-evaluation-v1.json`. It currently covers:
+The dataset is stored at `apps/backend/api.Evaluation/Scenarios/recovery-evaluation-v1.json`. It currently covers:
 
 - Breakdown with valid replacement resources.
 - Insufficient vehicle capacity.
@@ -24,7 +24,7 @@ The dataset is stored at `apps/api.Evaluation/Scenarios/recovery-evaluation-v1.j
 The baseline evaluates `SafeRecoveryPlanFactory`, the policy validator, and the proposal composer without contacting an external model.
 
 ```bash
-dotnet run --project apps/api.Evaluation -- \
+dotnet run --project apps/backend/api.Evaluation -- \
   --mode baseline \
   --output docs/evaluation/results/recovery-evaluation-baseline
 ```
@@ -38,7 +38,7 @@ The Gemini mode sends each scenario through the configured Gemini planner and ev
 ```bash
 export GEMINI_API_KEY="your-local-key"
 
-dotnet run --project apps/api.Evaluation -- \
+dotnet run --project apps/backend/api.Evaluation -- \
   --mode gemini \
   --output docs/evaluation/results/recovery-evaluation-gemini
 ```

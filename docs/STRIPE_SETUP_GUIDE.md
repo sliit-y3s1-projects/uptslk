@@ -4,7 +4,7 @@ UPTS uses Stripe Checkout for commuter bookings. The API owns fare calculation, 
 
 ## Configuration
 
-Put test credentials in `apps/api/appsettings.Development.json` for this university project. Do not commit live keys.
+Put test credentials in `apps/backend/api/appsettings.Development.json` for this university project. Do not commit live keys.
 
 ```json
 "Payments": {
@@ -23,7 +23,7 @@ Put test credentials in `apps/api/appsettings.Development.json` for this univers
 1. Apply the migration and start the API:
 
    ```bash
-   cd apps/api
+   cd apps/backend/api
    dotnet ef database update
    dotnet run
    ```

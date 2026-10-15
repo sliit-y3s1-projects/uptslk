@@ -1,6 +1,6 @@
 # api.Tests – backend test suite
 
-Run everything: `cd apps && dotnet test api.Tests/api.Tests.csproj`
+Run everything: `cd apps/backend && dotnet test api.Tests/api.Tests.csproj`
 Single area: `dotnet test api.Tests/api.Tests.csproj --filter "FullyQualifiedName~api.Tests.Fleet"`
 Coverage: `dotnet test api.Tests/api.Tests.csproj --settings api.Tests/coverage.runsettings --results-directory api.Tests/TestResults/cov` then `reportgenerator` (report committed in `docs/testing/coverage-report/`).
 Results (TRX): `dotnet test api.Tests/api.Tests.csproj --logger "trx;LogFileName=results.trx"` → `api.Tests/TestResults/`

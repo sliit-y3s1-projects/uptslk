@@ -7,7 +7,7 @@
 *.userosscache
 *.sln.docstates
 
-apps/api/appsettings.Development.json
+apps/backend/api/appsettings.Development.json
 
 *.db
 *.db-shm

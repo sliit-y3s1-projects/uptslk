@@ -85,13 +85,13 @@ Services never return error codes. They throw:
 ## Adding a feature
 
 1. Add the entity to `Entities/`, its configuration to `Data/Configurations/`, and a `DbSet` to `AppDbContext`.
-2. Discuss the schema change with the team, then run `dotnet ef migrations add <DescriptiveName>` from `apps/api`.
+2. Discuss the schema change with the team, then run `dotnet ef migrations add <DescriptiveName>` from `apps/backend/api`.
 3. Add request, response and filter types to `DTO/<Feature>/`.
 4. Add `IXRepository` in `Interfaces/Repositories/` and `XRepository : Repository<X>` in `Repositories/`. Only add query methods the service needs, named by intent (`GetActiveForRouteAsync`, not `Query`).
 5. Add `IXService` in `Interfaces/Services/` and `XService` in `Services/`. Throw exceptions for every failure.
 6. Register both in `Common/Extensions/ApplicationServiceExtensions.cs`, in alphabetical order.
 7. Add a controller where every action is one service call.
-8. Run `dotnet build` and the tests in `apps/api.Tests`.
+8. Run `dotnet build` and the tests in `apps/backend/api.Tests`.
 
 ## Locks and transactions
 

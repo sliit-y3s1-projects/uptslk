@@ -11,7 +11,7 @@ pnpm test:coverage    # coverage report in ./coverage (open coverage/index.html)
 
 ## Where tests go
 
-One folder per team member's component, the same names as the backend test folders in `apps/api.Tests`:
+One folder per team member's component, the same names as the backend test folders in `apps/backend/api.Tests`:
 
 | Folder | Component | Owner |
 | --- | --- | --- |
