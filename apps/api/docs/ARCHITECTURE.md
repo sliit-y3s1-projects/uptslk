@@ -93,13 +93,27 @@ Services never return error codes. They throw:
 7. Add a controller where every action is one service call.
 8. Run `dotnet build` and the tests in `apps/api.Tests`.
 
-## Known exceptions to the rules
+## Locks and transactions
 
-These older services still use `AppDbContext` directly. The tests build them with a `DbContext`, so moving them to repositories also means updating the tests.
+Some actions must not run twice at the same time, such as booking the last seat or refunding the same booking. They follow one pattern:
 
-- `TripConflictService` and `VehicleMaintenanceRules` (trip and maintenance clash checks)
-- `BookingCancellationService` and `BookingPaymentService` (cancellations, refunds and Stripe payments)
-- `MobileNotificationService` (in-app notifications)
-- The tools and workflow in `Services/AgentRecovery/`
+1. Open a transaction with `IUnitOfWork.BeginTransactionAsync`.
+2. Lock the row with `repository.LockAsync(id)` or `repository.LockAndReloadAsync(entity)`. Parallel requests on the same row now wait for each other.
+3. Read the data again and re-check the rules, because it may have changed while the request waited.
+4. Save, then commit.
 
-New code should not copy this pattern.
+Where this pattern is used today:
+
+| Where | What it protects |
+| --- | --- |
+| `BookingService.CreateAsync` | Locks the trip and the wallet, so a trip is never oversold and money is never spent twice. |
+| `BookingPaymentService.StartCheckoutAsync` | Locks the trip while a pending card booking holds its seats. |
+| `BookingPaymentService.RequestRefundAsync` | Locks the booking, so the payment provider is never asked to refund it twice. |
+| `BookingCancellationService` | Locks the trip, booking and wallet, so a cancellation refunds exactly once. |
+| `PassengerService.TopUpWalletAsync` | Locks the wallet, so parallel top-ups all count. |
+
+Add child rows (steps, approvals, transactions) through their own repository method, never through a parent's collection. New rows already have a Guid key, so EF would treat a row added to a collection as an existing row and try to update it.
+
+## Tests
+
+Most tests call the API over HTTP. Tests that call a service directly build it with `api.Tests/Shared/TestServices.cs`, which creates the real repositories on the test database.
