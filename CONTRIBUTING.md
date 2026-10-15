@@ -74,12 +74,12 @@ From the repository root:
 docker compose up -d
 ```
 
-PostgreSQL is exposed on port `5433` with the development database configured in `apps/api/appsettings.Development.json`.
+PostgreSQL is exposed on port `5433` with the development database configured in `apps/backend/api/appsettings.Development.json`.
 
 ### Backend
 
 ```bash
-cd apps/api
+cd apps/backend/api
 dotnet restore
 dotnet ef database update
 dotnet run

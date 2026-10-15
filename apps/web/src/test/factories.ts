@@ -1,6 +1,6 @@
 import type { User } from "@/types/auth";
 
-/** Roles the API issues (UserRole enum in apps/api). */
+/** Roles the API issues (UserRole enum in apps/backend/api). */
 export const ROLES = ["Admin", "CentreManager", "Dispatcher", "FleetOfficer", "Driver", "Commuter"] as const;
 export type Role = (typeof ROLES)[number];
 

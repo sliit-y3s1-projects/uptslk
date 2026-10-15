@@ -64,9 +64,10 @@ Stripe, Supabase, and Gemini are external providers. Their secret keys belong in
 
 ```text
 apps/
-  api/             ASP.NET Core API, domain models, services, and migrations
-  api.Tests/       Unit and integration tests
-  api.Evaluation/  Agent recovery dataset and evaluation runner
+  backend/
+    api/             ASP.NET Core API (controllers, services, repositories, entities, migrations)
+    api.Tests/       Unit and integration tests
+    api.Evaluation/  Agent recovery dataset and evaluation runner
   web/             React and TypeScript web platform
   mobile/          Flutter passenger and driver application
 docs/               Architecture, module, provider, and evaluation documentation

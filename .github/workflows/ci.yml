@@ -20,13 +20,13 @@ jobs:
           dotnet-version: "8.0.x"
 
       - name: Restore dependencies
-        run: dotnet restore apps/api/api.csproj
+        run: dotnet restore apps/backend/api/api.csproj
 
       - name: Build API
-        run: dotnet build apps/api/api.csproj --configuration Release --no-restore
+        run: dotnet build apps/backend/api/api.csproj --configuration Release --no-restore
 
       # - name: Run tests
-      #   run: dotnet test apps/api/api.csproj --no-build --verbosity normal
+      #   run: dotnet test apps/backend/api.Tests/api.Tests.csproj --verbosity normal
 
   frontend-check:
     runs-on: ubuntu-latest

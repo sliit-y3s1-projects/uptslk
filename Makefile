@@ -1,6 +1,7 @@
 SHELL := /usr/bin/env bash
 
-API_DIR := apps/api
+BACKEND_DIR := apps/backend
+API_DIR := $(BACKEND_DIR)/api
 WEB_DIR := apps/web
 
 .DEFAULT_GOAL := help
