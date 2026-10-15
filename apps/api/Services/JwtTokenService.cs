@@ -1,3 +1,4 @@
+using api.Common.Constants;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -25,7 +26,7 @@ public class JwtTokenService
             new(ClaimTypes.Name, user.Name),
             new(ClaimTypes.Role, user.Role.ToString())
         };
-        if (user.CentreId.HasValue) claims.Add(new Claim("centre_id", user.CentreId.Value.ToString()));
+        if (user.CentreId.HasValue) claims.Add(new Claim(AppClaims.CentreId, user.CentreId.Value.ToString()));
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

@@ -1,3 +1,4 @@
+using api.Common.Constants;
 using api.Data;
 using api.DTOs;
 using api.Enums;
@@ -15,7 +16,7 @@ namespace api.Controllers;
 [Route("api/v1/bookings")]
 public class BookingsController(AppDbContext db, BookingCancellationService cancellation) : ControllerBase
 {
-    [Authorize(Roles = "Commuter")]
+    [Authorize(Roles = AppRoles.Commuter)]
     [HttpGet("me")]
     public async Task<IActionResult> ListForCurrentUser(CancellationToken cancellationToken)
     {
@@ -54,7 +55,7 @@ public class BookingsController(AppDbContext db, BookingCancellationService canc
             }));
     }
 
-    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+    [Authorize(Roles = AppRoles.DispatchStaff)]
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] Guid? passengerId, [FromQuery] Guid? tripId, [FromQuery] BookingStatus? status)
     {
@@ -70,7 +71,7 @@ public class BookingsController(AppDbContext db, BookingCancellationService canc
         return Ok(bookings.Select(ToListItem));
     }
 
-    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+    [Authorize(Roles = AppRoles.DispatchStaff)]
     [HttpGet("{bookingId:guid}")]
     public async Task<IActionResult> Get(Guid bookingId)
     {
@@ -79,7 +80,7 @@ public class BookingsController(AppDbContext db, BookingCancellationService canc
         return Ok(ToDetail(booking));
     }
 
-    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+    [Authorize(Roles = AppRoles.DispatchStaff)]
     [HttpPost]
     public async Task<IActionResult> Create(CreateBookingRequest request)
     {
@@ -139,7 +140,7 @@ public class BookingsController(AppDbContext db, BookingCancellationService canc
     }
 
     [HttpPost("me")]
-    [Authorize(Roles = "Commuter")]
+    [Authorize(Roles = AppRoles.Commuter)]
     public async Task<IActionResult> CreateForCurrentUser(CreateMyBookingRequest request)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -156,7 +157,7 @@ public class BookingsController(AppDbContext db, BookingCancellationService canc
         });
     }
 
-    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+    [Authorize(Roles = AppRoles.DispatchStaff)]
     [HttpPatch("{bookingId:guid}/status")]
     public async Task<IActionResult> UpdateStatus(Guid bookingId, UpdateBookingStatusRequest request)
     {
@@ -170,7 +171,7 @@ public class BookingsController(AppDbContext db, BookingCancellationService canc
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+    [Authorize(Roles = AppRoles.DispatchStaff)]
     [HttpDelete("{bookingId:guid}")]
     public async Task<IActionResult> Cancel(Guid bookingId, CancelBookingRequest request)
     {
@@ -188,7 +189,7 @@ public class BookingsController(AppDbContext db, BookingCancellationService canc
         return Ok(new { capacity = trip.Vehicle.Capacity, occupied, available = Math.Max(0, trip.Vehicle.Capacity - occupied), isFull = occupied >= trip.Vehicle.Capacity });
     }
 
-    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+    [Authorize(Roles = AppRoles.DispatchStaff)]
     [HttpGet("trips/{tripId:guid}/manifest")]
     public async Task<IActionResult> Manifest(Guid tripId)
     {

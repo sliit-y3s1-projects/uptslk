@@ -1,3 +1,5 @@
+using api.Common.Extensions;
+using api.Common.Constants;
 using Microsoft.AspNetCore.Authorization;
 using api.Data;
 using api.DTOs;
@@ -47,7 +49,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return Ok(ToDetail(route));
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpPost]
     public async Task<IActionResult> Create(CreateRouteRequest request)
     {
@@ -100,7 +102,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return CreatedAtAction(nameof(Get), new { routeId = route.Id }, new { route.Id, route.CentreId, route.RouteNumber, route.Name });
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpPut("{routeId:guid}")]
     public async Task<IActionResult> Update(Guid routeId, UpdateRouteRequest request)
     {
@@ -123,7 +125,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpDelete("{routeId:guid}")]
     public async Task<IActionResult> Archive(Guid routeId)
     {
@@ -137,7 +139,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpPost("{routeId:guid}/reactivate")]
     public async Task<IActionResult> Reactivate(Guid routeId)
     {
@@ -161,7 +163,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return Ok(directions.Select(ToDirection));
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpPost("{routeId:guid}/directions")]
     public async Task<IActionResult> CreateDirection(Guid routeId, CreateRouteDirectionRequest request)
     {
@@ -178,7 +180,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return CreatedAtAction(nameof(ListDirections), new { routeId }, ToDirection(await LoadDirection(direction.Id, true) ?? direction));
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpPut("directions/{directionId:guid}")]
     public async Task<IActionResult> UpdateDirection(Guid directionId, UpdateRouteDirectionRequest request)
     {
@@ -231,7 +233,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return Ok(schedules);
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpPost("{routeId:guid}/schedules")]
     public async Task<IActionResult> CreateSchedule(Guid routeId, CreateRouteScheduleRequest request)
     {
@@ -267,7 +269,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return CreatedAtAction(nameof(ListSchedules), new { routeId }, new { schedule.Id, schedule.RouteId, schedule.RouteDirectionId, schedule.BayId, BayCode = bay.Code, schedule.FirstDeparture, schedule.LastDeparture, schedule.HeadwayMinutes, schedule.OperatingDays, schedule.IsActive });
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpPut("schedules/{scheduleId:guid}")]
     public async Task<IActionResult> UpdateSchedule(Guid scheduleId, UpdateRouteScheduleRequest request)
     {
@@ -291,7 +293,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpDelete("schedules/{scheduleId:guid}")]
     public async Task<IActionResult> DeactivateSchedule(Guid scheduleId)
     {
@@ -305,7 +307,7 @@ public class RoutesController(AppDbContext db, TripConflictService conflictServi
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpPost("schedules/{scheduleId:guid}/generate-trips")]
     public async Task<IActionResult> GenerateTrips(Guid scheduleId, GenerateScheduleTripsRequest request)
     {

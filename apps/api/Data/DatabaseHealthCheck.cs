@@ -1,7 +1,6 @@
-using api.Data;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace api.Services;
+namespace api.Data;
 
 public class DatabaseHealthCheck(AppDbContext db) : IHealthCheck
 {

@@ -1,3 +1,4 @@
+using api.Common.Constants;
 using api.Data;
 using api.DTOs;
 using api.Enums;
@@ -12,7 +13,7 @@ namespace api.Controllers;
 
 [ApiController]
 [Route("api/v1/incidents")]
-[Authorize(Roles = "Admin,CentreManager,Dispatcher,FleetOfficer")]
+[Authorize(Roles = AppRoles.OperationsStaff)]
 public class IncidentsController(AppDbContext db, MobileNotificationService notifications) : ControllerBase
 {
     [HttpGet]
@@ -126,12 +127,12 @@ public class IncidentsController(AppDbContext db, MobileNotificationService noti
 
     private bool TryGetScopedCentre(out Guid? centreId)
     {
-        if (User.IsInRole("Admin"))
+        if (User.IsInRole(AppRoles.Admin))
         {
             centreId = null;
             return true;
         }
-        var hasCentre = Guid.TryParse(User.FindFirstValue("centre_id"), out var parsedCentreId);
+        var hasCentre = Guid.TryParse(User.FindFirstValue(AppClaims.CentreId), out var parsedCentreId);
         centreId = hasCentre ? parsedCentreId : null;
         return hasCentre;
     }

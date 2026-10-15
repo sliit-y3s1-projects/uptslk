@@ -1,3 +1,4 @@
+using api.Common.Constants;
 using api.Data;
 using api.DTOs;
 using api.Enums;
@@ -9,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace api.Controllers;
 
 [ApiController]
-[Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+[Authorize(Roles = AppRoles.DispatchStaff)]
 [Route("api/v1/support-requests")]
 public class SupportRequestsController(AppDbContext db) : ControllerBase
 {

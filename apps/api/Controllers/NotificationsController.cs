@@ -1,3 +1,4 @@
+using api.Common.Constants;
 using System.Security.Claims;
 using api.Data;
 using api.DTOs;
@@ -9,7 +10,7 @@ namespace api.Controllers;
 
 [ApiController]
 [Route("api/v1/notifications")]
-[Authorize(Roles = "Commuter,Driver")]
+[Authorize(Roles = AppRoles.CommuterOrDriver)]
 public sealed class NotificationsController(AppDbContext db) : ControllerBase
 {
     [HttpGet]

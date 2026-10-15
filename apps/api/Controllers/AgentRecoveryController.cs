@@ -1,3 +1,4 @@
+using api.Common.Constants;
 using System.Security.Claims;
 using System.Text.Json;
 using api.Data;
@@ -14,7 +15,7 @@ namespace api.Controllers;
 
 [ApiController]
 [Route("api/v1/agent-recovery")]
-[Authorize(Roles = "Admin,CentreManager,Dispatcher,FleetOfficer")]
+[Authorize(Roles = AppRoles.OperationsStaff)]
 public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService recoveryWorkflows) : ControllerBase
 {
     [HttpGet("workflows")]
@@ -94,7 +95,7 @@ public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService re
     }
 
     [HttpPost("workflows")]
-    [EnableRateLimiting("AgentRecoveryStart")]
+    [EnableRateLimiting(RateLimitPolicies.AgentRecoveryStart)]
     public async Task<IActionResult> Start(StartRecoveryWorkflowRequest request, CancellationToken cancellationToken)
     {
         if (!RecoveryAccessScope.TryCreate(User, out var accessScope)) return Forbid();
@@ -130,8 +131,8 @@ public class AgentRecoveryController(AppDbContext db, RecoveryWorkflowService re
     }
 
     [HttpPost("workflows/{workflowId:guid}/approval")]
-    [Authorize(Roles = "Admin,CentreManager")]
-    [EnableRateLimiting("AgentRecoveryApproval")]
+    [Authorize(Roles = AppRoles.Managers)]
+    [EnableRateLimiting(RateLimitPolicies.AgentRecoveryApproval)]
     public async Task<IActionResult> Decide(Guid workflowId, DecideRecoveryApprovalRequest request, CancellationToken cancellationToken)
     {
         if (!RecoveryAccessScope.TryCreate(User, out var accessScope)) return Forbid();

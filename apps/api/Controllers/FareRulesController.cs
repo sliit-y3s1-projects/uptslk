@@ -1,3 +1,5 @@
+using api.Common.Extensions;
+using api.Common.Constants;
 using api.Services;
 using api.Data;
 using api.DTOs;
@@ -33,7 +35,7 @@ public class FareRulesController(AppDbContext db) : ControllerBase
         });
     }
 
-    [Authorize(Roles = "Commuter")]
+    [Authorize(Roles = AppRoles.Commuter)]
     [HttpGet("quote/me")]
     public async Task<IActionResult> QuoteForCurrentUser([FromQuery] Guid tripId)
     {
@@ -87,7 +89,7 @@ public class FareRulesController(AppDbContext db) : ControllerBase
         });
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpPost]
     public async Task<IActionResult> Create(CreateFareRuleRequest request)
     {
@@ -102,7 +104,7 @@ public class FareRulesController(AppDbContext db) : ControllerBase
         return CreatedAtAction(nameof(Get), new { fareRuleId = rule.Id }, new { rule.Id, rule.RouteId, rule.Amount, rule.IsActive });
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpPut("{fareRuleId:guid}")]
     public async Task<IActionResult> Update(Guid fareRuleId, UpdateFareRuleRequest request)
     {
@@ -117,7 +119,7 @@ public class FareRulesController(AppDbContext db) : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpDelete("{fareRuleId:guid}")]
     public async Task<IActionResult> Deactivate(Guid fareRuleId)
     {

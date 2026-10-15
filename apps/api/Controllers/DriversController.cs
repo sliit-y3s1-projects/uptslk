@@ -1,3 +1,5 @@
+using api.Common.Extensions;
+using api.Common.Constants;
 using api.Data;
 using api.DTOs;
 using api.Enums;
@@ -15,7 +17,7 @@ namespace api.Controllers;
 [Route("api/v1/drivers")]
 public class DriversController(AppDbContext db, UserManager<User> userManager, MobileNotificationService notifications) : ControllerBase
 {
-    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+    [Authorize(Roles = AppRoles.DispatchStaff)]
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] Guid? centreId, [FromQuery] DriverStatus? status, [FromQuery] string? search)
     {
@@ -44,7 +46,7 @@ public class DriversController(AppDbContext db, UserManager<User> userManager, M
         return Ok(drivers);
     }
 
-    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+    [Authorize(Roles = AppRoles.DispatchStaff)]
     [HttpGet("{driverId:guid}")]
     public async Task<IActionResult> Get(Guid driverId)
     {
@@ -66,7 +68,7 @@ public class DriversController(AppDbContext db, UserManager<User> userManager, M
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     public async Task<IActionResult> Create(CreateDriverRequest request)
     {
         if (!await db.Centres.AnyAsync(centre => centre.Id == request.CentreId)) return BadRequest(new { error = "The selected centre does not exist." });
@@ -110,7 +112,7 @@ public class DriversController(AppDbContext db, UserManager<User> userManager, M
     }
 
     [HttpPut("{driverId:guid}")]
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     public async Task<IActionResult> Update(Guid driverId, UpdateDriverRequest request)
     {
         var driver = await db.Drivers.FindAsync(driverId);
@@ -142,7 +144,7 @@ public class DriversController(AppDbContext db, UserManager<User> userManager, M
     }
 
     [HttpDelete("{driverId:guid}")]
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     public async Task<IActionResult> Deactivate(Guid driverId)
     {
         var driver = await db.Drivers.FindAsync(driverId);
@@ -166,7 +168,7 @@ public class DriversController(AppDbContext db, UserManager<User> userManager, M
     }
 
     [HttpGet("me")]
-    [Authorize(Roles = "Driver")]
+    [Authorize(Roles = AppRoles.Driver)]
     public async Task<IActionResult> Me()
     {
         var driver = await CurrentDriverQuery().SingleOrDefaultAsync();
@@ -187,7 +189,7 @@ public class DriversController(AppDbContext db, UserManager<User> userManager, M
     }
 
     [HttpGet("me/trips")]
-    [Authorize(Roles = "Driver")]
+    [Authorize(Roles = AppRoles.Driver)]
     public async Task<IActionResult> MyTrips([FromQuery] DateOnly? date, [FromQuery] DateOnly? fromDate, [FromQuery] DateOnly? toDate)
     {
         var driver = await CurrentDriverQuery().SingleOrDefaultAsync();
@@ -238,7 +240,7 @@ public class DriversController(AppDbContext db, UserManager<User> userManager, M
     }
 
     [HttpPatch("me/trips/{tripId:guid}/status")]
-    [Authorize(Roles = "Driver")]
+    [Authorize(Roles = AppRoles.Driver)]
     public async Task<IActionResult> UpdateMyTripStatus(Guid tripId, UpdateTripStatusRequest request)
     {
         var driver = await CurrentDriverQuery().SingleOrDefaultAsync();
@@ -262,7 +264,7 @@ public class DriversController(AppDbContext db, UserManager<User> userManager, M
     }
 
     [HttpPost("me/trips/{tripId:guid}/incidents")]
-    [Authorize(Roles = "Driver")]
+    [Authorize(Roles = AppRoles.Driver)]
     public async Task<IActionResult> ReportIncident(Guid tripId, ReportDriverIncidentRequest request)
     {
         var driver = await CurrentDriverQuery().SingleOrDefaultAsync();
@@ -304,9 +306,9 @@ public class DriversController(AppDbContext db, UserManager<User> userManager, M
 
     private bool CanManageCentre(Guid centreId)
     {
-        if (User.IsInRole(UserRole.Admin.ToString())) return true;
-        var claim = User.FindFirstValue("centre_id");
-        return User.IsInRole(UserRole.CentreManager.ToString()) && Guid.TryParse(claim, out var assignedCentreId) && assignedCentreId == centreId;
+        if (User.IsInRole(AppRoles.Admin)) return true;
+        var claim = User.FindFirstValue(AppClaims.CentreId);
+        return User.IsInRole(AppRoles.CentreManager) && Guid.TryParse(claim, out var assignedCentreId) && assignedCentreId == centreId;
     }
 
     private static bool CanDriverTransition(TripStatus from, TripStatus to) => (from, to) switch

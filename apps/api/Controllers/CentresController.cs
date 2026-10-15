@@ -1,3 +1,5 @@
+using api.Common.Extensions;
+using api.Common.Constants;
 using api.Services;
 using Microsoft.AspNetCore.Authorization;
 using api.Data;
@@ -70,7 +72,7 @@ public class CentresController(AppDbContext db) : ControllerBase
         });
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpPost]
     public async Task<IActionResult> Create(CreateCentreRequest request)
     {
@@ -92,7 +94,7 @@ public class CentresController(AppDbContext db) : ControllerBase
         return CreatedAtAction(nameof(Get), new { centreId = centre.Id }, new { centre.Id, centre.Code, centre.Name, centre.Status });
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpPut("{centreId:guid}")]
     public async Task<IActionResult> Update(Guid centreId, UpdateCentreRequest request)
     {
@@ -111,7 +113,7 @@ public class CentresController(AppDbContext db) : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpDelete("{centreId:guid}")]
     public async Task<IActionResult> Close(Guid centreId)
     {
@@ -139,7 +141,7 @@ public class CentresController(AppDbContext db) : ControllerBase
         return Ok(bays);
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpPost("{centreId:guid}/bays")]
     public async Task<IActionResult> CreateBay(Guid centreId, CreateBayRequest request)
     {
@@ -163,7 +165,7 @@ public class CentresController(AppDbContext db) : ControllerBase
         return Ok(new { bay.Id, bay.CentreId, bay.Code, bay.Name, bay.Status });
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpPut("bays/{bayId:guid}")]
     public async Task<IActionResult> UpdateBay(Guid bayId, UpdateBayRequest request)
     {
@@ -182,7 +184,7 @@ public class CentresController(AppDbContext db) : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,CentreManager")]
+    [Authorize(Roles = AppRoles.Managers)]
     [HttpDelete("bays/{bayId:guid}")]
     public async Task<IActionResult> DeactivateBay(Guid bayId)
     {

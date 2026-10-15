@@ -1,3 +1,4 @@
+using api.Common.Constants;
 using System.Security.Claims;
 
 namespace api.Services.AgentRecovery;
@@ -10,13 +11,13 @@ public sealed record RecoveryAccessScope(bool IsAdmin, Guid? CentreId)
         ClaimsPrincipal principal,
         out RecoveryAccessScope scope)
     {
-        if (principal.IsInRole("Admin"))
+        if (principal.IsInRole(AppRoles.Admin))
         {
             scope = new RecoveryAccessScope(true, null);
             return true;
         }
 
-        if (Guid.TryParse(principal.FindFirstValue("centre_id"), out var centreId))
+        if (Guid.TryParse(principal.FindFirstValue(AppClaims.CentreId), out var centreId))
         {
             scope = new RecoveryAccessScope(false, centreId);
             return true;

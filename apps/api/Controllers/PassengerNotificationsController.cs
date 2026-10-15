@@ -1,3 +1,4 @@
+using api.Common.Constants;
 using System.Security.Claims;
 using api.Data;
 using api.Enums;
@@ -9,7 +10,7 @@ namespace api.Controllers;
 
 [ApiController]
 [Route("api/v1/passenger-notifications")]
-[Authorize(Roles = "Commuter")]
+[Authorize(Roles = AppRoles.Commuter)]
 public sealed class PassengerNotificationsController(AppDbContext db) : ControllerBase
 {
     [HttpGet]

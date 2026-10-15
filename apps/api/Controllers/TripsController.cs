@@ -1,3 +1,5 @@
+using api.Common.Extensions;
+using api.Common.Constants;
 using Microsoft.AspNetCore.Authorization;
 using api.Data;
 using api.DTOs;
@@ -93,7 +95,7 @@ public class TripsController(
         return Ok(ToDetail(trip));
     }
 
-    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+    [Authorize(Roles = AppRoles.DispatchStaff)]
     [HttpPost]
     public async Task<IActionResult> Create(CreateTripRequest request)
     {
@@ -119,7 +121,7 @@ public class TripsController(
         return CreatedAtAction(nameof(Get), new { tripId = trip.Id }, new { trip.Id, trip.CentreId, trip.RouteId, trip.ScheduledTime, trip.Status });
     }
 
-    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+    [Authorize(Roles = AppRoles.DispatchStaff)]
     [HttpPut("{tripId:guid}")]
     public async Task<IActionResult> Update(Guid tripId, UpdateTripRequest request)
     {
@@ -146,7 +148,7 @@ public class TripsController(
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+    [Authorize(Roles = AppRoles.DispatchStaff)]
     [HttpPost("{tripId:guid}/reassign")]
     public async Task<IActionResult> Reassign(Guid tripId, ReassignTripRequest request)
     {
@@ -170,7 +172,7 @@ public class TripsController(
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+    [Authorize(Roles = AppRoles.DispatchStaff)]
     [HttpPatch("{tripId:guid}/status")]
     public async Task<IActionResult> UpdateStatus(Guid tripId, UpdateTripStatusRequest request)
     {
@@ -191,7 +193,7 @@ public class TripsController(
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+    [Authorize(Roles = AppRoles.DispatchStaff)]
     [HttpDelete("{tripId:guid}")]
     public async Task<IActionResult> Cancel(Guid tripId, CancelTripRequest request)
     {

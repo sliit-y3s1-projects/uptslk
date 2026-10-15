@@ -1,3 +1,4 @@
+using api.Common.Constants;
 using api.Data;
 using api.DTOs;
 using api.Enums;
@@ -18,7 +19,7 @@ public class PaymentsController(
     BookingPaymentService bookingPayments,
     IConfiguration configuration) : ControllerBase
 {
-    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+    [Authorize(Roles = AppRoles.DispatchStaff)]
     [HttpPost("checkout")]
     public async Task<IActionResult> StartCheckout(StartCheckoutRequest request, CancellationToken cancellationToken)
     {
@@ -27,7 +28,7 @@ public class PaymentsController(
         return Ok(new { url = session.Url, orderId = session.OrderId });
     }
 
-    [Authorize(Roles = "Commuter")]
+    [Authorize(Roles = AppRoles.Commuter)]
     [HttpPost("checkout/me")]
     public async Task<IActionResult> StartCheckoutForCurrentUser(CreateMyBookingRequest request, CancellationToken cancellationToken)
     {
@@ -117,7 +118,7 @@ public class PaymentsController(
         return Redirect(MobileAppUrl("payment-cancel", orderId));
     }
 
-    [Authorize(Roles = "Admin,CentreManager,Dispatcher")]
+    [Authorize(Roles = AppRoles.DispatchStaff)]
     [HttpPost("bookings/{bookingId:guid}/refund")]
     public async Task<IActionResult> Refund(Guid bookingId, RequestPaymentRefundRequest request, CancellationToken cancellationToken)
     {

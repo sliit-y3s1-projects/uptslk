@@ -1,3 +1,5 @@
+using api.Common.Extensions;
+using api.Common.Constants;
 using api.Data;
 using api.DTOs;
 using api.Enums;
@@ -59,7 +61,7 @@ public class MaintenanceRecordsController(AppDbContext db) : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,CentreManager,FleetOfficer")]
+    [Authorize(Roles = AppRoles.FleetStaff)]
     public async Task<IActionResult> Create(CreateMaintenanceRecordRequest request)
     {
         var vehicle = await db.Vehicles.FindAsync(request.VehicleId);
@@ -84,7 +86,7 @@ public class MaintenanceRecordsController(AppDbContext db) : ControllerBase
     }
 
     [HttpPut("{recordId:guid}")]
-    [Authorize(Roles = "Admin,CentreManager,FleetOfficer")]
+    [Authorize(Roles = AppRoles.FleetStaff)]
     public async Task<IActionResult> Update(Guid recordId, UpdateMaintenanceRecordRequest request)
     {
         var record = await db.MaintenanceRecords.Include(item => item.Vehicle).SingleOrDefaultAsync(item => item.Id == recordId);
@@ -113,7 +115,7 @@ public class MaintenanceRecordsController(AppDbContext db) : ControllerBase
     }
 
     [HttpDelete("{recordId:guid}")]
-    [Authorize(Roles = "Admin,CentreManager,FleetOfficer")]
+    [Authorize(Roles = AppRoles.FleetStaff)]
     public async Task<IActionResult> Cancel(Guid recordId)
     {
         var record = await db.MaintenanceRecords.Include(item => item.Vehicle).SingleOrDefaultAsync(item => item.Id == recordId);
@@ -127,5 +129,5 @@ public class MaintenanceRecordsController(AppDbContext db) : ControllerBase
     }
 
     private bool CanManageCentre(Guid centreId) =>
-        User.IsInRole("Admin") || Guid.TryParse(User.FindFirstValue("centre_id"), out var assignedCentreId) && assignedCentreId == centreId;
+        User.IsInRole(AppRoles.Admin) || Guid.TryParse(User.FindFirstValue(AppClaims.CentreId), out var assignedCentreId) && assignedCentreId == centreId;
 }

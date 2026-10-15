@@ -1,3 +1,5 @@
+using api.Common.Extensions;
+using api.Common.Constants;
 using api.Data;
 using api.DTOs;
 using api.Enums;
@@ -73,7 +75,7 @@ public class VehiclesController(
         });
     }
 
-    [Authorize(Roles = "Admin,CentreManager,FleetOfficer")]
+    [Authorize(Roles = AppRoles.FleetStaff)]
     [HttpPost]
     public async Task<IActionResult> Create(CreateVehicleRequest request)
     {
@@ -99,7 +101,7 @@ public class VehiclesController(
         return CreatedAtAction(nameof(Get), new { vehicleId = vehicle.Id }, new { vehicle.Id, vehicle.CentreId, vehicle.PlateNumber, vehicle.Model, vehicle.Status, vehicle.ImageUrl });
     }
 
-    [Authorize(Roles = "Admin,CentreManager,FleetOfficer")]
+    [Authorize(Roles = AppRoles.FleetStaff)]
     [HttpPut("{vehicleId:guid}")]
     public async Task<IActionResult> Update(Guid vehicleId, UpdateVehicleRequest request)
     {
@@ -123,7 +125,7 @@ public class VehiclesController(
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,CentreManager,FleetOfficer")]
+    [Authorize(Roles = AppRoles.FleetStaff)]
     [HttpDelete("{vehicleId:guid}")]
     public async Task<IActionResult> Deactivate(Guid vehicleId)
     {
@@ -138,7 +140,7 @@ public class VehiclesController(
     }
 
     [HttpPost("{vehicleId:guid}/image")]
-    [Authorize(Roles = "Admin,CentreManager,FleetOfficer")]
+    [Authorize(Roles = AppRoles.FleetStaff)]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(6 * 1024 * 1024)]
     public async Task<IActionResult> UploadImage(
@@ -154,9 +156,9 @@ public class VehiclesController(
             cancellationToken);
         if (vehicle is null) return NotFound();
 
-        if (!User.IsInRole(nameof(UserRole.Admin)))
+        if (!User.IsInRole(AppRoles.Admin))
         {
-            var centreClaim = User.FindFirst("centre_id")?.Value;
+            var centreClaim = User.FindFirst(AppClaims.CentreId)?.Value;
             if (!Guid.TryParse(centreClaim, out var centreId) || centreId != vehicle.CentreId)
                 return Forbid();
         }

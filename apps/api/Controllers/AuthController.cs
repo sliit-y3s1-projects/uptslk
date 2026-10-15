@@ -1,3 +1,4 @@
+using api.Common.Constants;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -112,15 +113,15 @@ public class AuthController : ControllerBase
     public IActionResult Logout()
     {
         var cookieOptions = CreateAuthCookieOptions();
-        Response.Cookies.Delete("upts_access_token", cookieOptions);
-        Response.Cookies.Delete("upts_refresh_token", cookieOptions);
+        Response.Cookies.Delete(AuthCookies.AccessToken, cookieOptions);
+        Response.Cookies.Delete(AuthCookies.RefreshToken, cookieOptions);
         return NoContent();
     }
 
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh()
     {
-        var refresh = Request.Cookies["upts_refresh_token"];
+        var refresh = Request.Cookies[AuthCookies.RefreshToken];
         if (string.IsNullOrWhiteSpace(refresh)) return Unauthorized();
         try
         {
@@ -262,7 +263,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("create-user")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> CreateUser(CreateUserRequest req)
     {
         if (!Enum.TryParse<UserRole>(req.Role, true, out var role))
@@ -288,7 +289,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("users")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Users([FromQuery] bool staffOnly = false)
     {
         var query = _userManager.Users.AsNoTracking();
@@ -303,7 +304,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPatch("users/{id:guid}/centre")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> AssignCentre(Guid id, AssignUserCentreRequest request)
     {
         var user = await _userManager.FindByIdAsync(id.ToString());
@@ -324,7 +325,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPatch("users/{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> UpdateUserDetails(Guid id, UpdateUserDetailsRequest request)
     {
         var name = request.Name?.Trim();
@@ -360,7 +361,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPatch("users/{id:guid}/status")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> SetStatus(Guid id, [FromBody] bool isActive)
     {
         var user = await _userManager.FindByIdAsync(id.ToString());
@@ -372,7 +373,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("users/{id:guid}/reset-password")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> ResetPassword(Guid id, [FromBody] string newPassword)
     {
         if (string.IsNullOrWhiteSpace(newPassword)) return BadRequest(new { error = "A new password is required" });
@@ -391,11 +392,11 @@ public class AuthController : ControllerBase
         var access = _jwtService.GenerateToken(user);
         var refresh = _jwtService.GenerateToken(user, TimeSpan.FromDays(30));
         Response.Cookies.Append(
-            "upts_access_token",
+            AuthCookies.AccessToken,
             access,
             CreateAuthCookieOptions(DateTimeOffset.UtcNow.AddHours(8)));
         Response.Cookies.Append(
-            "upts_refresh_token",
+            AuthCookies.RefreshToken,
             refresh,
             CreateAuthCookieOptions(DateTimeOffset.UtcNow.AddDays(30)));
     }
