@@ -271,12 +271,24 @@ function SelectField({
   onValueChange?: (value: string) => void;
   options: { value: string; label: string }[];
 }) {
+  const [picked, setPicked] = useState<string>();
+  // Keep the user's choice while it is still offered, otherwise fall back to the saved value or the first option.
+  const current =
+    [picked, value].find((candidate) =>
+      options.some((option) => option.value === candidate),
+    ) ??
+    options[0]?.value ??
+    null;
   return (
     <Field label={label}>
       <Select
         name={name}
-        value={value || options[0]?.value || null}
-        onValueChange={(selected) => onValueChange?.(String(selected ?? ""))}
+        value={current}
+        onValueChange={(selected) => {
+          const next = String(selected ?? "");
+          setPicked(next);
+          onValueChange?.(next);
+        }}
         itemToStringLabel={(selected) =>
           options.find((option) => option.value === selected)?.label ?? selected
         }
