@@ -14,6 +14,7 @@ public static class ApplicationServiceExtensions
 {
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
+        services.AddScoped<IBayRepository, BayRepository>();
         services.AddScoped<ICentreRepository, CentreRepository>();
         services.AddScoped<IFareRuleRepository, FareRuleRepository>();
         services.AddScoped<IIncidentRepository, IncidentRepository>();
@@ -35,12 +36,14 @@ public static class ApplicationServiceExtensions
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         // Feature services used by the controllers.
+        services.AddScoped<ICentreService, CentreService>();
         services.AddScoped<IFareRuleService, FareRuleService>();
         services.AddScoped<IIncidentService, IncidentService>();
         services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
         services.AddScoped<IPassengerNotificationQueryService, PassengerNotificationQueryService>();
         services.AddScoped<ISupportRequestService, SupportRequestService>();
         services.AddScoped<IUserNotificationService, UserNotificationService>();
+        services.AddScoped<IVehicleService, VehicleService>();
 
         // Shared services used by other services.
         services.AddScoped<JwtTokenService>();

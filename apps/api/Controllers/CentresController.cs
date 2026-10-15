@@ -1,202 +1,76 @@
-using api.Common.Extensions;
 using api.Common.Constants;
-using Microsoft.AspNetCore.Authorization;
-using api.Data;
 using api.DTO.Centres;
-using api.Entities.Enums;
-using api.Entities;
+using api.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace api.Controllers;
 
 [ApiController]
 [Route("api/v1/centres")]
-public class CentresController(AppDbContext db) : ControllerBase
+public class CentresController(ICentreService centres) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] CentreStatus? status, [FromQuery] string? district, [FromQuery] string? search, [FromQuery] bool includeClosed = false)
-    {
-        var query = db.Centres.AsNoTracking().AsQueryable();
-
-        if (!includeClosed && !status.HasValue) query = query.Where(centre => centre.Status != CentreStatus.Closed);
-
-        if (status.HasValue) query = query.Where(centre => centre.Status == status.Value);
-        if (!string.IsNullOrWhiteSpace(district)) query = query.Where(centre => centre.District == district.Trim());
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var term = search.Trim().ToLower();
-            query = query.Where(centre => centre.Code.ToLower().Contains(term) || centre.Name.ToLower().Contains(term) || centre.City.ToLower().Contains(term));
-        }
-
-        var centres = await query
-            .OrderBy(centre => centre.Name)
-            .Select(centre => new
-            {
-                centre.Id,
-                centre.Code,
-                centre.Name,
-                centre.City,
-                centre.District,
-                centre.Status,
-                BayCount = centre.Bays.Count,
-                RouteCount = centre.Routes.Count(route => route.IsActive)
-            })
-            .ToListAsync();
-
-        return Ok(centres);
-    }
+    public async Task<ActionResult<IReadOnlyList<CentreListItemResponse>>> List([FromQuery] CentreFilter filter, CancellationToken cancellationToken) =>
+        Ok(await centres.ListAsync(filter, cancellationToken));
 
     [HttpGet("{centreId:guid}")]
-    public async Task<IActionResult> Get(Guid centreId)
-    {
-        var centre = await db.Centres.AsNoTracking()
-            .Include(item => item.Bays)
-            .Include(item => item.Routes)
-            .SingleOrDefaultAsync(item => item.Id == centreId);
-
-        if (centre is null) return NotFound();
-
-        return Ok(new
-        {
-            centre.Id,
-            centre.Code,
-            centre.Name,
-            centre.City,
-            centre.District,
-            centre.Description,
-            centre.Status,
-            Bays = centre.Bays.OrderBy(bay => bay.Code).Select(bay => new { bay.Id, bay.Code, bay.Name, bay.Status }),
-            Routes = centre.Routes.OrderBy(route => route.RouteNumber).Select(route => new { route.Id, route.RouteNumber, route.Name, route.Origin, route.Destination, route.IsActive })
-        });
-    }
+    public async Task<ActionResult<CentreResponse>> Get(Guid centreId, CancellationToken cancellationToken) =>
+        Ok(await centres.GetAsync(centreId, cancellationToken));
 
     [Authorize(Roles = AppRoles.Managers)]
     [HttpPost]
-    public async Task<IActionResult> Create(CreateCentreRequest request)
+    public async Task<ActionResult<CentreCreatedResponse>> Create(CreateCentreRequest request, CancellationToken cancellationToken)
     {
-        var code = NormalizeCode(request.Code);
-        if (await db.Centres.AnyAsync(centre => centre.Code == code)) return Conflict(new { error = "A centre with this code already exists." });
-
-        var centre = new Centre
-        {
-            Code = code,
-            Name = request.Name.Trim(),
-            City = request.City.Trim(),
-            District = request.District.Trim(),
-            Description = CleanOptional(request.Description),
-            Status = request.Status
-        };
-
-        db.Centres.Add(centre);
-        await db.SaveChangesAsync();
-        return CreatedAtAction(nameof(Get), new { centreId = centre.Id }, new { centre.Id, centre.Code, centre.Name, centre.Status });
+        var created = await centres.CreateAsync(request, cancellationToken);
+        return CreatedAtAction(nameof(Get), new { centreId = created.Id }, created);
     }
 
     [Authorize(Roles = AppRoles.Managers)]
     [HttpPut("{centreId:guid}")]
-    public async Task<IActionResult> Update(Guid centreId, UpdateCentreRequest request)
+    public async Task<IActionResult> Update(Guid centreId, UpdateCentreRequest request, CancellationToken cancellationToken)
     {
-        var centre = await db.Centres.FindAsync(centreId);
-        if (centre is null) return NotFound();
-        if (!User.CanManageCentre(centre.Id)) return Forbid();
-
-        centre.Name = request.Name.Trim();
-        centre.City = request.City.Trim();
-        centre.District = request.District.Trim();
-        centre.Description = CleanOptional(request.Description);
-        centre.Status = request.Status;
-        centre.UpdatedAt = DateTime.UtcNow;
-
-        await db.SaveChangesAsync();
+        await centres.UpdateAsync(centreId, request, cancellationToken);
         return NoContent();
     }
 
     [Authorize(Roles = AppRoles.Managers)]
     [HttpDelete("{centreId:guid}")]
-    public async Task<IActionResult> Close(Guid centreId)
+    public async Task<IActionResult> Close(Guid centreId, CancellationToken cancellationToken)
     {
-        var centre = await db.Centres.FindAsync(centreId);
-        if (centre is null) return NotFound();
-        if (!User.CanManageCentre(centre.Id)) return Forbid();
-
-        centre.Status = CentreStatus.Closed;
-        centre.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync();
+        await centres.CloseAsync(centreId, cancellationToken);
         return NoContent();
     }
 
     [HttpGet("{centreId:guid}/bays")]
-    public async Task<IActionResult> ListBays(Guid centreId)
-    {
-        if (!await db.Centres.AnyAsync(centre => centre.Id == centreId)) return NotFound();
-
-        var bays = await db.Bays.AsNoTracking()
-            .Where(bay => bay.CentreId == centreId)
-            .OrderBy(bay => bay.Code)
-            .Select(bay => new { bay.Id, bay.CentreId, bay.Code, bay.Name, bay.Status })
-            .ToListAsync();
-
-        return Ok(bays);
-    }
+    public async Task<ActionResult<IReadOnlyList<BayResponse>>> ListBays(Guid centreId, CancellationToken cancellationToken) =>
+        Ok(await centres.ListBaysAsync(centreId, cancellationToken));
 
     [Authorize(Roles = AppRoles.Managers)]
     [HttpPost("{centreId:guid}/bays")]
-    public async Task<IActionResult> CreateBay(Guid centreId, CreateBayRequest request)
+    public async Task<ActionResult<BayResponse>> CreateBay(Guid centreId, CreateBayRequest request, CancellationToken cancellationToken)
     {
-        if (!await db.Centres.AnyAsync(centre => centre.Id == centreId)) return NotFound();
-        if (!User.CanManageCentre(centreId)) return Forbid();
-
-        var code = NormalizeCode(request.Code);
-        if (await db.Bays.AnyAsync(bay => bay.CentreId == centreId && bay.Code == code)) return Conflict(new { error = "A bay with this code already exists at this centre." });
-
-        var bay = new Bay { CentreId = centreId, Code = code, Name = CleanOptional(request.Name), Status = request.Status };
-        db.Bays.Add(bay);
-        await db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetBay), new { bayId = bay.Id }, new { bay.Id, bay.CentreId, bay.Code, bay.Name, bay.Status });
+        var created = await centres.CreateBayAsync(centreId, request, cancellationToken);
+        return CreatedAtAction(nameof(GetBay), new { bayId = created.Id }, created);
     }
 
     [HttpGet("bays/{bayId:guid}")]
-    public async Task<IActionResult> GetBay(Guid bayId)
-    {
-        var bay = await db.Bays.AsNoTracking().SingleOrDefaultAsync(item => item.Id == bayId);
-        if (bay is null) return NotFound();
-        return Ok(new { bay.Id, bay.CentreId, bay.Code, bay.Name, bay.Status });
-    }
+    public async Task<ActionResult<BayResponse>> GetBay(Guid bayId, CancellationToken cancellationToken) =>
+        Ok(await centres.GetBayAsync(bayId, cancellationToken));
 
     [Authorize(Roles = AppRoles.Managers)]
     [HttpPut("bays/{bayId:guid}")]
-    public async Task<IActionResult> UpdateBay(Guid bayId, UpdateBayRequest request)
+    public async Task<IActionResult> UpdateBay(Guid bayId, UpdateBayRequest request, CancellationToken cancellationToken)
     {
-        var bay = await db.Bays.FindAsync(bayId);
-        if (bay is null) return NotFound();
-        if (!User.CanManageCentre(bay.CentreId)) return Forbid();
-
-        var code = NormalizeCode(request.Code);
-        if (await db.Bays.AnyAsync(item => item.Id != bayId && item.CentreId == bay.CentreId && item.Code == code)) return Conflict(new { error = "A bay with this code already exists at this centre." });
-
-        bay.Code = code;
-        bay.Name = CleanOptional(request.Name);
-        bay.Status = request.Status;
-        bay.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync();
+        await centres.UpdateBayAsync(bayId, request, cancellationToken);
         return NoContent();
     }
 
     [Authorize(Roles = AppRoles.Managers)]
     [HttpDelete("bays/{bayId:guid}")]
-    public async Task<IActionResult> DeactivateBay(Guid bayId)
+    public async Task<IActionResult> DeactivateBay(Guid bayId, CancellationToken cancellationToken)
     {
-        var bay = await db.Bays.FindAsync(bayId);
-        if (bay is null) return NotFound();
-        if (!User.CanManageCentre(bay.CentreId)) return Forbid();
-
-        bay.Status = BayStatus.OutOfService;
-        bay.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync();
+        await centres.DeactivateBayAsync(bayId, cancellationToken);
         return NoContent();
     }
-
-    private static string NormalizeCode(string value) => value.Trim().ToUpperInvariant();
-    private static string? CleanOptional(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
