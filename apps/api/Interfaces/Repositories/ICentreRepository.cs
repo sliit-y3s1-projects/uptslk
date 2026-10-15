@@ -9,4 +9,5 @@ public interface ICentreRepository : IRepository<Centre>
     Task<List<Centre>> SearchAsync(CentreFilter filter, CancellationToken cancellationToken = default);
     Task<Centre?> GetWithBaysAndRoutesAsync(Guid id, CancellationToken cancellationToken = default);
     Task<bool> CodeExistsAsync(string code, CancellationToken cancellationToken = default);
+    Task<int> CountExistingAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
 }

@@ -32,6 +32,12 @@ public sealed class VehicleRepository(AppDbContext db) : Repository<Vehicle>(db)
             .Include(vehicle => vehicle.MaintenanceRecords)
             .SingleOrDefaultAsync(vehicle => vehicle.Id == id, cancellationToken);
 
+    public Task<List<Vehicle>> ListActiveInCentreAsync(Guid centreId, CancellationToken cancellationToken = default) =>
+        Set.AsNoTracking()
+            .Where(vehicle => vehicle.CentreId == centreId && vehicle.Status == VehicleStatus.Active)
+            .OrderBy(vehicle => vehicle.PlateNumber)
+            .ToListAsync(cancellationToken);
+
     public Task<bool> PlateNumberExistsAsync(string plateNumber, Guid? exceptVehicleId = null, CancellationToken cancellationToken = default) =>
         Set.AnyAsync(vehicle => vehicle.PlateNumber == plateNumber && vehicle.Id != exceptVehicleId, cancellationToken);
 }

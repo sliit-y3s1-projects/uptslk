@@ -26,6 +26,8 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IRouteDirectionRepository, RouteDirectionRepository>();
         services.AddScoped<IRouteRepository, RouteRepository>();
+        services.AddScoped<IRouteScheduleRepository, RouteScheduleRepository>();
+        services.AddScoped<IRouteStopRepository, RouteStopRepository>();
         services.AddScoped<ISupportRequestRepository, SupportRequestRepository>();
         services.AddScoped<ITripRepository, TripRepository>();
         services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
@@ -51,6 +53,8 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IPassengerNotificationQueryService, PassengerNotificationQueryService>();
         services.AddScoped<IPassengerService, PassengerService>();
         services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<IRouteScheduleService, RouteScheduleService>();
+        services.AddScoped<IRouteService, RouteService>();
         services.AddScoped<ISupportRequestService, SupportRequestService>();
         services.AddScoped<ITripService, TripService>();
         services.AddScoped<IUserNotificationService, UserNotificationService>();

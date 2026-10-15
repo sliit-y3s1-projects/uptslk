@@ -12,6 +12,7 @@ public interface ITripRepository : IRepository<Trip>
     Task<Trip?> GetWithDetailsAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Trip?> GetWithRouteAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Trip?> GetWithVehicleAndRouteAsync(Guid id, bool track = false, CancellationToken cancellationToken = default);
+    Task<bool> ExistsAtAsync(Guid routeId, Guid? directionId, DateTime scheduledTime, CancellationToken cancellationToken = default);
     Task<bool> ExistsInCentreAsync(Guid tripId, Guid centreId, CancellationToken cancellationToken = default);
     Task<Trip?> GetForDriverAsync(Guid tripId, Guid driverId, bool track = false, CancellationToken cancellationToken = default);
 

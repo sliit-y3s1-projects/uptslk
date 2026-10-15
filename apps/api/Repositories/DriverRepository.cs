@@ -25,6 +25,12 @@ public sealed class DriverRepository(AppDbContext db) : Repository<Driver>(db), 
     public Task<Driver?> GetWithDetailsAsync(Guid id, CancellationToken cancellationToken = default) =>
         WithDetails().SingleOrDefaultAsync(driver => driver.Id == id, cancellationToken);
 
+    public Task<List<Driver>> ListActiveInCentreAsync(Guid centreId, CancellationToken cancellationToken = default) =>
+        Set.AsNoTracking()
+            .Where(driver => driver.CentreId == centreId && driver.Status == DriverStatus.Active)
+            .OrderBy(driver => driver.FullName)
+            .ToListAsync(cancellationToken);
+
     public Task<bool> LicenseNumberExistsAsync(string licenseNumber, CancellationToken cancellationToken = default) =>
         Set.AnyAsync(driver => driver.LicenseNumber == licenseNumber, cancellationToken);
 

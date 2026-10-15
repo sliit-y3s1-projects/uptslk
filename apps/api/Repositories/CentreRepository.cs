@@ -41,4 +41,7 @@ public sealed class CentreRepository(AppDbContext db) : Repository<Centre>(db), 
 
     public Task<bool> CodeExistsAsync(string code, CancellationToken cancellationToken = default) =>
         Set.AnyAsync(centre => centre.Code == code, cancellationToken);
+
+    public Task<int> CountExistingAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default) =>
+        Set.CountAsync(centre => ids.Contains(centre.Id), cancellationToken);
 }
