@@ -49,6 +49,14 @@ public sealed class BookingRepository(AppDbContext db) : Repository<Booking>(db)
                 && (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed))
             .SumAsync(booking => (int?)booking.PassengerCount, cancellationToken) ?? 0;
 
+    public Task<Dictionary<Guid, int>> GetOccupiedCapacityByTripAsync(IReadOnlyCollection<Guid> tripIds, CancellationToken cancellationToken = default) =>
+        Set.AsNoTracking()
+            .Where(booking => tripIds.Contains(booking.TripId)
+                && (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed))
+            .GroupBy(booking => booking.TripId)
+            .Select(group => new { TripId = group.Key, Count = group.Sum(booking => booking.PassengerCount) })
+            .ToDictionaryAsync(item => item.TripId, item => item.Count, cancellationToken);
+
     public Task<List<Booking>> GetManifestAsync(Guid tripId, CancellationToken cancellationToken = default) =>
         Set.AsNoTracking()
             .Include(booking => booking.Passenger)

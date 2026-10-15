@@ -1,5 +1,8 @@
+using api.Common.Helpers;
 using api.Data;
+using api.DTO.Trips;
 using api.Entities;
+using api.Entities.Enums;
 using api.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,6 +10,40 @@ namespace api.Repositories;
 
 public sealed class TripRepository(AppDbContext db) : Repository<Trip>(db), ITripRepository
 {
+    public async Task<List<Trip>> SearchAsync(TripFilter filter, CancellationToken cancellationToken = default)
+    {
+        var query = WithListDetails();
+        if (filter.CentreId.HasValue) query = query.Where(trip => trip.CentreId == filter.CentreId.Value);
+        if (filter.TerminalId.HasValue)
+            query = query.Where(trip => trip.RouteDirection != null
+                && (trip.RouteDirection.StartCentreId == filter.TerminalId.Value || trip.RouteDirection.EndCentreId == filter.TerminalId.Value));
+        if (filter.RouteId.HasValue) query = query.Where(trip => trip.RouteId == filter.RouteId.Value);
+        if (filter.DirectionId.HasValue) query = query.Where(trip => trip.RouteDirectionId == filter.DirectionId.Value);
+        if (filter.VehicleId.HasValue) query = query.Where(trip => trip.VehicleId == filter.VehicleId.Value);
+        if (filter.DriverId.HasValue) query = query.Where(trip => trip.DriverId == filter.DriverId.Value);
+        if (filter.BayId.HasValue) query = query.Where(trip => trip.BayId == filter.BayId.Value);
+        if (filter.Status.HasValue) query = query.Where(trip => trip.Status == filter.Status.Value);
+        if (filter.BookableOnly)
+        {
+            var now = DateTime.UtcNow;
+            query = query.Where(trip => trip.ScheduledTime > now
+                && (trip.Status == TripStatus.Scheduled || trip.Status == TripStatus.Ready || trip.Status == TripStatus.Boarding));
+        }
+        if (filter.Date.HasValue) query = OnServiceDate(query, filter.Date.Value);
+        return await query.OrderBy(trip => trip.ScheduledTime).ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<Trip>> GetHistoryAsync(TripHistoryFilter filter, CancellationToken cancellationToken = default)
+    {
+        var query = WithListDetails().Where(trip => trip.Status == TripStatus.Completed || trip.Status == TripStatus.Cancelled);
+        if (filter.CentreId.HasValue) query = query.Where(trip => trip.CentreId == filter.CentreId.Value);
+        if (filter.Date.HasValue) query = OnServiceDate(query, filter.Date.Value);
+        return await query.OrderByDescending(trip => trip.ScheduledTime).ToListAsync(cancellationToken);
+    }
+
+    public Task<Trip?> GetWithDetailsAsync(Guid id, CancellationToken cancellationToken = default) =>
+        WithListDetails().Include(trip => trip.Centre).SingleOrDefaultAsync(trip => trip.Id == id, cancellationToken);
+
     public Task<Trip?> GetWithRouteAsync(Guid id, CancellationToken cancellationToken = default) =>
         Set.AsNoTracking().Include(trip => trip.Route).SingleOrDefaultAsync(trip => trip.Id == id, cancellationToken);
 
@@ -36,4 +73,20 @@ public sealed class TripRepository(AppDbContext db) : Repository<Trip>(db), ITri
             .Where(trip => trip.DriverId == driverId && trip.ScheduledTime >= startUtc && trip.ScheduledTime < endUtc)
             .OrderBy(trip => trip.ScheduledTime)
             .ToListAsync(cancellationToken);
+
+    private IQueryable<Trip> WithListDetails() =>
+        Set.AsNoTracking()
+            .Include(trip => trip.Route)
+            .Include(trip => trip.RouteDirection).ThenInclude(direction => direction!.StartCentre)
+            .Include(trip => trip.RouteDirection).ThenInclude(direction => direction!.EndCentre)
+            .Include(trip => trip.Vehicle)
+            .Include(trip => trip.Driver)
+            .Include(trip => trip.Bay);
+
+    private static IQueryable<Trip> OnServiceDate(IQueryable<Trip> query, DateOnly date)
+    {
+        var start = SriLankaTime.DayStartUtc(date);
+        var end = SriLankaTime.DayStartUtc(date.AddDays(1));
+        return query.Where(trip => trip.ScheduledTime >= start && trip.ScheduledTime < end);
+    }
 }

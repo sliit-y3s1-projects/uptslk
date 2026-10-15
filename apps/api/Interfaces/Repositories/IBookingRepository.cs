@@ -14,6 +14,9 @@ public interface IBookingRepository : IRepository<Booking>
     // Seats taken by pending and confirmed bookings on the trip.
     Task<int> GetOccupiedCapacityAsync(Guid tripId, CancellationToken cancellationToken = default);
 
+    // Seats taken on each trip. Trips with no bookings are left out.
+    Task<Dictionary<Guid, int>> GetOccupiedCapacityByTripAsync(IReadOnlyCollection<Guid> tripIds, CancellationToken cancellationToken = default);
+
     // Bookings on the trip that are not cancelled, oldest first.
     Task<List<Booking>> GetManifestAsync(Guid tripId, CancellationToken cancellationToken = default);
 }

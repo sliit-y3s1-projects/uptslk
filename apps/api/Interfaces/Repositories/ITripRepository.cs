@@ -1,9 +1,15 @@
+using api.DTO.Trips;
 using api.Entities;
 
 namespace api.Interfaces.Repositories;
 
 public interface ITripRepository : IRepository<Trip>
 {
+    Task<List<Trip>> SearchAsync(TripFilter filter, CancellationToken cancellationToken = default);
+
+    // Completed and cancelled trips, newest first.
+    Task<List<Trip>> GetHistoryAsync(TripHistoryFilter filter, CancellationToken cancellationToken = default);
+    Task<Trip?> GetWithDetailsAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Trip?> GetWithRouteAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Trip?> GetWithVehicleAndRouteAsync(Guid id, bool track = false, CancellationToken cancellationToken = default);
     Task<bool> ExistsInCentreAsync(Guid tripId, Guid centreId, CancellationToken cancellationToken = default);
