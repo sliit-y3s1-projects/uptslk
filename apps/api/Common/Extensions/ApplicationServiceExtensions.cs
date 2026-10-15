@@ -27,6 +27,7 @@ public static class ApplicationServiceExtensions
         services.AddScoped<ITripRepository, TripRepository>();
         services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
         services.AddScoped<IVehicleRepository, VehicleRepository>();
+        services.AddScoped<IWalletRepository, WalletRepository>();
 
         return services;
     }
@@ -44,6 +45,7 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IIncidentService, IncidentService>();
         services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
         services.AddScoped<IPassengerNotificationQueryService, PassengerNotificationQueryService>();
+        services.AddScoped<IPassengerService, PassengerService>();
         services.AddScoped<ISupportRequestService, SupportRequestService>();
         services.AddScoped<IUserNotificationService, UserNotificationService>();
         services.AddScoped<IVehicleService, VehicleService>();
