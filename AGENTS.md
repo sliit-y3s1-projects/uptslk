@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-UPTS is a full-stack public-transport platform. `apps/api` contains the ASP.NET Core 8 Web API: controllers, EF Core data access, domain models, DTOs, services, enums, and committed migrations. `apps/web` is the Vite/React/TypeScript administrator UI; application code lives under `src/` (`components/`, `pages/`, `context/`, `hooks/`, and `lib/`), while static files live in `public/`. PostgreSQL development infrastructure is defined in `docker-compose.yml`; product and milestone documentation is in `docs/`.
+UPTS is a full-stack public-transport platform. `apps/api` contains the ASP.NET Core 8 Web API, organised in layers: controllers, services, repositories, entities, DTOs, and committed migrations. Read `apps/api/docs/ARCHITECTURE.md` before changing the API; it explains where each kind of code belongs. `apps/web` is the Vite/React/TypeScript administrator UI; application code lives under `src/` (`components/`, `pages/`, `context/`, `hooks/`, and `lib/`), while static files live in `public/`. PostgreSQL development infrastructure is defined in `docker-compose.yml`; product and milestone documentation is in `docs/`.
 
 ## Build, Test, and Development Commands
 
@@ -17,7 +17,7 @@ Run `cd apps/api && dotnet build` before submitting backend work. For the web ap
 
 ## Coding Style & Naming Conventions
 
-Follow the existing conventions in nearby code. C# uses four-space indentation, PascalCase for public types, methods, properties, controllers, DTOs, and enum members; keep nullable annotations enabled. Put API additions in the appropriate existing layer (for example, `Models/`, `DTOs/`, then `Controllers/`). TypeScript and TSX use two-space indentation, double quotes, and PascalCase component filenames such as `DashboardPage.tsx`; hooks use `useX.ts`. Prefer the `@/` import alias for web source imports. Run the configured ESLint rules instead of manually reformatting generated UI components.
+Follow the existing conventions in nearby code. C# uses four-space indentation, PascalCase for public types, methods, properties, controllers, DTOs, and enum members; keep nullable annotations enabled. Put API additions in the matching layer (`Entities/`, `DTO/<Feature>/`, `Repositories/`, `Services/`, then `Controllers/`), following `apps/api/docs/ARCHITECTURE.md`. TypeScript and TSX use two-space indentation, double quotes, and PascalCase component filenames such as `DashboardPage.tsx`; hooks use `useX.ts`. Prefer the `@/` import alias for web source imports. Run the configured ESLint rules instead of manually reformatting generated UI components.
 
 ## Database & Configuration
 
