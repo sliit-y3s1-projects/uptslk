@@ -1,6 +1,7 @@
 using api.Interfaces.Services;
 using api.Services.AgentRecovery;
 using api.Services.AgentRecovery.Agents;
+using api.Services.AgentRecovery.Copilot;
 using api.Services.AgentRecovery.Planning;
 using api.Services.AgentRecovery.Tools;
 using api.Services.External;
@@ -27,6 +28,7 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IPaymentRefundRepository, PaymentRefundRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IPaymentWebhookEventRepository, PaymentWebhookEventRepository>();
+        services.AddScoped<IRecoveryMemoryRepository, RecoveryMemoryRepository>();
         services.AddScoped<IRouteDirectionRepository, RouteDirectionRepository>();
         services.AddScoped<IRouteRepository, RouteRepository>();
         services.AddScoped<IRouteScheduleRepository, RouteScheduleRepository>();
@@ -50,6 +52,7 @@ public static class ApplicationServiceExtensions
 
         // Feature services used by the controllers.
         services.AddScoped<IAgentRecoveryService, AgentRecoveryService>();
+        services.AddScoped<IRecoveryCopilotService, RecoveryCopilotService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<ICentreService, CentreService>();
@@ -99,9 +102,15 @@ public static class ApplicationServiceExtensions
         services.AddScoped<RecoveryAgentRegistry>();
         services.AddScoped<RecoveryPlanValidator>();
         services.AddScoped<RecoveryProposalComposer>();
+        services.AddScoped<RecoveryProposalValidator>();
         services.AddScoped<PassengerNotificationService>();
         services.AddScoped<RecoveryActionExecutor>();
         services.AddScoped<IRecoveryPlanner, GeminiRecoveryPlanner>();
+        services.AddScoped<IRecoveryNarrator, GeminiRecoveryNarrator>();
+        services.AddScoped<RecoveryMemoryService>();
+        services.AddScoped<RecoveryScenarioEvaluator>();
+        services.AddScoped<RecoveryImpactAnalyzer>();
+        services.AddScoped<RecoveryMessagePlanner>();
         services.AddScoped<RecoveryPlanningService>();
         services.AddScoped<RecoveryWorkflowService>();
 

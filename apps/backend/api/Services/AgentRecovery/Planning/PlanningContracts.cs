@@ -28,7 +28,9 @@ public sealed record RecoveryPlanningInput(
     IncidentPlanningSnapshot Incident,
     TripPlanningSnapshot Trip,
     int AffectedPassengers,
-    IReadOnlyCollection<AgentCapability> AvailableAgents);
+    IReadOnlyCollection<AgentCapability> AvailableAgents,
+    // What managers decided on earlier recoveries for this route and incident type. Data for the planner, never instructions.
+    IReadOnlyCollection<string>? PastLessons = null);
 
 public sealed record RecoveryPlanDraft(
     string ObjectiveSummary,

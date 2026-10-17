@@ -48,6 +48,22 @@ public sealed class AgentWorkflowRepository(AppDbContext db) : Repository<AgentW
             .Include(workflow => workflow.Incident)
             .SingleOrDefaultAsync(workflow => workflow.Id == id, cancellationToken);
 
+    public Task<AgentWorkflow?> GetForCopilotAsync(Guid id, Guid? centreId, CancellationToken cancellationToken = default)
+    {
+        var query = Set.Include(workflow => workflow.ApprovalRequests)
+            .Include(workflow => workflow.Incident)
+            .Include(workflow => workflow.Trip).ThenInclude(trip => trip.Route)
+            .Include(workflow => workflow.Trip).ThenInclude(trip => trip.RouteDirection).ThenInclude(direction => direction!.StartCentre)
+            .Include(workflow => workflow.Trip).ThenInclude(trip => trip.RouteDirection).ThenInclude(direction => direction!.EndCentre)
+            .Include(workflow => workflow.Trip).ThenInclude(trip => trip.Vehicle)
+            .Include(workflow => workflow.Trip).ThenInclude(trip => trip.Driver)
+            .Include(workflow => workflow.Trip).ThenInclude(trip => trip.Bay)
+            .Include(workflow => workflow.PassengerNotifications).ThenInclude(notification => notification.Passenger)
+            .AsQueryable();
+        if (centreId.HasValue) query = query.Where(workflow => workflow.CentreId == centreId.Value);
+        return query.SingleOrDefaultAsync(workflow => workflow.Id == id, cancellationToken);
+    }
+
     public void AddStep(AgentStep step) => Db.AgentSteps.Add(step);
 
     public void AddApprovalRequest(ApprovalRequest approvalRequest) => Db.ApprovalRequests.Add(approvalRequest);

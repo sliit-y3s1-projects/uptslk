@@ -43,6 +43,7 @@ public static class AuthServiceExtensions
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             options.AddPolicy(RateLimitPolicies.AgentRecoveryStart, context => PerUserPerMinute(context, 3));
             options.AddPolicy(RateLimitPolicies.AgentRecoveryApproval, context => PerUserPerMinute(context, 10));
+            options.AddPolicy(RateLimitPolicies.AgentRecoveryCopilot, context => PerUserPerMinute(context, 30));
         });
 
         return services;

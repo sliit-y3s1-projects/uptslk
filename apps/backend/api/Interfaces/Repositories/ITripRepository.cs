@@ -19,6 +19,9 @@ public interface ITripRepository : IRepository<Trip>
     // Active trips that use the vehicle, the driver or the bay, with their route.
     Task<List<Trip>> GetActiveUsingAnyAsync(Guid vehicleId, Guid driverId, Guid bayId, Guid? excludedTripId, CancellationToken cancellationToken = default);
 
+    // Active trips that depart in [fromUtc, toUtc) from, to or through the centre, with route, vehicle, driver and bay.
+    Task<List<Trip>> ListActiveInWindowAsync(Guid centreId, DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken = default);
+
     Task<bool> ExistsAtAsync(Guid routeId, Guid? directionId, DateTime scheduledTime, CancellationToken cancellationToken = default);
     Task<bool> ExistsInCentreAsync(Guid tripId, Guid centreId, CancellationToken cancellationToken = default);
     Task<Trip?> GetForDriverAsync(Guid tripId, Guid driverId, bool track = false, CancellationToken cancellationToken = default);
