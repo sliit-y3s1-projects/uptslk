@@ -1,6 +1,7 @@
 using api.Entities;
 using api.Entities.Enums;
 using api.Interfaces.Repositories;
+using api.Services.AgentRecovery.Copilot;
 
 namespace api.Services.AgentRecovery;
 
@@ -31,8 +32,9 @@ public sealed class PassengerNotificationService(
         var affectedBookings = await bookings.GetActiveWithoutRecoveryNoticeAsync(workflow.TripId, workflow.Id, cancellationToken);
 
         var createdAt = DateTime.UtcNow;
+        var drafts = RecoveryMessagePlanner.ReadDrafts(workflow).ToDictionary(draft => draft.Segment);
         var notifications = affectedBookings
-            .Select(booking => RecoveryNotificationFactory.Create(workflow, booking, proposal.ScheduledTime, bay.Code, createdAt))
+            .Select(booking => RecoveryNotificationFactory.Create(workflow, booking, proposal.ScheduledTime, bay.Code, createdAt, drafts))
             .ToArray();
         // Saved by the caller together with the rest of the approved recovery.
         passengerNotifications.AddRange(notifications);

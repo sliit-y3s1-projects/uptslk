@@ -20,6 +20,8 @@ public sealed class AgentWorkflowConfiguration : IEntityTypeConfiguration<AgentW
         builder.Property(workflow => workflow.PlannerOutputJson).HasColumnType("jsonb");
         builder.Property(workflow => workflow.ReplanHistoryJson).HasColumnType("jsonb");
         builder.Property(workflow => workflow.ValidationJson).HasColumnType("jsonb");
+        builder.Property(workflow => workflow.NotificationDraftsJson).HasColumnType("jsonb");
+        builder.Property(workflow => workflow.ImpactReviewsJson).HasColumnType("jsonb");
 
         // Booking <-> AgentWorkflow (1:1, nullable)
         builder.HasOne(aw => aw.Booking)

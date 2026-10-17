@@ -70,6 +70,14 @@ public sealed class TripRepository(AppDbContext db) : Repository<Trip>(db), ITri
                 && (trip.VehicleId == vehicleId || trip.DriverId == driverId || trip.BayId == bayId))
             .ToListAsync(cancellationToken);
 
+    public Task<List<Trip>> ListActiveInWindowAsync(Guid centreId, DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken = default) =>
+        Active(WithListDetails())
+            .Where(trip => trip.ScheduledTime >= fromUtc && trip.ScheduledTime < toUtc
+                && (trip.CentreId == centreId
+                    || (trip.RouteDirection != null && (trip.RouteDirection.StartCentreId == centreId || trip.RouteDirection.EndCentreId == centreId))))
+            .OrderBy(trip => trip.ScheduledTime)
+            .ToListAsync(cancellationToken);
+
     public Task<bool> ExistsAtAsync(Guid routeId, Guid? directionId, DateTime scheduledTime, CancellationToken cancellationToken = default) =>
         Set.AnyAsync(trip => trip.RouteId == routeId && trip.RouteDirectionId == directionId && trip.ScheduledTime == scheduledTime, cancellationToken);
 

@@ -33,6 +33,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<AgentWorkflow> AgentWorkflows => Set<AgentWorkflow>();
     public DbSet<AgentStep> AgentSteps => Set<AgentStep>();
     public DbSet<ApprovalRequest> ApprovalRequests => Set<ApprovalRequest>();
+    public DbSet<RecoveryMemory> RecoveryMemories => Set<RecoveryMemory>();
     public DbSet<PassengerNotification> PassengerNotifications => Set<PassengerNotification>();
     public DbSet<SupportRequest> SupportRequests => Set<SupportRequest>();
     public DbSet<UserNotification> UserNotifications => Set<UserNotification>();

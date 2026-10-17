@@ -15,6 +15,9 @@ public interface IAgentWorkflowRepository : IRepository<AgentWorkflow>
     // Loads the workflow for an approval decision, with its approvals, trip and incident.
     Task<AgentWorkflow?> GetForDecisionAsync(Guid id, CancellationToken cancellationToken = default);
 
+    // Loads the workflow for the coordinator tools, with the trip's full assignment, the incident and the approvals.
+    Task<AgentWorkflow?> GetForCopilotAsync(Guid id, Guid? centreId, CancellationToken cancellationToken = default);
+
     // Child rows are added to their own sets, because EF treats a new row with a Guid key in a collection as existing.
     void AddStep(AgentStep step);
     void AddApprovalRequest(ApprovalRequest approvalRequest);

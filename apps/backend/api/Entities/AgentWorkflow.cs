@@ -36,6 +36,10 @@ public class AgentWorkflow
     public string ReplanHistoryJson { get; set; } = "[]";
     public string? ProposalJson { get; set; }
     public string ValidationJson { get; set; } = "[]";
+    // Passenger message wording the coordinator edited. Empty means the default wording is used.
+    public string NotificationDraftsJson { get; set; } = "[]";
+    // What the coordinator decided about each downstream trip the network agent flagged.
+    public string ImpactReviewsJson { get; set; } = "[]";
     public string? FailureReason { get; set; }
     public DateTime? CompletedAt { get; set; }
 

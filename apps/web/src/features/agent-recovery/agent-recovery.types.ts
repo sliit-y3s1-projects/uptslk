@@ -103,3 +103,129 @@ export type RecoveryIncident = {
   tripRouteNumber?: string | null;
   tripTime?: string | null;
 };
+
+// ---- Coordinator tools (fleet, network, passenger and dispatch agents) ----
+
+export type ScoreFactor = {
+  factor: string;
+  points: number;
+  maxPoints: number;
+  detail: string;
+};
+
+export type RecoveryAlternative = {
+  id: string;
+  vehicleId: string;
+  vehiclePlate: string;
+  vehicleCapacity: number;
+  driverId?: string | null;
+  driverName?: string | null;
+  bayId?: string | null;
+  bayCode?: string | null;
+  scheduledTime: string;
+  delayMinutes: number;
+  score: number;
+  feasible: boolean;
+  isCurrent: boolean;
+  factors: ScoreFactor[];
+  risks: string[];
+  issues: string[];
+};
+
+export type RecoveryLesson = {
+  id: string;
+  kind: "Rejected" | "Approved";
+  summary: string;
+  reason?: string | null;
+  createdAt: string;
+};
+
+export type RecoveryAlternatives = {
+  alternatives: RecoveryAlternative[];
+  evaluated: number;
+  recommendation: string;
+  lessons: RecoveryLesson[];
+};
+
+export type ScenarioRequest = {
+  vehicleId: string;
+  driverId?: string | null;
+  bayId?: string | null;
+  delayMinutes: number;
+};
+
+export type ImpactRisk = "High" | "Medium" | "Low";
+export type ImpactReviewDecision = "Ignore" | "Escalate" | "Reset";
+
+export type ImpactNode = {
+  tripId: string;
+  lane: "Bus" | "Driver" | "Connection" | "Headway";
+  depth: number;
+  routeNumber: string;
+  routeName: string;
+  scheduledTime: string;
+  risk: ImpactRisk;
+  slackMinutes?: number | null;
+  expectedLateMinutes: number;
+  passengers: number;
+  vehicle?: string | null;
+  driver?: string | null;
+  reason: string;
+  review?: "Ignored" | "Escalated" | null;
+};
+
+export type RecoveryImpact = {
+  recoveredDeparture: string;
+  recoveredArrival: string;
+  delayMinutes: number;
+  nodes: ImpactNode[];
+  summary: {
+    high: number;
+    medium: number;
+    low: number;
+    ignored: number;
+    escalated: number;
+    passengersAtRisk: number;
+  };
+  recommendation: string;
+};
+
+export type ImpactExplanation = { answer: string; source: "ai" | "rules" };
+
+export type MessageSegment = {
+  segment: string;
+  label: string;
+  description: string;
+  recipients: number;
+  canReceiveInApp: boolean;
+  subject: string;
+  message: string;
+  source: "default" | "edited" | "ai" | "rules" | "sent";
+  warnings: string[];
+  delivered: number;
+  failed: number;
+};
+
+export type RecoveryMessages = {
+  segments: MessageSegment[];
+  totalRecipients: number;
+  sent: boolean;
+};
+
+export type ReviseRequest = {
+  reason: string;
+  avoidVehicle: boolean;
+  avoidDriver: boolean;
+  avoidBay: boolean;
+  maxDelayMinutes?: number | null;
+};
+
+export type ReviseResult = {
+  id: string;
+  status: WorkflowStatus;
+  failureReason?: string | null;
+  revision: number;
+  rationale: string;
+  appliedConstraints: string[];
+  alternativesConsidered: number;
+};

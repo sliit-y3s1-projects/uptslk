@@ -40,6 +40,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ApiError, apiClient } from "@/lib/api/api-client";
 import { agentRecoveryApi } from "./agent-recovery.api";
 import { RecoveryLiveRun } from "./RecoveryLiveRun";
+import { RecoveryCopilot, type CopilotTab } from "./RecoveryCopilot";
 import type {
   RecoveryIncident,
   RecoveryWorkflowDetail,
@@ -487,6 +488,7 @@ export function AgentRecoveryDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [note, setNote] = useState("");
+  const [copilotTab, setCopilotTab] = useState<CopilotTab>("fleet");
   const workflow = useQuery({
     queryKey: ["agent-recovery", workflowId],
     queryFn: () => agentRecoveryApi.detail(workflowId),
@@ -527,6 +529,8 @@ export function AgentRecoveryDetailPage() {
       pending={decide.isPending}
       canApprove={user?.role === "Admin" || user?.role === "CentreManager"}
       onDecision={(decision) => decide.mutate(decision)}
+      copilotTab={copilotTab}
+      onCopilotTab={setCopilotTab}
       error={decide.error instanceof Error ? decide.error.message : ""}
     />
   );
@@ -539,6 +543,8 @@ function RecoveryDetail({
   pending,
   canApprove,
   onDecision,
+  copilotTab,
+  onCopilotTab,
   error,
 }: {
   workflow: RecoveryWorkflowDetail;
@@ -547,6 +553,8 @@ function RecoveryDetail({
   pending: boolean;
   canApprove: boolean;
   onDecision: (decision: "Approved" | "Rejected") => void;
+  copilotTab: CopilotTab;
+  onCopilotTab: (tab: CopilotTab) => void;
   error: string;
 }) {
   const { summary, trip, plan, validationResults, steps, approvals } = workflow;
@@ -782,9 +790,21 @@ function RecoveryDetail({
                   <Button
                     variant="outline"
                     disabled={pending}
+                    onClick={() => {
+                      onCopilotTab("dispatch");
+                      document
+                        .getElementById("recovery-copilot")
+                        ?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                  >
+                    <X /> Reject and ask the agent to revise
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    disabled={pending}
                     onClick={() => onDecision("Rejected")}
                   >
-                    <X /> Reject proposal
+                    Reject and stop
                   </Button>
                 </div>
                 {error && (
@@ -856,6 +876,14 @@ function RecoveryDetail({
           </article>
         </aside>
       </section>
+      <RecoveryCopilot
+        workflowId={summary.id}
+        status={summary.status}
+        pendingDecision={isPending}
+        canRevise={canApprove}
+        tab={copilotTab}
+        onTabChange={onCopilotTab}
+      />
     </main>
   );
 }

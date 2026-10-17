@@ -152,7 +152,7 @@ namespace api.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("api.Models.AgentStep", b =>
+            modelBuilder.Entity("api.Entities.AgentStep", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -203,7 +203,7 @@ namespace api.Migrations
                     b.ToTable("AgentSteps");
                 });
 
-            modelBuilder.Entity("api.Models.AgentWorkflow", b =>
+            modelBuilder.Entity("api.Entities.AgentWorkflow", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -225,6 +225,10 @@ namespace api.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<string>("ImpactReviewsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
                     b.Property<Guid>("IncidentId")
                         .HasColumnType("uuid");
 
@@ -235,6 +239,10 @@ namespace api.Migrations
                     b.Property<string>("ModelProvider")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<string>("NotificationDraftsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
 
                     b.Property<string>("Objective")
                         .IsRequired()
@@ -315,7 +323,7 @@ namespace api.Migrations
                     b.ToTable("AgentWorkflows");
                 });
 
-            modelBuilder.Entity("api.Models.ApprovalRequest", b =>
+            modelBuilder.Entity("api.Entities.ApprovalRequest", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -357,7 +365,7 @@ namespace api.Migrations
                     b.ToTable("ApprovalRequests");
                 });
 
-            modelBuilder.Entity("api.Models.Bay", b =>
+            modelBuilder.Entity("api.Entities.Bay", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -391,7 +399,7 @@ namespace api.Migrations
                     b.ToTable("Bays");
                 });
 
-            modelBuilder.Entity("api.Models.Booking", b =>
+            modelBuilder.Entity("api.Entities.Booking", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -451,7 +459,7 @@ namespace api.Migrations
                     b.ToTable("Bookings");
                 });
 
-            modelBuilder.Entity("api.Models.Centre", b =>
+            modelBuilder.Entity("api.Entities.Centre", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -495,7 +503,7 @@ namespace api.Migrations
                     b.ToTable("Centres");
                 });
 
-            modelBuilder.Entity("api.Models.Driver", b =>
+            modelBuilder.Entity("api.Entities.Driver", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -541,7 +549,7 @@ namespace api.Migrations
                     b.ToTable("Drivers");
                 });
 
-            modelBuilder.Entity("api.Models.FareRule", b =>
+            modelBuilder.Entity("api.Entities.FareRule", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -571,7 +579,7 @@ namespace api.Migrations
                     b.ToTable("FareRules");
                 });
 
-            modelBuilder.Entity("api.Models.Incident", b =>
+            modelBuilder.Entity("api.Entities.Incident", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -633,7 +641,7 @@ namespace api.Migrations
                     b.ToTable("Incidents");
                 });
 
-            modelBuilder.Entity("api.Models.MaintenanceRecord", b =>
+            modelBuilder.Entity("api.Entities.MaintenanceRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -673,7 +681,7 @@ namespace api.Migrations
                     b.ToTable("MaintenanceRecords");
                 });
 
-            modelBuilder.Entity("api.Models.Passenger", b =>
+            modelBuilder.Entity("api.Entities.Passenger", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -718,7 +726,7 @@ namespace api.Migrations
                     b.ToTable("Passengers");
                 });
 
-            modelBuilder.Entity("api.Models.PassengerNotification", b =>
+            modelBuilder.Entity("api.Entities.PassengerNotification", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -777,7 +785,7 @@ namespace api.Migrations
                     b.ToTable("PassengerNotifications");
                 });
 
-            modelBuilder.Entity("api.Models.Payment", b =>
+            modelBuilder.Entity("api.Entities.Payment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -833,7 +841,7 @@ namespace api.Migrations
                     b.ToTable("Payments");
                 });
 
-            modelBuilder.Entity("api.Models.PaymentRefund", b =>
+            modelBuilder.Entity("api.Entities.PaymentRefund", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -873,7 +881,7 @@ namespace api.Migrations
                     b.ToTable("PaymentRefunds");
                 });
 
-            modelBuilder.Entity("api.Models.PaymentWebhookEvent", b =>
+            modelBuilder.Entity("api.Entities.PaymentWebhookEvent", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -903,7 +911,75 @@ namespace api.Migrations
                     b.ToTable("PaymentWebhookEvents");
                 });
 
-            modelBuilder.Entity("api.Models.Route", b =>
+            modelBuilder.Entity("api.Entities.RecoveryMemory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AvoidBay")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AvoidDriver")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AvoidVehicle")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("BayId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CentreId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DelayMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("DriverId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("IncidentType")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MaxDelayMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("RouteNumber")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("VehicleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("WorkflowId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkflowId");
+
+                    b.HasIndex("CentreId", "RouteNumber", "IncidentType");
+
+                    b.ToTable("RecoveryMemories");
+                });
+
+            modelBuilder.Entity("api.Entities.Route", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -955,7 +1031,7 @@ namespace api.Migrations
                     b.ToTable("Routes");
                 });
 
-            modelBuilder.Entity("api.Models.RouteDirection", b =>
+            modelBuilder.Entity("api.Entities.RouteDirection", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1001,7 +1077,7 @@ namespace api.Migrations
                     b.ToTable("RouteDirections");
                 });
 
-            modelBuilder.Entity("api.Models.RouteSchedule", b =>
+            modelBuilder.Entity("api.Entities.RouteSchedule", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1049,7 +1125,7 @@ namespace api.Migrations
                     b.ToTable("RouteSchedules");
                 });
 
-            modelBuilder.Entity("api.Models.RouteStop", b =>
+            modelBuilder.Entity("api.Entities.RouteStop", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1084,7 +1160,7 @@ namespace api.Migrations
                     b.ToTable("RouteStops");
                 });
 
-            modelBuilder.Entity("api.Models.SupportRequest", b =>
+            modelBuilder.Entity("api.Entities.SupportRequest", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1145,7 +1221,7 @@ namespace api.Migrations
                     b.ToTable("SupportRequests");
                 });
 
-            modelBuilder.Entity("api.Models.Transaction", b =>
+            modelBuilder.Entity("api.Entities.Transaction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1176,7 +1252,7 @@ namespace api.Migrations
                     b.ToTable("Transactions");
                 });
 
-            modelBuilder.Entity("api.Models.Trip", b =>
+            modelBuilder.Entity("api.Entities.Trip", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1241,7 +1317,7 @@ namespace api.Migrations
                     b.ToTable("Trips");
                 });
 
-            modelBuilder.Entity("api.Models.User", b =>
+            modelBuilder.Entity("api.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1343,7 +1419,7 @@ namespace api.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("api.Models.UserNotification", b =>
+            modelBuilder.Entity("api.Entities.UserNotification", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1384,7 +1460,7 @@ namespace api.Migrations
                     b.ToTable("UserNotifications");
                 });
 
-            modelBuilder.Entity("api.Models.Vehicle", b =>
+            modelBuilder.Entity("api.Entities.Vehicle", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1434,7 +1510,7 @@ namespace api.Migrations
                     b.ToTable("Vehicles");
                 });
 
-            modelBuilder.Entity("api.Models.Wallet", b =>
+            modelBuilder.Entity("api.Entities.Wallet", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1472,7 +1548,7 @@ namespace api.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
-                    b.HasOne("api.Models.User", null)
+                    b.HasOne("api.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1481,7 +1557,7 @@ namespace api.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
-                    b.HasOne("api.Models.User", null)
+                    b.HasOne("api.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1496,7 +1572,7 @@ namespace api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("api.Models.User", null)
+                    b.HasOne("api.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1505,16 +1581,16 @@ namespace api.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.HasOne("api.Models.User", null)
+                    b.HasOne("api.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("api.Models.AgentStep", b =>
+            modelBuilder.Entity("api.Entities.AgentStep", b =>
                 {
-                    b.HasOne("api.Models.AgentWorkflow", "Workflow")
+                    b.HasOne("api.Entities.AgentWorkflow", "Workflow")
                         .WithMany("Steps")
                         .HasForeignKey("WorkflowId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1523,26 +1599,26 @@ namespace api.Migrations
                     b.Navigation("Workflow");
                 });
 
-            modelBuilder.Entity("api.Models.AgentWorkflow", b =>
+            modelBuilder.Entity("api.Entities.AgentWorkflow", b =>
                 {
-                    b.HasOne("api.Models.Booking", "Booking")
+                    b.HasOne("api.Entities.Booking", "Booking")
                         .WithOne("AgentWorkflow")
-                        .HasForeignKey("api.Models.AgentWorkflow", "BookingId")
+                        .HasForeignKey("api.Entities.AgentWorkflow", "BookingId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("api.Models.Centre", "Centre")
+                    b.HasOne("api.Entities.Centre", "Centre")
                         .WithMany()
                         .HasForeignKey("CentreId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("api.Models.Incident", "Incident")
+                    b.HasOne("api.Entities.Incident", "Incident")
                         .WithMany()
                         .HasForeignKey("IncidentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("api.Models.Trip", "Trip")
+                    b.HasOne("api.Entities.Trip", "Trip")
                         .WithMany()
                         .HasForeignKey("TripId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1557,14 +1633,14 @@ namespace api.Migrations
                     b.Navigation("Trip");
                 });
 
-            modelBuilder.Entity("api.Models.ApprovalRequest", b =>
+            modelBuilder.Entity("api.Entities.ApprovalRequest", b =>
                 {
-                    b.HasOne("api.Models.User", "ReviewedBy")
+                    b.HasOne("api.Entities.User", "ReviewedBy")
                         .WithMany("ReviewedApprovals")
                         .HasForeignKey("ReviewedById")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("api.Models.AgentWorkflow", "Workflow")
+                    b.HasOne("api.Entities.AgentWorkflow", "Workflow")
                         .WithMany("ApprovalRequests")
                         .HasForeignKey("WorkflowId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1575,9 +1651,9 @@ namespace api.Migrations
                     b.Navigation("Workflow");
                 });
 
-            modelBuilder.Entity("api.Models.Bay", b =>
+            modelBuilder.Entity("api.Entities.Bay", b =>
                 {
-                    b.HasOne("api.Models.Centre", "Centre")
+                    b.HasOne("api.Entities.Centre", "Centre")
                         .WithMany("Bays")
                         .HasForeignKey("CentreId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1586,15 +1662,15 @@ namespace api.Migrations
                     b.Navigation("Centre");
                 });
 
-            modelBuilder.Entity("api.Models.Booking", b =>
+            modelBuilder.Entity("api.Entities.Booking", b =>
                 {
-                    b.HasOne("api.Models.Passenger", "Passenger")
+                    b.HasOne("api.Entities.Passenger", "Passenger")
                         .WithMany("Bookings")
                         .HasForeignKey("PassengerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("api.Models.Trip", "Trip")
+                    b.HasOne("api.Entities.Trip", "Trip")
                         .WithMany("Bookings")
                         .HasForeignKey("TripId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1605,17 +1681,17 @@ namespace api.Migrations
                     b.Navigation("Trip");
                 });
 
-            modelBuilder.Entity("api.Models.Driver", b =>
+            modelBuilder.Entity("api.Entities.Driver", b =>
                 {
-                    b.HasOne("api.Models.Centre", "Centre")
+                    b.HasOne("api.Entities.Centre", "Centre")
                         .WithMany("Drivers")
                         .HasForeignKey("CentreId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("api.Models.User", "User")
+                    b.HasOne("api.Entities.User", "User")
                         .WithOne("Driver")
-                        .HasForeignKey("api.Models.Driver", "UserId")
+                        .HasForeignKey("api.Entities.Driver", "UserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Centre");
@@ -1623,9 +1699,9 @@ namespace api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("api.Models.FareRule", b =>
+            modelBuilder.Entity("api.Entities.FareRule", b =>
                 {
-                    b.HasOne("api.Models.Route", "Route")
+                    b.HasOne("api.Entities.Route", "Route")
                         .WithMany("FareRules")
                         .HasForeignKey("RouteId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1634,20 +1710,20 @@ namespace api.Migrations
                     b.Navigation("Route");
                 });
 
-            modelBuilder.Entity("api.Models.Incident", b =>
+            modelBuilder.Entity("api.Entities.Incident", b =>
                 {
-                    b.HasOne("api.Models.Centre", "Centre")
+                    b.HasOne("api.Entities.Centre", "Centre")
                         .WithMany("Incidents")
                         .HasForeignKey("CentreId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("api.Models.User", "ReportedBy")
+                    b.HasOne("api.Entities.User", "ReportedBy")
                         .WithMany("ReportedIncidents")
                         .HasForeignKey("ReportedById")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("api.Models.Trip", "Trip")
+                    b.HasOne("api.Entities.Trip", "Trip")
                         .WithMany("Incidents")
                         .HasForeignKey("TripId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -1659,9 +1735,9 @@ namespace api.Migrations
                     b.Navigation("Trip");
                 });
 
-            modelBuilder.Entity("api.Models.MaintenanceRecord", b =>
+            modelBuilder.Entity("api.Entities.MaintenanceRecord", b =>
                 {
-                    b.HasOne("api.Models.Vehicle", "Vehicle")
+                    b.HasOne("api.Entities.Vehicle", "Vehicle")
                         .WithMany("MaintenanceRecords")
                         .HasForeignKey("VehicleId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1670,31 +1746,31 @@ namespace api.Migrations
                     b.Navigation("Vehicle");
                 });
 
-            modelBuilder.Entity("api.Models.Passenger", b =>
+            modelBuilder.Entity("api.Entities.Passenger", b =>
                 {
-                    b.HasOne("api.Models.User", "User")
+                    b.HasOne("api.Entities.User", "User")
                         .WithOne("Passenger")
-                        .HasForeignKey("api.Models.Passenger", "UserId")
+                        .HasForeignKey("api.Entities.Passenger", "UserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("api.Models.PassengerNotification", b =>
+            modelBuilder.Entity("api.Entities.PassengerNotification", b =>
                 {
-                    b.HasOne("api.Models.Booking", "Booking")
+                    b.HasOne("api.Entities.Booking", "Booking")
                         .WithMany("PassengerNotifications")
                         .HasForeignKey("BookingId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("api.Models.Passenger", "Passenger")
+                    b.HasOne("api.Entities.Passenger", "Passenger")
                         .WithMany("Notifications")
                         .HasForeignKey("PassengerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("api.Models.AgentWorkflow", "Workflow")
+                    b.HasOne("api.Entities.AgentWorkflow", "Workflow")
                         .WithMany("PassengerNotifications")
                         .HasForeignKey("WorkflowId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1707,9 +1783,9 @@ namespace api.Migrations
                     b.Navigation("Workflow");
                 });
 
-            modelBuilder.Entity("api.Models.Payment", b =>
+            modelBuilder.Entity("api.Entities.Payment", b =>
                 {
-                    b.HasOne("api.Models.Booking", "Booking")
+                    b.HasOne("api.Entities.Booking", "Booking")
                         .WithMany("Payments")
                         .HasForeignKey("BookingId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1718,9 +1794,9 @@ namespace api.Migrations
                     b.Navigation("Booking");
                 });
 
-            modelBuilder.Entity("api.Models.PaymentRefund", b =>
+            modelBuilder.Entity("api.Entities.PaymentRefund", b =>
                 {
-                    b.HasOne("api.Models.Payment", "Payment")
+                    b.HasOne("api.Entities.Payment", "Payment")
                         .WithMany("Refunds")
                         .HasForeignKey("PaymentId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1729,9 +1805,28 @@ namespace api.Migrations
                     b.Navigation("Payment");
                 });
 
-            modelBuilder.Entity("api.Models.Route", b =>
+            modelBuilder.Entity("api.Entities.RecoveryMemory", b =>
                 {
-                    b.HasOne("api.Models.Centre", "Centre")
+                    b.HasOne("api.Entities.Centre", "Centre")
+                        .WithMany()
+                        .HasForeignKey("CentreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("api.Entities.AgentWorkflow", "Workflow")
+                        .WithMany()
+                        .HasForeignKey("WorkflowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Centre");
+
+                    b.Navigation("Workflow");
+                });
+
+            modelBuilder.Entity("api.Entities.Route", b =>
+                {
+                    b.HasOne("api.Entities.Centre", "Centre")
                         .WithMany("Routes")
                         .HasForeignKey("CentreId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1740,21 +1835,21 @@ namespace api.Migrations
                     b.Navigation("Centre");
                 });
 
-            modelBuilder.Entity("api.Models.RouteDirection", b =>
+            modelBuilder.Entity("api.Entities.RouteDirection", b =>
                 {
-                    b.HasOne("api.Models.Centre", "EndCentre")
+                    b.HasOne("api.Entities.Centre", "EndCentre")
                         .WithMany()
                         .HasForeignKey("EndCentreId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("api.Models.Route", "Route")
+                    b.HasOne("api.Entities.Route", "Route")
                         .WithMany("Directions")
                         .HasForeignKey("RouteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("api.Models.Centre", "StartCentre")
+                    b.HasOne("api.Entities.Centre", "StartCentre")
                         .WithMany()
                         .HasForeignKey("StartCentreId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1767,20 +1862,20 @@ namespace api.Migrations
                     b.Navigation("StartCentre");
                 });
 
-            modelBuilder.Entity("api.Models.RouteSchedule", b =>
+            modelBuilder.Entity("api.Entities.RouteSchedule", b =>
                 {
-                    b.HasOne("api.Models.Bay", "Bay")
+                    b.HasOne("api.Entities.Bay", "Bay")
                         .WithMany("RouteSchedules")
                         .HasForeignKey("BayId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("api.Models.RouteDirection", "RouteDirection")
+                    b.HasOne("api.Entities.RouteDirection", "RouteDirection")
                         .WithMany("Schedules")
                         .HasForeignKey("RouteDirectionId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("api.Models.Route", "Route")
+                    b.HasOne("api.Entities.Route", "Route")
                         .WithMany("Schedules")
                         .HasForeignKey("RouteId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1793,14 +1888,14 @@ namespace api.Migrations
                     b.Navigation("RouteDirection");
                 });
 
-            modelBuilder.Entity("api.Models.RouteStop", b =>
+            modelBuilder.Entity("api.Entities.RouteStop", b =>
                 {
-                    b.HasOne("api.Models.RouteDirection", "RouteDirection")
+                    b.HasOne("api.Entities.RouteDirection", "RouteDirection")
                         .WithMany("Stops")
                         .HasForeignKey("RouteDirectionId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("api.Models.Route", "Route")
+                    b.HasOne("api.Entities.Route", "Route")
                         .WithMany("Stops")
                         .HasForeignKey("RouteId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1811,19 +1906,19 @@ namespace api.Migrations
                     b.Navigation("RouteDirection");
                 });
 
-            modelBuilder.Entity("api.Models.SupportRequest", b =>
+            modelBuilder.Entity("api.Entities.SupportRequest", b =>
                 {
-                    b.HasOne("api.Models.Centre", "Centre")
+                    b.HasOne("api.Entities.Centre", "Centre")
                         .WithMany()
                         .HasForeignKey("CentreId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("api.Models.Passenger", "Passenger")
+                    b.HasOne("api.Entities.Passenger", "Passenger")
                         .WithMany()
                         .HasForeignKey("PassengerId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("api.Models.Trip", "Trip")
+                    b.HasOne("api.Entities.Trip", "Trip")
                         .WithMany()
                         .HasForeignKey("TripId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -1835,14 +1930,14 @@ namespace api.Migrations
                     b.Navigation("Trip");
                 });
 
-            modelBuilder.Entity("api.Models.Transaction", b =>
+            modelBuilder.Entity("api.Entities.Transaction", b =>
                 {
-                    b.HasOne("api.Models.Booking", "Booking")
+                    b.HasOne("api.Entities.Booking", "Booking")
                         .WithMany("Transactions")
                         .HasForeignKey("BookingId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("api.Models.Wallet", "Wallet")
+                    b.HasOne("api.Entities.Wallet", "Wallet")
                         .WithMany("Transactions")
                         .HasForeignKey("WalletId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1853,38 +1948,38 @@ namespace api.Migrations
                     b.Navigation("Wallet");
                 });
 
-            modelBuilder.Entity("api.Models.Trip", b =>
+            modelBuilder.Entity("api.Entities.Trip", b =>
                 {
-                    b.HasOne("api.Models.Bay", "Bay")
+                    b.HasOne("api.Entities.Bay", "Bay")
                         .WithMany("Trips")
                         .HasForeignKey("BayId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("api.Models.Centre", "Centre")
+                    b.HasOne("api.Entities.Centre", "Centre")
                         .WithMany("Trips")
                         .HasForeignKey("CentreId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("api.Models.Driver", "Driver")
+                    b.HasOne("api.Entities.Driver", "Driver")
                         .WithMany("Trips")
                         .HasForeignKey("DriverId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("api.Models.RouteDirection", "RouteDirection")
+                    b.HasOne("api.Entities.RouteDirection", "RouteDirection")
                         .WithMany("Trips")
                         .HasForeignKey("RouteDirectionId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("api.Models.Route", "Route")
+                    b.HasOne("api.Entities.Route", "Route")
                         .WithMany("Trips")
                         .HasForeignKey("RouteId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("api.Models.Vehicle", "Vehicle")
+                    b.HasOne("api.Entities.Vehicle", "Vehicle")
                         .WithMany("Trips")
                         .HasForeignKey("VehicleId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1903,9 +1998,9 @@ namespace api.Migrations
                     b.Navigation("Vehicle");
                 });
 
-            modelBuilder.Entity("api.Models.User", b =>
+            modelBuilder.Entity("api.Entities.User", b =>
                 {
-                    b.HasOne("api.Models.Centre", "Centre")
+                    b.HasOne("api.Entities.Centre", "Centre")
                         .WithMany()
                         .HasForeignKey("CentreId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -1913,9 +2008,9 @@ namespace api.Migrations
                     b.Navigation("Centre");
                 });
 
-            modelBuilder.Entity("api.Models.UserNotification", b =>
+            modelBuilder.Entity("api.Entities.UserNotification", b =>
                 {
-                    b.HasOne("api.Models.User", "User")
+                    b.HasOne("api.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1924,9 +2019,9 @@ namespace api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("api.Models.Vehicle", b =>
+            modelBuilder.Entity("api.Entities.Vehicle", b =>
                 {
-                    b.HasOne("api.Models.Centre", "Centre")
+                    b.HasOne("api.Entities.Centre", "Centre")
                         .WithMany("Vehicles")
                         .HasForeignKey("CentreId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1935,18 +2030,18 @@ namespace api.Migrations
                     b.Navigation("Centre");
                 });
 
-            modelBuilder.Entity("api.Models.Wallet", b =>
+            modelBuilder.Entity("api.Entities.Wallet", b =>
                 {
-                    b.HasOne("api.Models.Passenger", "Passenger")
+                    b.HasOne("api.Entities.Passenger", "Passenger")
                         .WithOne("Wallet")
-                        .HasForeignKey("api.Models.Wallet", "PassengerId")
+                        .HasForeignKey("api.Entities.Wallet", "PassengerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Passenger");
                 });
 
-            modelBuilder.Entity("api.Models.AgentWorkflow", b =>
+            modelBuilder.Entity("api.Entities.AgentWorkflow", b =>
                 {
                     b.Navigation("ApprovalRequests");
 
@@ -1955,14 +2050,14 @@ namespace api.Migrations
                     b.Navigation("Steps");
                 });
 
-            modelBuilder.Entity("api.Models.Bay", b =>
+            modelBuilder.Entity("api.Entities.Bay", b =>
                 {
                     b.Navigation("RouteSchedules");
 
                     b.Navigation("Trips");
                 });
 
-            modelBuilder.Entity("api.Models.Booking", b =>
+            modelBuilder.Entity("api.Entities.Booking", b =>
                 {
                     b.Navigation("AgentWorkflow");
 
@@ -1973,7 +2068,7 @@ namespace api.Migrations
                     b.Navigation("Transactions");
                 });
 
-            modelBuilder.Entity("api.Models.Centre", b =>
+            modelBuilder.Entity("api.Entities.Centre", b =>
                 {
                     b.Navigation("Bays");
 
@@ -1988,12 +2083,12 @@ namespace api.Migrations
                     b.Navigation("Vehicles");
                 });
 
-            modelBuilder.Entity("api.Models.Driver", b =>
+            modelBuilder.Entity("api.Entities.Driver", b =>
                 {
                     b.Navigation("Trips");
                 });
 
-            modelBuilder.Entity("api.Models.Passenger", b =>
+            modelBuilder.Entity("api.Entities.Passenger", b =>
                 {
                     b.Navigation("Bookings");
 
@@ -2002,12 +2097,12 @@ namespace api.Migrations
                     b.Navigation("Wallet");
                 });
 
-            modelBuilder.Entity("api.Models.Payment", b =>
+            modelBuilder.Entity("api.Entities.Payment", b =>
                 {
                     b.Navigation("Refunds");
                 });
 
-            modelBuilder.Entity("api.Models.Route", b =>
+            modelBuilder.Entity("api.Entities.Route", b =>
                 {
                     b.Navigation("Directions");
 
@@ -2020,7 +2115,7 @@ namespace api.Migrations
                     b.Navigation("Trips");
                 });
 
-            modelBuilder.Entity("api.Models.RouteDirection", b =>
+            modelBuilder.Entity("api.Entities.RouteDirection", b =>
                 {
                     b.Navigation("Schedules");
 
@@ -2029,14 +2124,14 @@ namespace api.Migrations
                     b.Navigation("Trips");
                 });
 
-            modelBuilder.Entity("api.Models.Trip", b =>
+            modelBuilder.Entity("api.Entities.Trip", b =>
                 {
                     b.Navigation("Bookings");
 
                     b.Navigation("Incidents");
                 });
 
-            modelBuilder.Entity("api.Models.User", b =>
+            modelBuilder.Entity("api.Entities.User", b =>
                 {
                     b.Navigation("Driver");
 
@@ -2047,14 +2142,14 @@ namespace api.Migrations
                     b.Navigation("ReviewedApprovals");
                 });
 
-            modelBuilder.Entity("api.Models.Vehicle", b =>
+            modelBuilder.Entity("api.Entities.Vehicle", b =>
                 {
                     b.Navigation("MaintenanceRecords");
 
                     b.Navigation("Trips");
                 });
 
-            modelBuilder.Entity("api.Models.Wallet", b =>
+            modelBuilder.Entity("api.Entities.Wallet", b =>
                 {
                     b.Navigation("Transactions");
                 });

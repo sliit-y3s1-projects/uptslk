@@ -5,6 +5,7 @@ using api.Entities;
 using api.Entities.Enums;
 using api.Interfaces.Repositories;
 using api.Interfaces.Services;
+using api.Services.AgentRecovery.Copilot;
 using api.Services.AgentRecovery.Planning;
 using Microsoft.Extensions.Options;
 
@@ -15,15 +16,14 @@ public sealed class RecoveryWorkflowService(
     IAgentWorkflowRepository workflows,
     IIncidentRepository incidents,
     IBookingRepository bookings,
-    IVehicleRepository vehicles,
-    IDriverRepository drivers,
-    IBayRepository bays,
     IUnitOfWork unitOfWork,
     RecoveryPlanningService planningService,
     RecoveryAgentRegistry agentRegistry,
     RecoveryProposalComposer proposalComposer,
     RecoveryActionExecutor actionExecutor,
-    ITripConflictService conflictService,
+    RecoveryProposalValidator proposalValidator,
+    RecoveryMemoryService memory,
+    RecoveryScenarioEvaluator scenarioEvaluator,
     IOptions<AgentAiOptions> agentAiOptions,
     ILogger<RecoveryWorkflowService> logger)
 {
@@ -68,7 +68,8 @@ public sealed class RecoveryWorkflowService(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Plan with the AI planner. When it is unavailable, the safe built-in plan is used if the caller allowed it.
-        var planningInput = CreatePlanningInput(workflow, incident, affectedPassengers, agentRegistry.Capabilities);
+        var lessons = await memory.GetLessonsAsync(incident.CentreId, incident.Trip.Route.RouteNumber, incident.Type, cancellationToken);
+        var planningInput = CreatePlanningInput(workflow, incident, affectedPassengers, agentRegistry.Capabilities, RecoveryMemoryService.ToPromptLessons(lessons));
         RecoveryPlanningResult planningResult;
         try
         {
@@ -179,6 +180,7 @@ public sealed class RecoveryWorkflowService(
         // Deterministic safety checks run before a manager ever sees the proposal.
         var proposal = composition.Proposal
             ?? throw new InvalidOperationException("Proposal composition succeeded without producing a proposal.");
+        proposal = await ApplyMemoryAsync(workflow, incident, affectedPassengers, proposal, lessons, cancellationToken);
         MarkPlanStep(plan, "Safety Validation", "Running");
         var validationResults = await ValidateProposalAsync(incident.Trip, proposal, "Pre-approval", cancellationToken);
         workflow.ValidationJson = JsonSerializer.Serialize(validationResults, JsonOptions);
@@ -230,6 +232,15 @@ public sealed class RecoveryWorkflowService(
         approval.DecidedAt = DateTime.UtcNow;
         if (decision == ApprovalDecision.Rejected)
         {
+            // A plain rejection is still remembered, so the next recovery on this route is not offered the same thing.
+            var rejected = TryReadProposal(workflow);
+            if (rejected is not null)
+            {
+                var (constraints, _) = await memory.ResolveRejectionAsync(approval.DecisionNote, false, false, false, null, rejected,
+                    RecoveryMemoryService.CurrentDelay(workflow, rejected), cancellationToken);
+                await memory.RecordAsync(workflow, RecoveryMemoryKind.Rejected, rejected, approval.DecisionNote, constraints, cancellationToken);
+            }
+
             MarkPlanStep(workflow, "Manager Approval", "Rejected");
             workflow.Status = WorkflowStatus.Failed;
             workflow.FailureReason = "Recovery proposal rejected by the approving manager.";
@@ -257,37 +268,60 @@ public sealed class RecoveryWorkflowService(
         }
 
         MarkPlanStep(workflow, "Manager Approval", "Completed");
+        await memory.RecordAsync(workflow, RecoveryMemoryKind.Approved, proposal, approval.DecisionNote, RejectionConstraints.None, cancellationToken);
         await actionExecutor.ExecuteAsync(workflow, approval, proposal, cancellationToken);
         return (workflow, null);
     }
 
-    private async Task<IReadOnlyList<ValidationResult>> ValidateProposalAsync(Trip trip, RecoveryProposal proposal, string phase, CancellationToken cancellationToken)
+    // Checks the proposal against what managers decided on earlier recoveries. A proposal they rejected before is swapped
+    // for the best option they have not rejected, or kept with a visible warning when there is none.
+    private async Task<RecoveryProposal> ApplyMemoryAsync(
+        AgentWorkflow workflow,
+        Incident incident,
+        int affectedPassengers,
+        RecoveryProposal proposal,
+        IReadOnlyList<RecoveryMemory> lessons,
+        CancellationToken cancellationToken)
     {
-        var results = new List<ValidationResult>();
-        var checkedAt = DateTime.UtcNow;
-        // Read the resources fresh, because they may have changed since the agents looked at them.
-        var vehicle = await vehicles.GetWithMaintenanceAsync(proposal.VehicleId, cancellationToken);
-        var driver = await drivers.GetReadOnlyAsync(proposal.DriverId, cancellationToken);
-        var bay = await bays.GetReadOnlyAsync(proposal.BayId, cancellationToken);
-        results.Add(Check(phase, "Vehicle active at centre", vehicle is not null && vehicle.Status == VehicleStatus.Active && vehicle.CentreId == trip.CentreId, "The proposed vehicle is no longer active at this centre.", checkedAt));
-        var maintenanceClear = vehicle is not null && !vehicle.MaintenanceRecords.Any(record =>
-            VehicleMaintenanceRules.BlocksTrip(record, proposal.ScheduledTime,
-                trip.RouteDirection?.EstimatedDurationMin ?? trip.Route.EstimatedDurationMin));
-        results.Add(Check(phase, "Vehicle maintenance clearance", maintenanceClear, "The proposed vehicle has scheduled or in-progress maintenance during this trip.", checkedAt));
-        results.Add(Check(phase, "Driver active at centre", driver is not null && driver.Status == DriverStatus.Active && driver.CentreId == trip.CentreId, "The proposed driver is no longer active at this centre.", checkedAt));
-        results.Add(Check(phase, "Bay available", bay is not null && bay.Status == BayStatus.Available, "The proposed bay is no longer available.", checkedAt));
-        results.Add(Check(phase, "Vehicle capacity", vehicle is not null && vehicle.Capacity >= proposal.AffectedPassengers, "The proposed vehicle no longer has sufficient capacity.", checkedAt));
-        if (vehicle is not null && driver is not null && bay is not null)
+        var trip = incident.Trip!;
+        var delay = Math.Max(0, (int)(proposal.ScheduledTime - trip.ScheduledTime).TotalMinutes);
+        var assessment = RecoveryMemoryService.Assess(proposal.VehicleId, proposal.DriverId, proposal.BayId, delay, lessons);
+        if (assessment.Rejections == 0) return proposal;
+
+        var context = await scenarioEvaluator.LoadAsync(trip, incident.Type, affectedPassengers, proposal, cancellationToken);
+        var search = await scenarioEvaluator.SearchAsync(context, ScenarioSearchOptions.Default, cancellationToken);
+        var better = search.Alternatives.FirstOrDefault(candidate => !candidate.IsCurrent
+            && RecoveryMemoryService.Assess(candidate.VehicleId, candidate.DriverId, candidate.BayId, candidate.DelayMinutes, lessons).Rejections == 0);
+
+        var before = await memory.DescribeAsync(proposal, delay, cancellationToken);
+        RecoveryProposal result = proposal;
+        string summary;
+        if (better is not null)
         {
-            var conflicts = await conflictService.FindConflicts(vehicle.Id, driver.Id, bay.Id, proposal.ScheduledTime, trip.RouteDirection?.EstimatedDurationMin ?? trip.Route.EstimatedDurationMin, trip.Id, cancellationToken);
-            results.Add(Check(phase, "Vehicle, driver and bay conflicts", conflicts.Count == 0, conflicts.Count == 0 ? "No resource conflict was found." : string.Join(" ", conflicts), checkedAt));
+            result = new RecoveryProposal(better.VehicleId, better.DriverId!.Value, better.BayId!.Value, better.ScheduledTime, affectedPassengers,
+                proposal.Warnings.Concat(better.Risks).Append($"Adjusted from the agents' first choice because of earlier manager decisions: {assessment.Notes[0]}").Distinct(StringComparer.Ordinal).ToArray());
+            summary = $"Replaced ({before}) with {better.VehiclePlate} and {better.DriverName}, bay {better.BayCode}, {better.DelayMinutes} min delay (score {better.Score}).";
         }
-        else results.Add(Check(phase, "Vehicle, driver and bay conflicts", false, "Conflict validation could not run because a required resource is invalid.", checkedAt));
-        return results;
+        else
+        {
+            result = proposal with { Warnings = proposal.Warnings.Concat(assessment.Notes).Distinct(StringComparer.Ordinal).ToArray() };
+            summary = $"Kept ({before}) because no better option exists, but flagged the earlier rejection.";
+        }
+
+        workflows.AddStep(new AgentStep
+        {
+            WorkflowId = workflow.Id,
+            AgentName = "Recovery Memory Agent",
+            InputJson = JsonSerializer.Serialize(new { LessonsChecked = lessons.Count, Rejections = assessment.Rejections }, JsonOptions),
+            OutputJson = JsonSerializer.Serialize(new AgentRecommendation("Recovery Memory Agent", summary, assessment.Notes, [],
+                result.VehicleId, result.DriverId, result.BayId, result.ScheduledTime), JsonOptions),
+            ToolCallsJson = JsonSerializer.Serialize(new[] { new { tool = "RecallPastDecisions", input = new { trip.Route.RouteNumber, Type = incident.Type.ToString() }, output = new { lessons.Count, assessment.Rejections, Swapped = better is not null } } }, JsonOptions)
+        });
+        return result;
     }
 
-    private static ValidationResult Check(string phase, string check, bool passed, string failedDetail, DateTime checkedAt) =>
-        new(phase, check, passed, passed ? $"{check} passed." : failedDetail, checkedAt);
+    private Task<IReadOnlyList<ValidationResult>> ValidateProposalAsync(Trip trip, RecoveryProposal proposal, string phase, CancellationToken cancellationToken) =>
+        proposalValidator.ValidateAsync(trip, proposal, phase, cancellationToken);
 
     private async Task<PlanExecutionResult> ExecutePlanAsync(
         AgentWorkflow workflow,
@@ -424,7 +458,8 @@ public sealed class RecoveryWorkflowService(
         AgentWorkflow workflow,
         Incident incident,
         int affectedPassengers,
-        IReadOnlyCollection<AgentCapability> capabilities)
+        IReadOnlyCollection<AgentCapability> capabilities,
+        IReadOnlyCollection<string> pastLessons)
     {
         var trip = incident.Trip!;
         var direction = trip.RouteDirection is null
@@ -448,7 +483,8 @@ public sealed class RecoveryWorkflowService(
                 trip.ScheduledTime,
                 trip.RouteDirection?.EstimatedDurationMin ?? trip.Route.EstimatedDurationMin),
             affectedPassengers,
-            capabilities);
+            capabilities,
+            pastLessons);
     }
 
     private static void ApplyPlanningResult(AgentWorkflow workflow, RecoveryPlanningResult result)
@@ -557,7 +593,7 @@ public sealed class RecoveryWorkflowService(
         };
     }
 
-    private static void MarkPlanStep(AgentWorkflow workflow, string owner, string status)
+    internal static void MarkPlanStep(AgentWorkflow workflow, string owner, string status)
     {
         var plan = DeserializePlan(workflow.PlanJson);
         MarkPlanStep(plan, owner, status);
@@ -570,13 +606,19 @@ public sealed class RecoveryWorkflowService(
         catch (JsonException) { return []; }
     }
 
-    private static void AppendValidationResults(AgentWorkflow workflow, IReadOnlyList<ValidationResult> validationResults)
+    internal static void AppendValidationResults(AgentWorkflow workflow, IReadOnlyList<ValidationResult> validationResults)
     {
         List<ValidationResult> allResults;
         try { allResults = JsonSerializer.Deserialize<List<ValidationResult>>(workflow.ValidationJson, JsonOptions) ?? []; }
         catch (JsonException) { allResults = []; }
         allResults.AddRange(validationResults);
         workflow.ValidationJson = JsonSerializer.Serialize(allResults, JsonOptions);
+    }
+
+    private static RecoveryProposal? TryReadProposal(AgentWorkflow workflow)
+    {
+        try { return JsonSerializer.Deserialize<RecoveryProposal>(workflow.ProposalJson ?? "", JsonOptions); }
+        catch (JsonException) { return null; }
     }
 
     private static void ValidateToolCalls(IRecoveryAgent agent, AgentExecutionResult execution)
