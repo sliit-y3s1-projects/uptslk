@@ -1,0 +1,251 @@
+{
+    "metrics": {
+        "http_req_sending": {
+            "avg": 0.022597896049896007,
+            "min": 0.004672,
+            "med": 0.012636,
+            "p(90)": 0.035898,
+            "p(95)": 0.051324,
+            "max": 6.501911
+        },
+        "http_reqs": {
+            "count": 5291,
+            "rate": 58.50748482997424
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 5291,
+            "value": 0
+        },
+        "http_req_duration{expected_response:true}": {
+            "min": 1.420242,
+            "med": 3.639673,
+            "p(90)": 6.169602,
+            "p(95)": 7.4150659999999995,
+            "max": 210.023091,
+            "avg": 4.374132525987537
+        },
+        "http_req_blocked": {
+            "avg": 0.008876957474957469,
+            "min": 0.001306,
+            "med": 0.004073,
+            "p(90)": 0.007484,
+            "p(95)": 0.009062500000000001,
+            "max": 5.041126
+        },
+        "checks": {
+            "passes": 5270,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.99": false
+            },
+            "value": 1
+        },
+        "http_req_duration": {
+            "avg": 4.374132525987537,
+            "min": 1.420242,
+            "med": 3.639673,
+            "p(90)": 6.169602,
+            "p(95)": 7.4150659999999995,
+            "max": 210.023091
+        },
+        "http_req_connecting": {
+            "avg": 0.0022753602343602345,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "max": 4.932892
+        },
+        "http_req_waiting": {
+            "p(90)": 6.066533,
+            "p(95)": 7.27388,
+            "max": 209.973668,
+            "avg": 4.271456373842368,
+            "min": 1.352446,
+            "med": 3.540444
+        },
+        "http_req_receiving": {
+            "med": 0.052458,
+            "p(90)": 0.13105,
+            "p(95)": 0.201959,
+            "max": 2.878382,
+            "avg": 0.08007825609525625,
+            "min": 0.01027
+        },
+        "http_req_duration{scenario:centre_list}": {
+            "avg": 4.10949500338983,
+            "min": 1.420242,
+            "med": 3.3743425,
+            "p(90)": 5.6630853000000005,
+            "p(95)": 6.915077449999999,
+            "max": 87.335332,
+            "thresholds": {
+                "p(95)<400": false
+            }
+        },
+        "data_sent": {
+            "count": 4597842,
+            "rate": 50842.595173997055
+        },
+        "vus_max": {
+            "value": 20,
+            "min": 20,
+            "max": 20
+        },
+        "http_req_tls_handshaking": {
+            "p(95)": 0,
+            "max": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0
+        },
+        "vus": {
+            "value": 10,
+            "min": 10,
+            "max": 10
+        },
+        "data_received": {
+            "count": 9188616,
+            "rate": 101607.0329292116
+        },
+        "iterations": {
+            "count": 1760,
+            "rate": 19.461949215791847
+        },
+        "http_req_failed{phase:test}": {
+            "passes": 0,
+            "fails": 5270,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "iteration_duration": {
+            "p(95)": 524.7970003,
+            "max": 717.741303,
+            "avg": 514.1661514880692,
+            "min": 504.76888,
+            "med": 511.81241850000004,
+            "p(90)": 521.4960904
+        },
+        "http_req_duration{scenario:network_detail}": {
+            "avg": 4.535863323275855,
+            "min": 1.442601,
+            "med": 4.0390865,
+            "p(90)": 7.0382352,
+            "p(95)": 8.630492799999999,
+            "max": 33.66994,
+            "thresholds": {
+                "p(95)<400": false
+            }
+        },
+        "http_req_duration{scenario:timetables}": {
+            "avg": 4.297349516949151,
+            "min": 1.796285,
+            "med": 3.5024095,
+            "p(90)": 4.981055900000001,
+            "p(95)": 5.537997649999999,
+            "max": 210.023091,
+            "thresholds": {
+                "p(95)<400": false
+            }
+        }
+    },
+    "setup_data": {
+        "network": {
+            "code": "AO3P7F",
+            "driverIds": [
+                "e1a54af2-0f2f-4a2b-8272-08ce8511fe57"
+            ],
+            "routeId": "eaa6b4ae-2071-4dcc-93e3-98765be08071",
+            "vehicleIds": [
+                "f5ad6152-5609-4b55-a351-a11ee06d25a8"
+            ],
+            "bayIds": [
+                "b14a6db6-7403-400a-a318-1d2f1dd49a59",
+                "dbe95e9b-a311-473b-b9c2-edd311f99120",
+                "8400de93-763a-4894-b5c1-30121cf5ab62"
+            ],
+            "centreId": "c96b7db8-fe67-439f-9ab0-e06cacce689a"
+        },
+        "scheduleIds": [
+            "17fc1122-73b5-4061-9925-df61e061d242",
+            "983dd03a-49ce-4bc1-be87-a8fb6e825b43",
+            "70de9ce1-1c64-4079-ac59-c5425f27ca6e"
+        ],
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZTVmZjA2Mi01MGMzLTQyZmUtYjllYy02MDE1M2UzNTE4M2QiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjRlNWZmMDYyLTUwYzMtNDJmZS1iOWVjLTYwMTUzZTM1MTgzZCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InBlcmYuYWRtaW5AdXB0cy50ZXN0IiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6IlVQVFNMSyBTdXBlciBBZG1pbiIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkFkbWluIiwiZXhwIjoxNzkyMzQ3MjA2LCJpc3MiOiJ1cHRzLXBlcmYiLCJhdWQiOiJ1cHRzLXBlcmYtd2ViIn0.BqaW4JbNuFYD8XsfyNcjVdyZiCDDW4b4DEb4n8aMfJg"
+    },
+    "root_group": {
+        "checks": {
+            "centre list is 200": {
+                "name": "centre list is 200",
+                "path": "::centre list is 200",
+                "id": "7ffe8a93367b78a6fe00f790ac45493f",
+                "passes": 590,
+                "fails": 0
+            },
+            "centres by district is 200": {
+                "name": "centres by district is 200",
+                "path": "::centres by district is 200",
+                "id": "ad40ddea47a4a701aa7369fefa4bd67d",
+                "passes": 590,
+                "fails": 0
+            },
+            "centre search is 200": {
+                "name": "centre search is 200",
+                "path": "::centre search is 200",
+                "id": "ea3ea31006e2a5adf6a0ff98265be6e1",
+                "passes": 590,
+                "fails": 0
+            },
+            "centre detail is 200": {
+                "path": "::centre detail is 200",
+                "id": "028c4d48b58b2e4e04a1d589bd73817a",
+                "passes": 580,
+                "fails": 0,
+                "name": "centre detail is 200"
+            },
+            "bay list is 200": {
+                "name": "bay list is 200",
+                "path": "::bay list is 200",
+                "id": "ce815629c091f427f18dbbf361b4aae5",
+                "passes": 580,
+                "fails": 0
+            },
+            "route detail with stops is 200": {
+                "name": "route detail with stops is 200",
+                "path": "::route detail with stops is 200",
+                "id": "2dbdd8eadd4f6165d19dc1413a040994",
+                "passes": 580,
+                "fails": 0
+            },
+            "route list is 200": {
+                "id": "808e238c2b04b63bebeb784fc4268ba1",
+                "passes": 580,
+                "fails": 0,
+                "name": "route list is 200",
+                "path": "::route list is 200"
+            },
+            "timetable list is 200": {
+                "fails": 0,
+                "name": "timetable list is 200",
+                "path": "::timetable list is 200",
+                "id": "72fc08a4501701ad04a97ed3af1f8079",
+                "passes": 590
+            },
+            "direction list is 200": {
+                "path": "::direction list is 200",
+                "id": "fc714ab1274dac32ad2f9fb845e821d8",
+                "passes": 590,
+                "fails": 0,
+                "name": "direction list is 200"
+            }
+        },
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {}
+    }
+}

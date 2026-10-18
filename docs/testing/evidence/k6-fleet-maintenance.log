@@ -1,0 +1,31 @@
+
+     ✓ vehicle list for a centre is 200
+     ✓ active vehicles is 200
+     ✓ vehicle search is 200
+     ✓ vehicle profile is 200
+     ✓ maintenance history is 200
+     ✓ maintenance record created is 201
+     ✓ scheduled maintenance list is 200
+
+   ✓ checks.........................................: 100.00% 4122 out of 4122
+     data_received..................................: 76 MB   836 kB/s
+     data_sent......................................: 3.8 MB  42 kB/s
+     http_req_blocked...............................: avg=9.17µs   min=1.21µs   med=4.03µs   p(90)=7.4µs    p(95)=8.85µs   max=1.5ms   
+     http_req_connecting............................: avg=3.12µs   min=0s       med=0s       p(90)=0s       p(95)=0s       max=1.42ms  
+     http_req_duration..............................: avg=4.97ms   min=1.25ms   med=4.14ms   p(90)=8.35ms   p(95)=10.09ms  max=94.38ms 
+       { expected_response:true }...................: avg=4.97ms   min=1.25ms   med=4.14ms   p(90)=8.35ms   p(95)=10.09ms  max=94.38ms 
+     ✓ { scenario:maintenance_writes,kind:write }...: avg=8.04ms   min=3.68ms   med=7.29ms   p(90)=11.43ms  p(95)=12.75ms  max=34.17ms 
+     ✓ { scenario:vehicle_list }....................: avg=3.81ms   min=1.58ms   med=3.42ms   p(90)=5.83ms   p(95)=6.91ms   max=28.2ms  
+     ✓ { scenario:vehicle_profile }.................: avg=3.8ms    min=1.25ms   med=3.62ms   p(90)=5.49ms   p(95)=6.18ms   max=14.13ms 
+     http_req_failed................................: 0.00%   0 out of 4152
+     ✓ { phase:test }...............................: 0.00%   0 out of 4122
+     http_req_receiving.............................: avg=159.58µs min=9.15µs   med=54.2µs   p(90)=293.55µs p(95)=577.11µs max=15.88ms 
+     http_req_sending...............................: avg=25.16µs  min=4.5µs    med=12.67µs  p(90)=40.05µs  p(95)=56.58µs  max=3.38ms  
+     http_req_tls_handshaking.......................: avg=0s       min=0s       med=0s       p(90)=0s       p(95)=0s       max=0s      
+     http_req_waiting...............................: avg=4.78ms   min=1.19ms   med=4.02ms   p(90)=7.99ms   p(95)=9.69ms   max=94.23ms 
+     http_reqs......................................: 4152    45.71769/s
+     iteration_duration.............................: avg=512.76ms min=504.18ms med=511.59ms p(90)=518.88ms p(95)=521ms    max=542.12ms
+     iterations.....................................: 1766    19.445433/s
+     vus............................................: 10      min=10           max=10
+     vus_max........................................: 20      min=20           max=20
+

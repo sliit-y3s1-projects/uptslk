@@ -1,0 +1,459 @@
+{
+    "metrics": {
+        "http_req_connecting": {
+            "avg": 0.002014630571863449,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "max": 1.147496
+        },
+        "iterations": {
+            "count": 1717,
+            "rate": 18.633700618640468
+        },
+        "http_req_failed{phase:test}": {
+            "passes": 0,
+            "fails": 4524,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_sending": {
+            "med": 0.021149,
+            "p(90)": 0.05167279999999999,
+            "p(95)": 0.06484889999999999,
+            "max": 2.929045,
+            "avg": 0.032505324200913344,
+            "min": 0.00579
+        },
+        "http_req_waiting": {
+            "avg": 10.656556941291585,
+            "min": 2.908439,
+            "med": 8.991068,
+            "p(90)": 16.3910502,
+            "p(95)": 19.963353799999982,
+            "max": 148.451746
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 4599,
+            "value": 0
+        },
+        "http_req_duration{scenario:clash_check}": {
+            "p(95)": 15.6686903,
+            "max": 47.047092,
+            "avg": 10.441786827118653,
+            "min": 6.042407,
+            "med": 9.788795,
+            "p(90)": 13.935299800000001,
+            "thresholds": {
+                "p(95)<800": false
+            }
+        },
+        "http_req_duration{expected_response:true}": {
+            "avg": 10.788399852359198,
+            "min": 2.983195,
+            "med": 9.13578,
+            "p(90)": 16.554706799999998,
+            "p(95)": 20.197871299999992,
+            "max": 148.766976
+        },
+        "iteration_duration": {
+            "p(90)": 552.1596726,
+            "p(95)": 558.1810536,
+            "max": 630.86553,
+            "avg": 529.2060918841003,
+            "min": 506.529727,
+            "med": 525.84339
+        },
+        "http_req_duration": {
+            "min": 2.983195,
+            "med": 9.13578,
+            "p(90)": 16.554706799999998,
+            "p(95)": 20.197871299999992,
+            "max": 148.766976,
+            "avg": 10.788399852359198
+        },
+        "http_reqs": {
+            "count": 4599,
+            "rate": 49.91053532040041
+        },
+        "checks": {
+            "passes": 5114,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.99": false
+            },
+            "value": 1
+        },
+        "data_sent": {
+            "count": 4500054,
+            "rate": 48836.72626890827
+        },
+        "data_received": {
+            "count": 28240830,
+            "rate": 306482.91871981375
+        },
+        "http_req_duration{scenario:dispatch_board}": {
+            "avg": 8.96086617363533,
+            "min": 4.855872,
+            "med": 7.983800499999999,
+            "p(90)": 12.599511700000003,
+            "p(95)": 14.988565999999999,
+            "max": 61.259328,
+            "thresholds": {
+                "p(95)<400": false
+            }
+        },
+        "http_req_blocked": {
+            "max": 1.217542,
+            "avg": 0.00849803152859318,
+            "min": 0.001368,
+            "med": 0.004879,
+            "p(90)": 0.0081166,
+            "p(95)": 0.009769
+        },
+        "http_req_receiving": {
+            "med": 0.069393,
+            "p(90)": 0.15869499999999997,
+            "p(95)": 0.2293334999999999,
+            "max": 6.730583,
+            "avg": 0.09933758686671013,
+            "min": 0.007645
+        },
+        "vus_max": {
+            "value": 20,
+            "min": 20,
+            "max": 20
+        },
+        "http_req_tls_handshaking": {
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "max": 0,
+            "avg": 0,
+            "min": 0
+        },
+        "http_req_duration{scenario:trip_lifecycle,kind:write}": {
+            "avg": 11.806619340415919,
+            "min": 3.736132,
+            "med": 10.174108,
+            "p(90)": 18.915937,
+            "p(95)": 21.748007499999986,
+            "max": 84.160356,
+            "thresholds": {
+                "p(95)<800": false
+            }
+        },
+        "vus": {
+            "min": 0,
+            "max": 20,
+            "value": 10
+        }
+    },
+    "setup_data": {
+        "boardTrips": [
+            {
+                "id": "0396a30e-c78a-478c-9eb0-03502e2b90ec",
+                "slot": 0,
+                "vehicle": 0
+            },
+            {
+                "id": "122d5c05-fd9d-4d3e-b6e6-6b7718f92fe3",
+                "slot": 0,
+                "vehicle": 1
+            },
+            {
+                "vehicle": 2,
+                "id": "7f36e094-e578-470d-b0e3-d53b41c72335",
+                "slot": 0
+            },
+            {
+                "id": "2adbbdc1-cbb4-4de6-9ae5-991f1c8996e8",
+                "slot": 0,
+                "vehicle": 3
+            },
+            {
+                "vehicle": 4,
+                "id": "cc98587f-bf11-43bb-866f-7135616fb206",
+                "slot": 0
+            },
+            {
+                "id": "72303fc7-eaa6-4d51-b548-4f0984f1c2ce",
+                "slot": 0,
+                "vehicle": 5
+            },
+            {
+                "id": "ded80808-26b3-4f27-8ac1-978711ed34b5",
+                "slot": 0,
+                "vehicle": 6
+            },
+            {
+                "id": "6b77c10f-b285-4c38-ac55-eb245598696f",
+                "slot": 0,
+                "vehicle": 7
+            },
+            {
+                "id": "7f7a13b9-4a15-408c-906a-8ef0d6160778",
+                "slot": 0,
+                "vehicle": 8
+            },
+            {
+                "id": "c8ea362e-5a61-4de6-a2eb-c74c57abd38b",
+                "slot": 0,
+                "vehicle": 9
+            },
+            {
+                "id": "caa3e331-3ef7-4a6a-b3ff-5eb760dad4b3",
+                "slot": 0,
+                "vehicle": 10
+            },
+            {
+                "id": "f7148927-0467-4b62-b124-57c0e267ddd5",
+                "slot": 0,
+                "vehicle": 11
+            },
+            {
+                "id": "faeb4fa9-b089-46be-bf5d-914384cda036",
+                "slot": 1,
+                "vehicle": 0
+            },
+            {
+                "id": "e40d4ec9-2ed0-46b4-8efc-a7a0d1e2c658",
+                "slot": 1,
+                "vehicle": 1
+            },
+            {
+                "id": "0e4e0cf6-ac16-4f7b-ba7d-d3716c9f0d72",
+                "slot": 1,
+                "vehicle": 2
+            },
+            {
+                "vehicle": 3,
+                "id": "a631645d-37b1-435c-8364-36ea694613ea",
+                "slot": 1
+            },
+            {
+                "id": "517d0a82-fe9e-4858-a33a-79079aded4ab",
+                "slot": 1,
+                "vehicle": 4
+            },
+            {
+                "id": "812ac713-c96b-4875-aca9-0a28baf6cf84",
+                "slot": 1,
+                "vehicle": 5
+            },
+            {
+                "vehicle": 6,
+                "id": "9e6fbaf0-e021-4485-8c46-1b8670bc0b60",
+                "slot": 1
+            },
+            {
+                "id": "d0f3822c-5469-45ac-bcb9-7a7b015ea314",
+                "slot": 1,
+                "vehicle": 7
+            },
+            {
+                "slot": 1,
+                "vehicle": 8,
+                "id": "e74432c6-2960-4589-b5fc-6e88a4e885bb"
+            },
+            {
+                "id": "e194f89d-195c-4958-b9ef-28f77dfc014e",
+                "slot": 1,
+                "vehicle": 9
+            },
+            {
+                "id": "bfe6b65e-d4bc-4a5d-8462-f97ed4e5795b",
+                "slot": 1,
+                "vehicle": 10
+            },
+            {
+                "id": "b5afde12-946a-454a-a5ba-f289203896de",
+                "slot": 1,
+                "vehicle": 11
+            },
+            {
+                "id": "1e41f0f3-3ec0-4f55-a746-9435e7538d26",
+                "slot": 2,
+                "vehicle": 0
+            },
+            {
+                "id": "6e702c5b-a896-461f-824e-d56535eeef30",
+                "slot": 2,
+                "vehicle": 1
+            },
+            {
+                "slot": 2,
+                "vehicle": 2,
+                "id": "48c739a6-48af-4626-8804-9f22c00f0595"
+            },
+            {
+                "slot": 2,
+                "vehicle": 3,
+                "id": "82fb2c68-d03b-4bd1-bd5e-3c3f0e3c17ef"
+            },
+            {
+                "id": "fe7ce2c6-33d9-4036-90b3-5336f4ac2924",
+                "slot": 2,
+                "vehicle": 4
+            },
+            {
+                "vehicle": 5,
+                "id": "3708bb58-76db-4fe9-b250-10b717e6d353",
+                "slot": 2
+            },
+            {
+                "id": "fc8273ee-f2db-4be1-b92b-19e6a8223002",
+                "slot": 2,
+                "vehicle": 6
+            },
+            {
+                "vehicle": 7,
+                "id": "4ba9e512-d6fa-4c96-adbd-8080b9bdf1fd",
+                "slot": 2
+            },
+            {
+                "slot": 2,
+                "vehicle": 8,
+                "id": "2a8a28ff-e4fb-47ba-a789-1f0cd4aec4c6"
+            },
+            {
+                "id": "3ac2f299-12cc-4ec6-b752-24bfbdc115a3",
+                "slot": 2,
+                "vehicle": 9
+            },
+            {
+                "id": "8d43befb-778a-42bd-82c0-ce9c9f691ef7",
+                "slot": 2,
+                "vehicle": 10
+            },
+            {
+                "id": "af80ca52-a763-4f1c-929e-edf8a18cec17",
+                "slot": 2,
+                "vehicle": 11
+            }
+        ],
+        "network": {
+            "bayIds": [
+                "2dbe9c3c-177e-4d0c-b857-fc4507af7605",
+                "2fd6521e-644d-414e-a829-c899f6616807",
+                "45644961-3189-4b32-9292-e8609971f656",
+                "919a7ebf-08fa-47a0-b40e-e3454e2edcc3",
+                "5f454a92-943f-4d2a-9d8b-052540bb829e",
+                "bc2e2b42-156a-4325-b750-07276cec8daa",
+                "c0df4184-8e4a-401e-878e-d70766824882",
+                "d9320dae-e754-43f5-919d-e6819d9ffa7d",
+                "097d642f-197f-4076-8fba-5c1e09e46cec",
+                "c83ce297-9762-4859-a960-6512ca8853b0",
+                "cc3854ec-2da5-4b34-88c9-8c3925269024",
+                "b456d1cb-942f-484b-a3a4-f6898132ea0d"
+            ],
+            "centreId": "5c2a5e39-b4e9-422a-94f3-4b8603a20fbe",
+            "code": "CO7LHI",
+            "driverIds": [
+                "0acd621a-2e05-443f-b67d-0624471b67ba",
+                "a7fb1cd7-f359-49f1-9413-266bb8282166",
+                "c87c7a59-9f0e-47ca-be92-d70650bc35d4",
+                "67cc3f62-56b8-479a-b185-dc7ad981055b",
+                "b4939488-3c8f-47c0-ac62-da4d6649157d",
+                "15553375-e5e7-47ed-bee9-48f9db605442",
+                "e634f30e-da52-4bf2-900f-269ca6f7a60c",
+                "56eaf77b-8eaa-4a8c-9535-4bc706656858",
+                "63370e7a-ef5e-44a7-b0c7-ed1ff0932835",
+                "79c5328d-487a-4e51-bd6b-80ca1b9883fa",
+                "4f792cec-f359-4573-947c-768cdbe8ec3a",
+                "91869599-9656-456a-ab94-ec048f49a3c8"
+            ],
+            "routeId": "875369f2-16db-4cf2-9dbb-3367e2a6de9e",
+            "vehicleIds": [
+                "e0c05ed9-fbd0-482e-9e84-124bd6dba4bd",
+                "7d766c8b-e6e7-4cdb-8ce1-e83cc0867cc9",
+                "bfcdde91-6c9a-47dd-bb9c-a715cdbb1e42",
+                "75da568e-bb3f-4ed4-8087-100b7b89e759",
+                "b421cde9-5c5f-42b7-b373-304cd0ef3002",
+                "c7cf8133-511a-4349-9613-e31c321d29db",
+                "81da3f82-bef1-4aab-90ba-e7501ae890d1",
+                "690d1d01-d052-4830-b80a-b752b861dfb6",
+                "77236a31-ee04-4c6c-9e64-2accfa55af1b",
+                "a5b80531-af6b-4d43-8268-1649b5818d7e",
+                "3e295589-afc1-4b11-b894-71329d3f1c20",
+                "135078eb-bbde-47fe-93fa-f55247f7db3d"
+            ]
+        },
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZTVmZjA2Mi01MGMzLTQyZmUtYjllYy02MDE1M2UzNTE4M2QiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjRlNWZmMDYyLTUwYzMtNDJmZS1iOWVjLTYwMTUzZTM1MTgzZCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InBlcmYuYWRtaW5AdXB0cy50ZXN0IiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6IlVQVFNMSyBTdXBlciBBZG1pbiIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkFkbWluIiwiZXhwIjoxNzkyMzQ3Mzg4LCJpc3MiOiJ1cHRzLXBlcmYiLCJhdWQiOiJ1cHRzLXBlcmYtd2ViIn0.cgdf9as4-F3jpcEcDU_yLwtDXr_nNGtdSzIBhKMHw2w"
+    },
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "board for the day is 200": {
+                    "name": "board for the day is 200",
+                    "path": "::board for the day is 200",
+                    "id": "fa51aeb09cd27a3e2871d83de33d5013",
+                    "passes": 574,
+                    "fails": 0
+                },
+                "scheduled trips is 200": {
+                    "fails": 0,
+                    "name": "scheduled trips is 200",
+                    "path": "::scheduled trips is 200",
+                    "id": "1e98989276ed3f4b46029da776f23a16",
+                    "passes": 574
+                },
+                "trip detail is 200": {
+                    "passes": 574,
+                    "fails": 0,
+                    "name": "trip detail is 200",
+                    "path": "::trip detail is 200",
+                    "id": "e41ac4adc3c4196a7a2fa70420d7790d"
+                },
+                "trip scheduled is 201": {
+                    "passes": 553,
+                    "fails": 0,
+                    "name": "trip scheduled is 201",
+                    "path": "::trip scheduled is 201",
+                    "id": "921afcf27b60d56a63a5775c2fae55cb"
+                },
+                "trip moved to Ready is 204": {
+                    "fails": 0,
+                    "name": "trip moved to Ready is 204",
+                    "path": "::trip moved to Ready is 204",
+                    "id": "e6fc7772338cf09bc900dbd82b07e944",
+                    "passes": 553
+                },
+                "trip moved to Boarding is 204": {
+                    "name": "trip moved to Boarding is 204",
+                    "path": "::trip moved to Boarding is 204",
+                    "id": "4afe6f9797fea2fb87f0f88cf6475e49",
+                    "passes": 553,
+                    "fails": 0
+                },
+                "trip moved to Dispatched is 204": {
+                    "name": "trip moved to Dispatched is 204",
+                    "path": "::trip moved to Dispatched is 204",
+                    "id": "1fa8c9aec33fc549bbebb76aec0ec094",
+                    "passes": 553,
+                    "fails": 0
+                },
+                "clash is refused with 400": {
+                    "passes": 590,
+                    "fails": 0,
+                    "name": "clash is refused with 400",
+                    "path": "::clash is refused with 400",
+                    "id": "3a8711aea0fd4a042b7cc2142adb039c"
+                },
+                "clash names the vehicle": {
+                    "fails": 0,
+                    "name": "clash names the vehicle",
+                    "path": "::clash names the vehicle",
+                    "id": "1d2339e526f1c84509e75fcd79ac4374",
+                    "passes": 590
+                }
+            }
+    }
+}
