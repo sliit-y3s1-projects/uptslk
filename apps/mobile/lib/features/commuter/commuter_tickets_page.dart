@@ -31,7 +31,10 @@ class _CommuterTicketsPageState extends State<CommuterTicketsPage> {
     super.initState();
     _ticketsFuture = _load();
     _timer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) setState(() => _ticketsFuture = _load());
+      if (!mounted) return;
+      setState(() {
+        _ticketsFuture = _load();
+      });
     });
   }
 
@@ -61,7 +64,9 @@ class _CommuterTicketsPageState extends State<CommuterTicketsPage> {
 
   Future<void> _refresh() async {
     final future = _load();
-    setState(() => _ticketsFuture = future);
+    setState(() {
+      _ticketsFuture = future;
+    });
     try {
       await future;
     } catch (_) {
@@ -253,7 +258,10 @@ class _TicketSheetState extends State<_TicketSheet> {
     super.initState();
     _future = widget.load();
     _timer = Timer.periodic(const Duration(seconds: 15), (_) {
-      if (mounted) setState(() => _future = widget.load());
+      if (!mounted) return;
+      setState(() {
+        _future = widget.load();
+      });
     });
   }
 

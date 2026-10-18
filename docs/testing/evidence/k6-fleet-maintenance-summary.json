@@ -1,0 +1,254 @@
+{
+    "metrics": {
+        "http_req_duration{expected_response:true}": {
+            "med": 4.143776000000001,
+            "p(90)": 8.3529743,
+            "p(95)": 10.094394,
+            "max": 94.3818,
+            "avg": 4.974423262283225,
+            "min": 1.254864
+        },
+        "data_received": {
+            "count": 75959823,
+            "rate": 836393.9336118902
+        },
+        "http_req_duration{scenario:maintenance_writes,kind:write}": {
+            "p(95)": 12.7523015,
+            "max": 34.176179,
+            "avg": 8.04072498122867,
+            "min": 3.682076,
+            "med": 7.295251,
+            "p(90)": 11.432835,
+            "thresholds": {
+                "p(95)<800": false
+            }
+        },
+        "iteration_duration": {
+            "avg": 512.7608700554925,
+            "min": 504.184613,
+            "med": 511.592066,
+            "p(90)": 518.8846599999999,
+            "p(95)": 521.002144,
+            "max": 542.124509
+        },
+        "iterations": {
+            "count": 1766,
+            "rate": 19.44543349921442
+        },
+        "http_req_duration{scenario:vehicle_list}": {
+            "min": 1.585529,
+            "med": 3.42313,
+            "p(90)": 5.837600400000001,
+            "p(95)": 6.91921665,
+            "max": 28.203853,
+            "avg": 3.8191617271186455,
+            "thresholds": {
+                "p(95)<400": false
+            }
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "max": 0
+        },
+        "http_req_duration{scenario:vehicle_profile}": {
+            "min": 1.254864,
+            "med": 3.6293735,
+            "p(90)": 5.491113500000001,
+            "p(95)": 6.18887715,
+            "max": 14.132859,
+            "avg": 3.8070804059322105,
+            "thresholds": {
+                "p(95)<400": false
+            }
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 4152,
+            "value": 0
+        },
+        "http_req_blocked": {
+            "avg": 0.009171405105973019,
+            "min": 0.001218,
+            "med": 0.0040315,
+            "p(90)": 0.0074098,
+            "p(95)": 0.008857849999999997,
+            "max": 1.501495
+        },
+        "data_sent": {
+            "count": 3795642,
+            "rate": 41793.83017996898
+        },
+        "http_req_waiting": {
+            "min": 1.192633,
+            "med": 4.026319,
+            "p(90)": 7.9944741,
+            "p(95)": 9.6986543,
+            "max": 94.23142,
+            "avg": 4.789681503371854
+        },
+        "vus": {
+            "value": 10,
+            "min": 10,
+            "max": 10
+        },
+        "vus_max": {
+            "value": 20,
+            "min": 20,
+            "max": 20
+        },
+        "http_reqs": {
+            "count": 4152,
+            "rate": 45.71768963122213
+        },
+        "http_req_connecting": {
+            "p(90)": 0,
+            "p(95)": 0,
+            "max": 1.4243,
+            "avg": 0.0031286611271676306,
+            "min": 0,
+            "med": 0
+        },
+        "http_req_failed{phase:test}": {
+            "passes": 0,
+            "fails": 4122,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_sending": {
+            "p(90)": 0.040053200000000004,
+            "p(95)": 0.05658984999999996,
+            "max": 3.380429,
+            "avg": 0.02516017846820811,
+            "min": 0.004507,
+            "med": 0.0126745
+        },
+        "checks": {
+            "passes": 4122,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.99": false
+            },
+            "value": 1
+        },
+        "http_req_receiving": {
+            "p(95)": 0.5771128,
+            "max": 15.882678,
+            "avg": 0.15958158044316004,
+            "min": 0.009159,
+            "med": 0.054202,
+            "p(90)": 0.2935519000000001
+        },
+        "http_req_duration": {
+            "p(90)": 8.3529743,
+            "p(95)": 10.094394,
+            "max": 94.3818,
+            "avg": 4.974423262283225,
+            "min": 1.254864,
+            "med": 4.143776000000001
+        }
+    },
+    "setup_data": {
+        "network": {
+            "routeId": "48b115f1-46ee-4286-a64c-30ae55fe6177",
+            "vehicleIds": [
+                "d720ebbd-37ff-49a2-903a-8e3cd817d812",
+                "c267e71e-636f-48bb-b4e4-f51e24e209a6",
+                "b5841d48-ddff-4e34-a07c-c599c4e105c2",
+                "c4e67209-d783-4e1a-b233-f2c14cef7993",
+                "a34283e7-0cb5-4ad5-9c41-54515818a375",
+                "7c04e35a-4cbc-46fa-a534-82805c9067c6",
+                "04fd1e1f-2eca-42b8-9d00-3ccbcaf6bc30",
+                "9e6031c8-97b5-4d72-893f-0dbf66e959db",
+                "f308fb1b-f4fd-41f1-aaba-8e318fd78d8d",
+                "3bd031bf-9ce9-4da7-bc8c-64fdbe317d60",
+                "95530e6f-9817-4eb6-a130-8b32ffbb6adb",
+                "0fcebdfa-34fb-42c5-9b4b-2b58978b9979",
+                "7c53f4b2-4b3f-41f1-8c52-486a1dd9eb7c",
+                "274d2ae1-bc3a-456d-8471-8eea911ea0b6",
+                "ce4236cf-bf99-4d0e-847e-d8d9badc60ad",
+                "cae0aef9-e4f6-46bb-9809-d26aff0a2737",
+                "0c109d6c-02d4-49d1-8cd9-e56454d87c69",
+                "248cf523-8cf5-421c-b32a-ea35a86161f4",
+                "95d5b4f8-2018-4f3c-acb1-29172e62df60",
+                "8b1ab5d0-5bde-4a2c-9a0c-04be71d244b3",
+                "42a46336-ec0f-49c6-9d08-af307a7804ef",
+                "ba0b9584-b5d1-4269-a044-3d06e1544465",
+                "bf58297e-787e-40b0-a8ff-20c47e6a8b59",
+                "1f564a5f-8885-48bf-a0a6-5c98bf5d7205",
+                "ebb2c426-dcc2-43c4-afad-145941d03ac0"
+            ],
+            "bayIds": [
+                "0336bb53-bc2c-47a1-ab45-9baeeaf7ca6a"
+            ],
+            "centreId": "56775d43-b17e-4a7a-aa7a-d9b6c9dee94b",
+            "code": "BO5N69",
+            "driverIds": [
+                "244876e5-7aca-4ffe-8b03-5e9c220b1a9e"
+            ]
+        },
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZTVmZjA2Mi01MGMzLTQyZmUtYjllYy02MDE1M2UzNTE4M2QiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjRlNWZmMDYyLTUwYzMtNDJmZS1iOWVjLTYwMTUzZTM1MTgzZCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InBlcmYuYWRtaW5AdXB0cy50ZXN0IiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6IlVQVFNMSyBTdXBlciBBZG1pbiIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkFkbWluIiwiZXhwIjoxNzkyMzQ3Mjk2LCJpc3MiOiJ1cHRzLXBlcmYiLCJhdWQiOiJ1cHRzLXBlcmYtd2ViIn0.tEJHGOa35mNACH3f5OP0zbtJNoJbN5EXGsriGEqWfb0"
+    },
+    "root_group": {
+        "groups": {},
+        "checks": {
+                "vehicle list for a centre is 200": {
+                    "passes": 590,
+                    "fails": 0,
+                    "name": "vehicle list for a centre is 200",
+                    "path": "::vehicle list for a centre is 200",
+                    "id": "709e730397b3691f111fe317bde387b4"
+                },
+                "active vehicles is 200": {
+                    "passes": 590,
+                    "fails": 0,
+                    "name": "active vehicles is 200",
+                    "path": "::active vehicles is 200",
+                    "id": "c314cf3aba91a7e032d09d044cd88263"
+                },
+                "vehicle search is 200": {
+                    "path": "::vehicle search is 200",
+                    "id": "61368e36a64c7d7ccbb9ef4830167087",
+                    "passes": 590,
+                    "fails": 0,
+                    "name": "vehicle search is 200"
+                },
+                "vehicle profile is 200": {
+                    "name": "vehicle profile is 200",
+                    "path": "::vehicle profile is 200",
+                    "id": "e411d3d43a81b9182671c95f41cff18d",
+                    "passes": 590,
+                    "fails": 0
+                },
+                "maintenance history is 200": {
+                    "passes": 590,
+                    "fails": 0,
+                    "name": "maintenance history is 200",
+                    "path": "::maintenance history is 200",
+                    "id": "743415ffab2f2f5228a93ef2ebc4a446"
+                },
+                "maintenance record created is 201": {
+                    "fails": 0,
+                    "name": "maintenance record created is 201",
+                    "path": "::maintenance record created is 201",
+                    "id": "3e315a549a3e507d51a779feb08635d6",
+                    "passes": 586
+                },
+                "scheduled maintenance list is 200": {
+                    "id": "5eb9568942c80ba0aa1d0166d40db746",
+                    "passes": 586,
+                    "fails": 0,
+                    "name": "scheduled maintenance list is 200",
+                    "path": "::scheduled maintenance list is 200"
+                }
+            },
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+}

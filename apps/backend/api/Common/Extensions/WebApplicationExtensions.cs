@@ -23,6 +23,17 @@ public static class WebApplicationExtensions
     // The order matters: errors first, then CORS, then auth, then the endpoints.
     public static WebApplication UseApiPipeline(this WebApplication app)
     {
+        // Browsers must not guess the content type of a response (found by the OWASP ZAP scan). The header is added when
+        // the response starts, because the exception handler clears headers before it writes an error response.
+        app.Use((context, next) =>
+        {
+            context.Response.OnStarting(() =>
+            {
+                context.Response.Headers.XContentTypeOptions = "nosniff";
+                return Task.CompletedTask;
+            });
+            return next(context);
+        });
         app.UseExceptionHandler();
         app.UseSwagger();
         app.UseSwaggerUI();

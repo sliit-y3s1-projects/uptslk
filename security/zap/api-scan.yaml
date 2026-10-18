@@ -1,0 +1,78 @@
+# OWASP ZAP automation plan: a passive and active scan of the UPTS API as a signed-in admin.
+# Every endpoint is imported from the API's own OpenAPI (Swagger) document, so the scan reaches all of them.
+#
+# The active scan sends attack payloads (SQL injection, XSS, path traversal, ...) and writes data.
+# Only run it against a local API on a throwaway database. See security/zap/README.md.
+#
+#   ZAP_TARGET  API address, e.g. http://localhost:5250
+#   ZAP_TOKEN   a JWT for the admin account, sent as "Authorization: Bearer <token>"
+#   ZAP_REPORTS folder for the reports
+env:
+  contexts:
+    - name: upts-api
+      urls:
+        - ${ZAP_TARGET}
+      includePaths:
+        - ${ZAP_TARGET}.*
+  parameters:
+    # Two payment endpoints redirect to the mobile app (uptslk://), which ZAP cannot follow; that is expected.
+    failOnError: false
+    failOnWarning: false
+    progressToStdout: true
+
+jobs:
+  - type: replacer
+    name: add-bearer-token
+    parameters:
+      deleteAllRules: true
+    rules:
+      - description: Admin bearer token
+        matchType: req_header
+        matchString: Authorization
+        replacementString: Bearer ${ZAP_TOKEN}
+
+  - type: openapi
+    name: import-swagger
+    parameters:
+      apiUrl: ${ZAP_TARGET}/swagger/v1/swagger.json
+      targetUrl: ${ZAP_TARGET}
+      context: upts-api
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+
+  - type: activeScan
+    name: active-scan
+    parameters:
+      context: upts-api
+      maxScanDurationInMins: 20
+      maxRuleDurationInMins: 3
+      threadPerHost: 4
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+
+  - type: report
+    name: html-report
+    parameters:
+      template: traditional-html
+      reportDir: ${ZAP_REPORTS}
+      reportFile: zap-api-scan.html
+      reportTitle: UPTS API - OWASP ZAP scan
+
+  - type: report
+    name: json-report
+    parameters:
+      template: traditional-json
+      reportDir: ${ZAP_REPORTS}
+      reportFile: zap-api-scan.json
+
+  - type: report
+    name: markdown-report
+    parameters:
+      template: traditional-md
+      reportDir: ${ZAP_REPORTS}
+      reportFile: zap-api-scan.md
+      reportTitle: UPTS API - OWASP ZAP scan
