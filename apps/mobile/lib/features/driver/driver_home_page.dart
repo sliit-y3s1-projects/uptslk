@@ -34,7 +34,10 @@ class _DriverHomePageState extends State<DriverHomePage> {
     super.initState();
     _dashboardFuture = _load();
     _timer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) setState(() => _dashboardFuture = _load());
+      if (!mounted) return;
+      setState(() {
+        _dashboardFuture = _load();
+      });
     });
   }
 
@@ -83,7 +86,9 @@ class _DriverHomePageState extends State<DriverHomePage> {
 
   Future<void> _refresh() async {
     final future = _load();
-    setState(() => _dashboardFuture = future);
+    setState(() {
+      _dashboardFuture = future;
+    });
     try {
       await future;
     } catch (_) {
@@ -124,7 +129,9 @@ class _DriverHomePageState extends State<DriverHomePage> {
             message: snapshot.error is AuthApiException
                 ? (snapshot.error! as AuthApiException).message
                 : 'Could not load your assigned duties.',
-            onRetry: () => setState(() => _dashboardFuture = _load()),
+            onRetry: () => setState(() {
+              _dashboardFuture = _load();
+            }),
           );
         }
 

@@ -1,0 +1,57 @@
+Found Java version 21.0.12.1
+Available memory: 16093 MB
+Using JVM args: -Xmx4023m
+Picked up JAVA_TOOL_OPTIONS: 
+This ZAP installation is over a year old - its probably very out of date
+Job add-bearer-token set deleteAllRules = true
+Job add-bearer-token set description = Admin bearer token
+Job add-bearer-token set matchType = req_header
+Job add-bearer-token set matchString = Authorization
+Job add-bearer-token set replacementString = Bearer ${ZAP_TOKEN}
+Job import-swagger set apiUrl = ${ZAP_TARGET}/swagger/v1/swagger.json
+Job import-swagger set targetUrl = ${ZAP_TARGET}
+Job import-swagger set context = upts-api
+Job passiveScan-wait set maxDuration = 5
+Job active-scan set context = upts-api
+Job active-scan set maxScanDurationInMins = 20
+Job active-scan set maxRuleDurationInMins = 3
+Job active-scan set threadPerHost = 4
+Job passiveScan-wait set maxDuration = 5
+Job html-report set template = traditional-html
+Job html-report set reportDir = ${ZAP_REPORTS}
+Job html-report set reportFile = zap-api-scan.html
+Job html-report set reportTitle = UPTS API - OWASP ZAP scan
+Job json-report set template = traditional-json
+Job json-report set reportDir = ${ZAP_REPORTS}
+Job json-report set reportFile = zap-api-scan.json
+Job markdown-report set template = traditional-md
+Job markdown-report set reportDir = ${ZAP_REPORTS}
+Job markdown-report set reportFile = zap-api-scan.md
+Job markdown-report set reportTitle = UPTS API - OWASP ZAP scan
+Job replacer set deleteAllRules = true
+Job replacer started
+Existing Replace rules deleted
+Job replacer finished, time taken: 00:00:00
+Job openapi started
+Job import-swagger target: http://localhost:5250 error: Failed to access URL: http://localhost:5250/api/v1/payments/mobile-return?orderId=orderId : org.apache.hc.client5.http.UnsupportedSchemeException : uptslk protocol is not supported
+Job import-swagger target: http://localhost:5250 error: Failed to access URL: http://localhost:5250/api/v1/payments/mobile-cancel?orderId=orderId : org.apache.hc.client5.http.UnsupportedSchemeException : uptslk protocol is not supported
+Job import-swagger added 128 URLs
+Job openapi finished, time taken: 00:00:01
+Job passiveScan-wait started
+Job passiveScan-wait finished, time taken: 00:00:13
+Job activeScan started
+Job activeScan finished, time taken: 00:03:06
+Job passiveScan-wait started
+Job passiveScan-wait finished, time taken: 00:00:00
+Job report started
+Job html-report generated report /home/user/uptslk/docs/testing/evidence/zap/zap-api-scan.html
+Job report finished, time taken: 00:00:00
+Job report started
+Job json-report generated report /home/user/uptslk/docs/testing/evidence/zap/zap-api-scan.json
+Job report finished, time taken: 00:00:00
+Job report started
+Job markdown-report generated report /home/user/uptslk/docs/testing/evidence/zap/zap-api-scan.md
+Job report finished, time taken: 00:00:00
+Automation plan failures:
+	Job import-swagger target: http://localhost:5250 error: Failed to access URL: http://localhost:5250/api/v1/payments/mobile-return?orderId=orderId : org.apache.hc.client5.http.UnsupportedSchemeException : uptslk protocol is not supported
+	Job import-swagger target: http://localhost:5250 error: Failed to access URL: http://localhost:5250/api/v1/payments/mobile-cancel?orderId=orderId : org.apache.hc.client5.http.UnsupportedSchemeException : uptslk protocol is not supported
